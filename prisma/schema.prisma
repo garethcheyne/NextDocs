@@ -1,0 +1,227 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  password      String?   // Only for local accounts
+  image         String?
+  role          String    @default("user") // user, admin, editor
+  provider      String?   // azuread, credentials
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  accounts      Account[]
+  sessions      Session[]
+  repositories  Repository[] // Repositories created by user
+  ssoProviders  SSOProvider[] @relation("SSOProviderCreator")
+  apiSpecs      APISpec[] @relation("APISpecCreator")
+}
+
+model Author {
+  id            String    @id @default(cuid())
+  email         String    @unique // Primary key for cross-repo identification
+  name          String
+  title         String?
+  bio           String?
+  avatar        String?
+  linkedin      String?
+  github        String?
+  website       String?
+  location      String?
+  joinedDate    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@index([email])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  
+  @@unique([identifier, token])
+}
+
+model Repository {
+  id              String    @id @default(cuid())
+  name            String
+  slug            String    @unique
+  description     String?
+  source          String    // 'github' or 'azure'
+  
+  // Azure DevOps
+  organization    String?
+  project         String?
+  repositoryId    String?
+  
+  // GitHub
+  owner           String?
+  repo            String?
+  
+  // Common
+  branch          String    @default("main")
+  basePath        String    @default("/")
+  
+  // Encrypted credentials
+  patEncrypted    String?   @db.Text // Encrypted PAT
+  
+  // Sync settings
+  enabled         Boolean   @default(true)
+  syncFrequency   Int       @default(3600) // Seconds
+  lastSyncAt      DateTime?
+  lastSyncStatus  String?   // 'success', 'failed', 'in_progress'
+  
+  // Webhook
+  webhookSecret   String?
+  webhookEnabled  Boolean   @default(false)
+  
+  // Metadata
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdBy       String
+  
+  // Relations
+  creator         User      @relation(fields: [createdBy], references: [id])
+  syncLogs        SyncLog[]
+  webhookEvents   WebhookEvent[]
+  apiSpecs        APISpec[]
+  
+  @@index([enabled])
+  @@index([source])
+}
+
+model SyncLog {
+  id            String    @id @default(cuid())
+  repositoryId  String
+  status        String    // 'success', 'failed', 'partial'
+  filesChanged  Int       @default(0)
+  filesAdded    Int       @default(0)
+  filesDeleted  Int       @default(0)
+  error         String?   @db.Text
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+  duration      Int?      // Milliseconds
+  
+  repository    Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  
+  @@index([repositoryId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+model WebhookEvent {
+  id            String     @id @default(cuid())
+  repositoryId  String
+  eventType     String     // 'push', 'pull_request', etc.
+  payload       String     @db.Text // JSON payload
+  signature     String?
+  verified      Boolean    @default(false)
+  processed     Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  processedAt   DateTime?
+  
+  repository    Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  
+  @@index([repositoryId])
+  @@index([processed])
+  @@index([createdAt])
+}
+
+model SSOProvider {
+  id                      String    @id @default(cuid())
+  name                    String    // Display name (e.g., "Azure AD", "Google Workspace")
+  slug                    String    @unique // URL-friendly identifier
+  provider                String    // 'azure-ad', 'google', 'okta', 'github'
+  enabled                 Boolean   @default(true)
+  
+  // OAuth Configuration (encrypted)
+  clientIdEncrypted       String    @db.Text
+  clientSecretEncrypted   String    @db.Text
+  tenantId                String?   // For Azure AD
+  
+  // Access Control
+  domainRestriction       String?   // Comma-separated allowed domains
+  roleMapping             String?   @db.Text // JSON mapping of provider roles to app roles
+  
+  // Metadata
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  createdBy               String    // User ID who configured
+  
+  // Relations
+  creator                 User      @relation("SSOProviderCreator", fields: [createdBy], references: [id])
+  
+  @@index([enabled])
+  @@index([provider])
+}
+
+model APISpec {
+  id              String    @id @default(cuid())
+  name            String    // API name (e.g., "NextDocs API")
+  slug            String    @unique // URL-friendly identifier
+  description     String?   @db.Text
+  version         String    // e.g., "1.0.0"
+  specPath        String    // Path to spec file in /content/api-specs/
+  renderer        String    @default("swagger-ui") // 'swagger-ui' or 'redoc'
+  category        String?   // Optional categorization
+  enabled         Boolean   @default(true)
+  
+  // Repository integration (optional)
+  repositoryId    String?
+  filePath        String?   // Path within repository
+  
+  // Auto-sync configuration
+  autoSync        Boolean   @default(false)
+  syncFrequency   Int       @default(3600) // Seconds between syncs
+  lastSyncAt      DateTime?
+  
+  // Metadata
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdBy       String    // User ID who created
+  
+  // Relations
+  repository      Repository? @relation(fields: [repositoryId], references: [id], onDelete: SetNull)
+  creator         User      @relation("APISpecCreator", fields: [createdBy], references: [id])
+  
+  @@index([enabled])
+  @@index([category])
+}
