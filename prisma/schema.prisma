@@ -9,7 +9,7 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String    @id @default(uuid())
   name          String?
   email         String    @unique
   emailVerified DateTime?
@@ -28,7 +28,7 @@ model User {
 }
 
 model Author {
-  id            String    @id @default(cuid())
+  id            String    @id @default(uuid())
   email         String    @unique // Primary key for cross-repo identification
   name          String
   title         String?
@@ -46,7 +46,7 @@ model Author {
 }
 
 model Account {
-  id                String  @id @default(cuid())
+  id                String  @id @default(uuid())
   userId            String
   type              String
   provider          String
@@ -65,7 +65,7 @@ model Account {
 }
 
 model Session {
-  id           String   @id @default(cuid())
+  id           String   @id @default(uuid())
   sessionToken String   @unique
   userId       String
   expires      DateTime
@@ -81,7 +81,7 @@ model VerificationToken {
 }
 
 model Repository {
-  id              String    @id @default(cuid())
+  id              String    @id @default(uuid())
   name            String
   slug            String    @unique
   description     String?
@@ -123,13 +123,16 @@ model Repository {
   syncLogs        SyncLog[]
   webhookEvents   WebhookEvent[]
   apiSpecs        APISpec[]
+  documents       Document[]
+  blogPosts       BlogPost[]
+  categoryMetadata CategoryMetadata[]
   
   @@index([enabled])
   @@index([source])
 }
 
 model SyncLog {
-  id            String    @id @default(cuid())
+  id            String    @id @default(uuid())
   repositoryId  String
   status        String    // 'success', 'failed', 'partial'
   filesChanged  Int       @default(0)
@@ -141,14 +144,61 @@ model SyncLog {
   duration      Int?      // Milliseconds
   
   repository    Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  changes       DocumentChange[]
   
   @@index([repositoryId])
   @@index([status])
   @@index([startedAt])
 }
 
+model DocumentChange {
+  id            String    @id @default(uuid())
+  syncLogId     String
+  changeType    String    // 'added', 'modified', 'deleted'
+  documentType  String    // 'document' or 'blog'
+  filePath      String
+  title         String
+  
+  // Store old and new content hashes for modified files
+  oldHash       String?
+  newHash       String?
+  
+  // Content diff summary
+  linesAdded    Int       @default(0)
+  linesRemoved  Int       @default(0)
+  
+  createdAt     DateTime  @default(now())
+  
+  syncLog       SyncLog   @relation(fields: [syncLogId], references: [id], onDelete: Cascade)
+  
+  @@index([syncLogId])
+  @@index([changeType])
+  @@index([documentType])
+}
+
+model CategoryMetadata {
+  id            String    @id @default(uuid())
+  repositoryId  String
+  categorySlug  String    // e.g., "dynamics-365-bc" or "eway/payment-methods"
+  title         String    // e.g., "Dynamics 365 BC"
+  icon          String?   // Lucide icon name
+  description   String?   @db.Text
+  order         Int       @default(0)
+  parentSlug    String?   // Parent category slug for hierarchical navigation
+  level         Int       @default(0) // 0 = root, 1 = first level, etc.
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  repository    Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  
+  @@unique([repositoryId, categorySlug])
+  @@index([repositoryId])
+  @@index([parentSlug])
+}
+
 model WebhookEvent {
-  id            String     @id @default(cuid())
+  id            String     @id @default(uuid())
   repositoryId  String
   eventType     String     // 'push', 'pull_request', etc.
   payload       String     @db.Text // JSON payload
@@ -166,7 +216,7 @@ model WebhookEvent {
 }
 
 model SSOProvider {
-  id                      String    @id @default(cuid())
+  id                      String    @id @default(uuid())
   name                    String    // Display name (e.g., "Azure AD", "Google Workspace")
   slug                    String    @unique // URL-friendly identifier
   provider                String    // 'azure-ad', 'google', 'okta', 'github'
@@ -194,12 +244,13 @@ model SSOProvider {
 }
 
 model APISpec {
-  id              String    @id @default(cuid())
+  id              String    @id @default(uuid())
   name            String    // API name (e.g., "NextDocs API")
-  slug            String    @unique // URL-friendly identifier
+  slug            String    // URL-friendly identifier (not unique - multiple versions)
   description     String?   @db.Text
   version         String    // e.g., "1.0.0"
-  specPath        String    // Path to spec file in /content/api-specs/
+  specPath        String    // Path to spec file in repository
+  specContent     String    @default("") @db.Text // Actual YAML/JSON content
   renderer        String    @default("swagger-ui") // 'swagger-ui' or 'redoc'
   category        String?   // Optional categorization
   enabled         Boolean   @default(true)
@@ -222,6 +273,92 @@ model APISpec {
   repository      Repository? @relation(fields: [repositoryId], references: [id], onDelete: SetNull)
   creator         User      @relation("APISpecCreator", fields: [createdBy], references: [id])
   
+  @@unique([slug, version]) // Allow multiple versions of same API
   @@index([enabled])
   @@index([category])
+  @@index([slug])
+}
+
+model Document {
+  id              String    @id @default(uuid())
+  repositoryId    String
+  
+  // File information
+  filePath        String    // Path in repository (e.g., /docs/getting-started.md)
+  fileName        String    // File name
+  title           String    // Extracted from frontmatter or filename
+  slug            String    // URL-friendly path
+  
+  // Content
+  content         String    @db.Text // Full markdown content
+  excerpt         String?   @db.Text // Summary/description
+  
+  // Frontmatter metadata
+  category        String?
+  tags            String[]  @default([])
+  author          String?   // Author name or email
+  publishedAt     DateTime?
+  updatedAt       DateTime  @updatedAt
+  
+  // Search optimization
+  searchVector    String?   @db.Text // For full-text search
+  
+  // Sync metadata
+  sourceHash      String    // SHA hash of source content
+  lastSyncedAt    DateTime  @default(now())
+  
+  // Relations
+  repository      Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  
+  @@unique([repositoryId, filePath])
+  @@index([repositoryId])
+  @@index([slug])
+  @@index([category])
+  @@index([publishedAt])
+}
+
+model BlogPost {
+  id              String    @id @default(uuid())
+  repositoryId    String
+  
+  // File information
+  filePath        String    // Path in repository (e.g., /blog/2025/02/product-locks.md)
+  fileName        String
+  title           String
+  slug            String    // URL-friendly
+  
+  // Content
+  content         String    @db.Text
+  excerpt         String?   @db.Text
+  featuredImage   String?
+  
+  // Frontmatter metadata
+  author          String?   // Author name or email
+  authorId        String?   // Link to Author model if exists
+  category        String?
+  tags            String[]  @default([])
+  publishedAt     DateTime?
+  isDraft         Boolean   @default(false)
+  
+  // Engagement (for future use)
+  views           Int       @default(0)
+  
+  // Search optimization
+  searchVector    String?   @db.Text
+  
+  // Sync metadata
+  sourceHash      String
+  lastSyncedAt    DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  repository      Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  
+  @@unique([repositoryId, filePath])
+  @@index([repositoryId])
+  @@index([slug])
+  @@index([category])
+  @@index([publishedAt])
+  @@index([isDraft])
 }

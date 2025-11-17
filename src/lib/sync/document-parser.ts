@@ -1,0 +1,120 @@
+import crypto from 'crypto'
+import matter from 'gray-matter'
+
+export interface ParsedDocument {
+  filePath: string
+  fileName: string
+  title: string
+  slug: string
+  content: string
+  excerpt?: string
+  category?: string
+  tags: string[]
+  author?: string
+  publishedAt?: Date
+  isDraft: boolean
+  sourceHash: string
+}
+
+export function parseMarkdownDocument(
+  filePath: string,
+  content: string
+): ParsedDocument {
+  // Parse frontmatter
+  const { data: frontmatter, content: markdownContent } = matter(content)
+
+  // Generate hash of source content
+  const sourceHash = crypto.createHash('sha256').update(content).digest('hex')
+
+  // Extract filename from path
+  const fileName = filePath.split('/').pop() || filePath
+
+  // Generate slug from path (remove .md extension, convert to URL-friendly)
+  // For index.md files, use the parent directory as the slug
+  let slug = filePath
+    .replace(/\.md$/, '')
+    .replace(/^\//, '')
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+  
+  // If this is an index file, use the parent directory
+  if (fileName.toLowerCase() === 'index.md') {
+    const pathParts = slug.split('/')
+    // Remove 'index' from the end
+    pathParts.pop()
+    slug = pathParts.join('/') || 'docs' // Default to 'docs' if at root
+  }
+
+  // Extract title (from frontmatter or filename)
+  const title =
+    frontmatter.title ||
+    fileName.replace(/\.md$/, '').replace(/-/g, ' ')
+
+  // Extract excerpt (from frontmatter, content, or generate)
+  const excerpt =
+    frontmatter.excerpt ||
+    frontmatter.description ||
+    markdownContent.slice(0, 200).trim() + '...'
+
+  // Parse published date
+  let publishedAt: Date | undefined
+  if (frontmatter.date || frontmatter.publishedAt || frontmatter.published) {
+    const dateStr = frontmatter.date || frontmatter.publishedAt || frontmatter.published
+    publishedAt = new Date(dateStr)
+  }
+
+  // Extract tags
+  const tags = Array.isArray(frontmatter.tags)
+    ? frontmatter.tags
+    : typeof frontmatter.tags === 'string'
+    ? frontmatter.tags.split(',').map((t: string) => t.trim())
+    : []
+
+  // Check if draft
+  const isDraft = frontmatter.draft === true || frontmatter.status === 'draft'
+
+  // Extract category from folder structure
+  // For /docs/product-name/index.md -> category: product-name
+  // For /docs/product-name/topic.md -> category: product-name
+  // For /docs/product-name/section/topic.md -> category: product-name
+  let category = frontmatter.category
+  if (!category && filePath.includes('/docs/')) {
+    const pathParts = filePath.split('/')
+    const docsIndex = pathParts.indexOf('docs')
+    if (docsIndex >= 0 && pathParts.length > docsIndex + 1) {
+      // Get the first folder after /docs/
+      const nextPart = pathParts[docsIndex + 1]
+      // If it's not index.md or a file, use it as category
+      if (nextPart && !nextPart.endsWith('.md')) {
+        category = nextPart
+      } else if (nextPart && nextPart.toLowerCase() !== 'index.md' && pathParts.length > docsIndex + 2) {
+        // If the next part is a file, check if there's a folder before it
+        category = pathParts[docsIndex + 1]
+      }
+    }
+  }
+
+  return {
+    filePath,
+    fileName,
+    title,
+    slug,
+    content: markdownContent,
+    excerpt,
+    category,
+    tags,
+    author: frontmatter.author,
+    publishedAt,
+    isDraft,
+    sourceHash,
+  }
+}
+
+export function isBlogPost(filePath: string): boolean {
+  return filePath.toLowerCase().includes('/blog/')
+}
+
+export function isDocument(filePath: string): boolean {
+  return filePath.toLowerCase().includes('/docs/') || 
+         filePath.toLowerCase().includes('/documentation/')
+}

@@ -1,0 +1,156 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light mode - clean white with orange accents */
+    --background: 0 0% 98%; /* Subtle gray instead of pure white */
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%; /* Pure white cards for contrast */
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 16 100% 60%; /* Orange */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 16 100% 60%; /* Orange */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 16 100% 60%;
+    --radius: 0.5rem;
+    --chart-1: 16 100% 60%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --sidebar-background: 0 0% 96%; /* Light gray for sidebar */
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 16 100% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 16 100% 97%;
+    --sidebar-accent-foreground: 16 100% 60%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 16 100% 60%;
+  }
+
+  .dark {
+    /* Dark mode - navy/dark with orange accents */
+    --background: 214 100% 2%; /* Deep dark blue #02060f */
+    --foreground: 210 40% 98%;
+    --card: 215 60% 8%; /* Darker card background #0d1420 */
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 16 100% 60%; /* Orange */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 16 100% 60%; /* Orange */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 16 100% 60%;
+    --chart-1: 16 100% 60%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --sidebar-background: 222 84% 3%; /* Matches gradient start #02060f */
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 16 100% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 16 100% 60%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 217 33% 20%;
+    --sidebar-ring: 16 100% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* API Spec Viewer Styling */
+.api-spec-viewer {
+  /* Swagger UI Dark Mode Overrides */
+  .swagger-ui .info .title,
+  .swagger-ui .info .description,
+  .swagger-ui .opblock-tag,
+  .swagger-ui .opblock-summary-description,
+  .swagger-ui .opblock-description-wrapper p,
+  .swagger-ui .parameter__name,
+  .swagger-ui .parameter__type,
+  .swagger-ui .response-col_status,
+  .swagger-ui .response-col_description,
+  .swagger-ui table thead tr th,
+  .swagger-ui table tbody tr td,
+  .swagger-ui .tab li,
+  .swagger-ui .scheme-container,
+  .swagger-ui .model-title,
+  .swagger-ui .model,
+  .swagger-ui .prop-type,
+  .swagger-ui .prop-format {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .swagger-ui .opblock-tag {
+    border-bottom-color: hsl(var(--border)) !important;
+  }
+
+  .swagger-ui .opblock {
+    background-color: hsl(var(--card)) !important;
+    border-color: hsl(var(--border)) !important;
+  }
+
+  .swagger-ui .opblock .opblock-summary {
+    background-color: hsl(var(--muted)) !important;
+    border-color: hsl(var(--border)) !important;
+  }
+
+  .swagger-ui .opblock .opblock-section-header {
+    background-color: hsl(var(--muted)) !important;
+  }
+
+  .swagger-ui table thead tr th {
+    background-color: hsl(var(--muted)) !important;
+    border-color: hsl(var(--border)) !important;
+  }
+
+  /* Redoc Dark Mode Overrides */
+  .redoc-wrap {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .redoc-wrap h1,
+  .redoc-wrap h2,
+  .redoc-wrap h3,
+  .redoc-wrap h4,
+  .redoc-wrap h5,
+  .redoc-wrap p,
+  .redoc-wrap li,
+  .redoc-wrap td,
+  .redoc-wrap th,
+  .redoc-wrap span {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .redoc-wrap div[role="button"] {
+    color: hsl(var(--foreground)) !important;
+  }
+}

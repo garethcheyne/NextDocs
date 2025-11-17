@@ -1,0 +1,198 @@
+import { auth } from '@/lib/auth/auth'
+import { redirect } from 'next/navigation'
+import { prisma } from '@/lib/db/prisma'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Edit, Shield, User as UserIcon, PanelLeft, ChevronRight } from 'lucide-react'
+import { SidebarTrigger } from '@/components/ui/sidebar'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
+import { Separator } from '@/components/ui/separator'
+import { ThemeToggle } from '@/components/theme-toggle'
+
+export default async function UsersPage() {
+    const session = await auth()
+
+    if (!session || session.user.role !== 'admin') {
+        redirect('/')
+    }
+
+    const users = await prisma.user.findMany({
+        orderBy: [
+            { createdAt: 'desc' },
+        ],
+        include: {
+            _count: {
+                select: {
+                    repositories: true,
+                },
+            },
+        },
+    })
+
+    const getRoleBadgeVariant = (role: string) => {
+        switch (role) {
+            case 'admin':
+                return 'destructive'
+            case 'editor':
+                return 'default'
+            default:
+                return 'secondary'
+        }
+    }
+
+    const getRoleIcon = (role: string) => {
+        switch (role) {
+            case 'admin':
+                return <Shield className="w-4 h-4" />
+            case 'editor':
+                return <Edit className="w-4 h-4" />
+            default:
+                return <UserIcon className="w-4 h-4" />
+        }
+    }
+
+    return (
+        <>
+            {/* Header */}
+            <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+                <div className="flex items-center justify-between w-full gap-2 px-4">
+                    <div className="flex items-center gap-2">
+                    <SidebarTrigger className="-ml-1">
+                        <PanelLeft />
+                        <span className="sr-only">Toggle Sidebar</span>
+                    </SidebarTrigger>
+                    <Separator orientation="vertical" className="mr-2 h-4" />
+                    <Breadcrumb>
+                        <BreadcrumbList>
+                            <BreadcrumbItem className="hidden md:block">
+                                <BreadcrumbLink href="/">
+                                    Home
+                                </BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator className="hidden md:block">
+                                <ChevronRight />
+                            </BreadcrumbSeparator>
+                            <BreadcrumbItem>
+                                <BreadcrumbLink href="/admin">
+                                    Admin
+                                </BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator className="hidden md:block">
+                                <ChevronRight />
+                            </BreadcrumbSeparator>
+                            <BreadcrumbItem>
+                                <BreadcrumbPage>Users</BreadcrumbPage>
+                            </BreadcrumbItem>
+                        </BreadcrumbList>
+                    </Breadcrumb>
+                    </div>
+                    <ThemeToggle />
+                </div>
+            </header>
+
+            {/* Page Content */}
+            <main className="flex-1 px-12 py-6 overflow-auto">
+                <div className="max-w-7xl space-y-6">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Users</h1>
+                    <p className="text-muted-foreground">
+                        Manage user accounts and permissions
+                    </p>
+                </div>
+            </div>
+
+            <div className="rounded-md border">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>User</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Role</TableHead>
+                            <TableHead>Provider</TableHead>
+                            <TableHead>Repositories</TableHead>
+                            <TableHead>Joined</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {users.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                                    No users found
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            users.map((user) => (
+                                <TableRow key={user.id}>
+                                    <TableCell>
+                                        <div className="flex items-center gap-3">
+                                            {user.image ? (
+                                                <img
+                                                    src={user.image}
+                                                    alt={user.name || 'User'}
+                                                    className="w-8 h-8 rounded-full"
+                                                />
+                                            ) : (
+                                                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                                                    <UserIcon className="w-4 h-4" />
+                                                </div>
+                                            )}
+                                            <span className="font-medium">{user.name || 'Unknown'}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>{user.email}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={getRoleBadgeVariant(user.role)} className="gap-1">
+                                            {getRoleIcon(user.role)}
+                                            {user.role}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant="outline" className="capitalize">
+                                            {user.provider || 'credentials'}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>{user._count.repositories}</TableCell>
+                                    <TableCell className="text-muted-foreground">
+                                        {new Date(user.createdAt).toLocaleDateString()}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Link href={`/admin/users/${user.id}/edit`}>
+                                            <Button variant="ghost" size="sm">
+                                                <Edit className="w-4 h-4 mr-1" />
+                                                Edit
+                                            </Button>
+                                        </Link>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
+
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <p>Showing {users.length} user{users.length !== 1 ? 's' : ''}</p>
+            </div>
+                </div>
+            </main>
+        </>
+    )
+}

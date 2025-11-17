@@ -11,7 +11,7 @@ services:
       - "9980:9980"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/nextdocs
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/nextdocs
       - NEXTAUTH_URL=${NEXTAUTH_URL:-https://docs.harveynorman.com}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
@@ -19,7 +19,7 @@ services:
       - AZURE_AD_CLIENT_SECRET=${AZURE_AD_CLIENT_SECRET}
       - AZURE_AD_TENANT_ID=${AZURE_AD_TENANT_ID}
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
     networks:
       - nextdocs-network
@@ -32,9 +32,9 @@ services:
       start_period: 40s
 
   # PostgreSQL database
-  db:
+  postgres:
     image: postgres:16-alpine
-    container_name: nextdocs-db-prod
+    container_name: nextdocs-postgres-prod
     ports:
       - "5432:5432"
     environment:
