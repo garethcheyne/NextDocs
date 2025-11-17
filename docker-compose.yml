@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  # Development Next.js app with hot reload
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: nextdocs-dev
+    ports:
+      - "9980:9980"
+    volumes:
+      # Mount source code for hot reload
+      - .:/app
+      # Prevent overwriting node_modules
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/nextdocs
+      - NEXTAUTH_URL=http://localhost:9980
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-your-secret-key-min-32-chars-long}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+      - AZURE_AD_CLIENT_ID=${AZURE_AD_CLIENT_ID}
+      - AZURE_AD_CLIENT_SECRET=${AZURE_AD_CLIENT_SECRET}
+      - AZURE_AD_TENANT_ID=${AZURE_AD_TENANT_ID}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - nextdocs-network
+    restart: unless-stopped
+
+  # PostgreSQL database
+  db:
+    image: postgres:16-alpine
+    container_name: nextdocs-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=nextdocs
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nextdocs-network
+    restart: unless-stopped
+
+  # pgAdmin for database management (optional)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: nextdocs-pgadmin
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@nextdocs.local
+      - PGADMIN_DEFAULT_PASSWORD=admin
+      - PGADMIN_CONFIG_SERVER_MODE=False
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    networks:
+      - nextdocs-network
+    restart: unless-stopped
+    profiles:
+      - tools
+
+volumes:
+  postgres-data:
+    driver: local
+  pgadmin-data:
+    driver: local
+
+networks:
+  nextdocs-network:
+    driver: bridge

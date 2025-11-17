@@ -1,0 +1,10 @@
+{
+  "financial-management": {
+    "title": "Financial Management",
+    "icon": "DollarSign"
+  },
+  "advanced-features": {
+    "title": "Advanced Features",
+    "icon": "Sparkles"
+  }
+}

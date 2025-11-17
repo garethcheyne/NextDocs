@@ -1,0 +1,10 @@
+{
+  "getting-started": {
+    "title": "Getting Started",
+    "icon": "Play"
+  },
+  "api-integration": {
+    "title": "API Integration",
+    "icon": "Code"
+  }
+}
