@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/db/prisma'
+import { notifyFeatureStatusChange } from '@/lib/email/notification-service'
 
 // POST /api/admin/features/[id]/status - Update feature request status
 export async function POST(
@@ -73,7 +74,17 @@ export async function POST(
             },
         })
 
-        // TODO: Send email notifications to followers
+        // Send email notifications to followers
+        notifyFeatureStatusChange(
+            id,
+            feature.status,
+            status,
+            reason,
+            session.user.id
+        ).catch((error) => {
+            console.error('Failed to send status change notifications:', error)
+            // Don't fail the request if email fails
+        })
 
         return NextResponse.json({
             feature: updatedFeature,

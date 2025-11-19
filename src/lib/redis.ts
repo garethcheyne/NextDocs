@@ -10,15 +10,36 @@ const getRedisUrl = () => {
   return 'redis://localhost:6379'
 }
 
+// Parse Redis URL to extract connection details
+const getRedisConfig = () => {
+  const url = getRedisUrl()
+  
+  try {
+    const parsedUrl = new URL(url)
+    return {
+      host: parsedUrl.hostname,
+      port: parseInt(parsedUrl.port || '6379'),
+      password: parsedUrl.password || undefined,
+    }
+  } catch {
+    // Fallback for invalid URLs
+    return {
+      host: 'localhost',
+      port: 6379,
+    }
+  }
+}
+
 // Create Redis client singleton
 const createRedisClient = () => {
-  const client = new Redis(getRedisUrl(), {
+  const config = getRedisConfig()
+  const client = new Redis({
+    ...config,
     maxRetriesPerRequest: 3,
     retryStrategy(times) {
       const delay = Math.min(times * 50, 2000)
       return delay
     },
-    lazyConnect: true,
   })
 
   client.on('error', (error) => {

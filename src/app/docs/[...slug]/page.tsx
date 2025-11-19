@@ -132,12 +132,11 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
     // Build breadcrumb from slug
     const breadcrumbParts = fullSlug.split('/')
     const allBreadcrumbs = [
-        { label: 'Home', href: '/', isLast: false },
-        { label: 'Documentation', href: '/docs', isLast: false },
+        { label: 'Home', href: '/' },
+        { label: 'Documentation', href: '/docs' },
         ...breadcrumbParts.map((part, index) => ({
             label: part.replace(/-/g, ' '),
             href: `/docs/${breadcrumbParts.slice(0, index + 1).join('/')}`,
-            isLast: index === breadcrumbParts.length - 1,
         })),
     ]
 

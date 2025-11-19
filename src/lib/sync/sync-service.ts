@@ -109,7 +109,7 @@ export async function syncRepository(repositoryId: string, ipAddress?: string) {
           imageResult = await syncRepositoryImages(
             repository.owner!,
             repository.repo!,
-            repository.accessToken,
+            repository.patEncrypted!,
             repository.id,
             repository.slug,
             repository.branch

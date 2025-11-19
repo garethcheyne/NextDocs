@@ -41,7 +41,6 @@ export async function getAuthorDocuments(authorSlug: string) {
   return await prisma.document.findMany({
     where: {
       author: authorSlug,
-      isDeleted: false,
     },
     select: {
       id: true,
@@ -63,7 +62,6 @@ export async function getAuthorBlogPosts(authorSlug: string) {
   return await prisma.blogPost.findMany({
     where: {
       author: authorSlug,
-      isDeleted: false,
     },
     select: {
       id: true,

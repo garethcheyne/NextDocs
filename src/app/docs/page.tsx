@@ -96,8 +96,8 @@ export default async function DocsPage() {
                         <Separator orientation="vertical" className="mr-2 h-4" />
                         <BreadcrumbNavigation
                             items={[
-                                { label: 'Home', href: '/', isLast: false },
-                                { label: 'Documentation', href: '/docs', isLast: true },
+                                { label: 'Home', href: '/' },
+                                { label: 'Documentation', href: '/docs' },
                             ]}
                         />
                         <div className="ml-auto flex items-center gap-2">

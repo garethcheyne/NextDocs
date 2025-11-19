@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
@@ -17,8 +17,9 @@ import {
 } from '@/components/ui/card'
 import { Shield, AlertCircle, Loader2 } from 'lucide-react'
 import ParticlesBackground from '@/components/particles-background'
+import { ThemeAwareLogo } from '@/components/theme-aware-logo'
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/docs'
@@ -77,14 +78,14 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 flex items-center justify-center">
-                <Image
-                  src="/img/hn_cat_logo.svg"
-                  alt="Harvey Norman Commercial Apps Team"
-                  width={64}
-                  height={64}
+
+              <div className="w-20 h-20 flex items-center justify-center">
+                <ThemeAwareLogo
+                  width={80}
+                  height={80}
                   className="drop-shadow-2xl drop-shadow-brand-orange/50"
                 />
+
               </div>
             </div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">
@@ -236,5 +237,17 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="relative min-h-screen bg-gradient-to-br from-gray-950 via-brand-navy/90 to-black flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-orange" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }

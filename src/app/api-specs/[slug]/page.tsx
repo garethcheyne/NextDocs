@@ -80,9 +80,9 @@ export default async function ApiSpecVersionsPage({ params }: ApiSpecVersionsPag
                                 </SidebarTrigger>
                                 <Separator orientation="vertical" className="mr-2 h-4" />
                                 <BreadcrumbNavigation items={[
-                                    { label: 'Home', href: '/', isLast: false },
-                                    { label: 'API Specs', href: '/api-specs', isLast: false },
-                                    { label: `${latestSpec.name} Versions`, href: `/api-specs/${slug}`, isLast: true },
+                                    { label: 'Home', href: '/' },
+                                    { label: 'API Specs', href: '/api-specs' },
+                                    { label: `${latestSpec.name} Versions`, href: `/api-specs/${slug}` },
                                 ]} />
                             </div>
                             <ThemeToggle />

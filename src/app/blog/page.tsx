@@ -84,8 +84,8 @@ export default async function BlogPage() {
                         <Separator orientation="vertical" className="mr-2 h-4" />
                         <BreadcrumbNavigation
                             items={[
-                                { label: 'Home', href: '/', isLast: false },
-                                { label: 'Blog', href: '/blog', isLast: true },
+                                { label: 'Home', href: '/' },
+                                { label: 'Blog', href: '/blog' },
                             ]}
                         />
                         <div className="ml-auto flex items-center gap-2">

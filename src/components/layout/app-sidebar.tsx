@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Home, BookOpen, FileText, Settings, LogOut, User, GitBranch, Activity, Users, ChevronsUpDown, ChevronRight, Code2, Lightbulb } from 'lucide-react'
+import { SignOutButton } from '@/components/auth/signout-button'
 import {
     Sidebar,
     SidebarContent,
@@ -533,10 +534,7 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                                     </DropdownMenuGroup>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem asChild>
-                                        <Link href="/api/auth/signout" className="cursor-pointer">
-                                            <LogOut className="mr-2 h-4 w-4" />
-                                            <span>Sign Out</span>
-                                        </Link>
+                                        <SignOutButton />
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>

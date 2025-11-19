@@ -1,12 +1,24 @@
-import {
-  ExchangeService,
-  ExchangeVersion,
-  WebCredentials,
-  EmailMessage,
-  MessageBody,
-  BodyType,
-  Importance,
-} from 'ews-javascript-api'
+// Dynamically import EWS to avoid build issues in production
+let ExchangeService: any
+let ExchangeVersion: any
+let WebCredentials: any
+let EmailMessage: any
+let MessageBody: any
+let BodyType: any
+let Importance: any
+
+try {
+  const ews = require('ews-javascript-api')
+  ExchangeService = ews.ExchangeService
+  ExchangeVersion = ews.ExchangeVersion
+  WebCredentials = ews.WebCredentials
+  EmailMessage = ews.EmailMessage
+  MessageBody = ews.MessageBody
+  BodyType = ews.BodyType
+  Importance = ews.Importance
+} catch (error) {
+  console.warn('EWS library not available - email notifications disabled')
+}
 
 export interface EmailOptions {
   to: string | string[]
@@ -18,7 +30,7 @@ export interface EmailOptions {
 }
 
 export class EWSClient {
-  private service: ExchangeService | null = null
+  private service: any = null
   private isInitialized = false
 
   constructor() {

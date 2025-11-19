@@ -89,10 +89,10 @@ export default async function ApiDocDetailPage({ params }: ApiDocDetailPageProps
   }
 
   const breadcrumbs = [
-    { label: 'Home', href: '/', isLast: false },
-    { label: 'API Specs', href: '/api-specs', isLast: false },
-    { label: apiSpec.name, href: `/api-specs/${slug}`, isLast: false },
-    { label: `v${version}`, href: `/api-specs/${slug}/${version}`, isLast: true },
+    { label: 'Home', href: '/' },
+    { label: 'API Specs', href: '/api-specs' },
+    { label: apiSpec.name, href: `/api-specs/${slug}` },
+    { label: `v${version}`, href: `/api-specs/${slug}/${version}` },
   ]
 
   return (

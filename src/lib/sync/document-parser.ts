@@ -20,8 +20,23 @@ export function parseMarkdownDocument(
   filePath: string,
   content: string
 ): ParsedDocument {
-  // Parse frontmatter
-  const { data: frontmatter, content: markdownContent } = matter(content)
+  // Parse frontmatter with error handling
+  let frontmatter: any = {}
+  let markdownContent = content
+  
+  try {
+    const parsed = matter(content)
+    frontmatter = parsed.data
+    markdownContent = parsed.content
+  } catch (error) {
+    console.warn(`⚠️  Failed to parse frontmatter for ${filePath}, using content as-is:`, error instanceof Error ? error.message : error)
+    // If frontmatter parsing fails, treat entire content as markdown
+    // Try to extract title from first heading
+    const titleMatch = content.match(/^#\s+(.+)$/m)
+    if (titleMatch) {
+      frontmatter.title = titleMatch[1]
+    }
+  }
 
   // Generate hash of source content
   const sourceHash = crypto.createHash('sha256').update(content).digest('hex')

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/db/prisma'
+import { notifyNewComment } from '@/lib/email/notification-service'
 
 export async function GET(
   request: NextRequest,
@@ -75,6 +76,12 @@ export async function POST(
         commentCount: { increment: 1 },
         lastActivityAt: new Date(),
       },
+    })
+
+    // Send email notifications to followers
+    notifyNewComment(id, comment.id).catch((error) => {
+      console.error('Failed to send comment notifications:', error)
+      // Don't fail the request if email fails
     })
 
     return NextResponse.json({ comment })

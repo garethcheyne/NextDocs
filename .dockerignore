@@ -47,6 +47,12 @@ README.md
 # Sample data (not needed in container)
 sample
 
+# Scripts (utility/debug scripts)
+scripts/check-*.ts
+prisma/check-*.ts
+prisma/trigger-*.ts
+prisma/enable-*.ts
+
 # Documentation
 *.md
 !README.md

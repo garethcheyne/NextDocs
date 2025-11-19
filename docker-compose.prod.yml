@@ -1,18 +1,18 @@
-version: '3.8'
-
 services:
   # Production Next.js app
   app:
+    env_file:
+      - .env
     build:
       context: .
       dockerfile: Dockerfile
     container_name: nextdocs-prod
     ports:
-      - "9980:9980"
+      - "9981:9980"
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/nextdocs
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
       - NEXTAUTH_URL=${NEXTAUTH_URL:-https://docs.harveynorman.com}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
@@ -36,10 +36,12 @@ services:
 
   # PostgreSQL database
   postgres:
+    env_file:
+      - .env
     image: postgres:16-alpine
     container_name: nextdocs-postgres-prod
     ports:
-      - "5432:5432"
+      - "5434:5432"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -58,10 +60,12 @@ services:
 
   # Redis for caching search results and sessions
   redis:
+    env_file:
+      - .env
     image: redis:7-alpine
     container_name: nextdocs-redis-prod
     ports:
-      - "6379:6379"
+      - "6381:6379"
     volumes:
       - redis-data:/data
     healthcheck:
@@ -72,25 +76,25 @@ services:
     networks:
       - nextdocs-network
     restart: always
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-changeme}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
 
   # Nginx reverse proxy (optional)
-  nginx:
-    image: nginx:alpine
-    container_name: nextdocs-nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - app
-    networks:
-      - nextdocs-network
-    restart: always
-    profiles:
-      - with-nginx
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: nextdocs-nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./nginx/ssl:/etc/nginx/ssl:ro
+  #   depends_on:
+  #     - app
+  #   networks:
+  #     - nextdocs-network
+  #   restart: always
+  #   profiles:
+  #     - with-nginx
 
 volumes:
   postgres-data:

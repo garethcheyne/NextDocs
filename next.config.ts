@@ -2,6 +2,7 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  output: 'standalone',
   images: {
     remotePatterns: [
       {
@@ -16,7 +17,14 @@ const nextConfig: NextConfig = {
     },
   },
   // Exclude server-only packages from client bundle
-  serverExternalPackages: ['bcrypt', '@mapbox/node-pre-gyp'],
+  serverExternalPackages: [
+    'bcrypt',
+    '@mapbox/node-pre-gyp',
+    'ews-javascript-api',
+    '@ewsjs/xhr',
+    'http-cookie-agent',
+    'deasync'
+  ],
 }
 
 export default nextConfig

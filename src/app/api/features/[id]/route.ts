@@ -6,16 +6,17 @@ import { updateFeatureRequestSearchVector } from '@/lib/search/indexer'
 // GET /api/features/[id] - Get single feature request
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params
         const session = await auth()
         if (!session?.user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
         const feature = await prisma.featureRequest.findUnique({
-            where: { id: params.id },
+            where: { id },
             include: {
                 creator: {
                     select: {
@@ -66,7 +67,7 @@ export async function GET(
             prisma.featureVote.findUnique({
                 where: {
                     featureId_userId: {
-                        featureId: params.id,
+                        featureId: id,
                         userId: session.user.id,
                     },
                 },
@@ -74,7 +75,7 @@ export async function GET(
             prisma.featureFollower.findUnique({
                 where: {
                     featureId_userId: {
-                        featureId: params.id,
+                        featureId: id,
                         userId: session.user.id,
                     },
                 },
@@ -95,16 +96,17 @@ export async function GET(
 // PUT /api/features/[id] - Update feature request
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params
         const session = await auth()
         if (!session?.user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
         const feature = await prisma.featureRequest.findUnique({
-            where: { id: params.id },
+            where: { id },
         })
 
         if (!feature) {
@@ -123,7 +125,7 @@ export async function PUT(
         const { title, description, categoryId, tags, priority, targetVersion, attachments } = body
 
         const updated = await prisma.featureRequest.update({
-            where: { id: params.id },
+            where: { id },
             data: {
                 title,
                 description,
@@ -169,16 +171,17 @@ export async function PUT(
 // DELETE /api/features/[id] - Delete feature request
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params
         const session = await auth()
         if (!session?.user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
         const feature = await prisma.featureRequest.findUnique({
-            where: { id: params.id },
+            where: { id },
         })
 
         if (!feature) {
@@ -194,7 +197,7 @@ export async function DELETE(
         }
 
         await prisma.featureRequest.delete({
-            where: { id: params.id },
+            where: { id },
         })
 
         return NextResponse.json({ success: true })

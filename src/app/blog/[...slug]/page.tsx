@@ -92,9 +92,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         .sort((a, b) => a.category.localeCompare(b.category))
 
     const breadcrumbs = [
-        { label: 'Home', href: '/', isLast: false },
-        { label: 'Blog', href: '/blog', isLast: false },
-        { label: blogPost.title, href: `/blog/${fullSlug}`, isLast: true },
+        { label: 'Home', href: '/' },
+        { label: 'Blog', href: '/blog' },
+        { label: blogPost.title, href: `/blog/${fullSlug}` },
     ]
 
     return (

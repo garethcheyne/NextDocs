@@ -20,6 +20,13 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
+  // Email Notification Preferences
+  emailNotifications            Boolean   @default(true)  // Master toggle for all emails
+  notifyOnFeatureStatusChange   Boolean   @default(true)  // Status changes on followed features
+  notifyOnFeatureComment        Boolean   @default(true)  // Comments on followed features
+  notifyOnNewFeature            Boolean   @default(false) // All new feature submissions
+  notifyOnFeatureVote           Boolean   @default(false) // Votes on created features
+  
   accounts      Account[]
   sessions      Session[]
   repositories  Repository[] // Repositories created by user

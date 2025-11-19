@@ -35,8 +35,10 @@ next-env.d.ts
 
 # Environment
 .env
+.env.local
 .env*.local
 .env.production
+!.env.production.example
 
 # IDE
 .vscode/*
@@ -62,3 +64,6 @@ scripts/check-*.ts
 # Synced images
 public/img/**
 !public/img/.gitkeep
+
+
+prisma/seed-standalone.js

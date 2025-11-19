@@ -18,7 +18,7 @@ export async function POST(
     // Extract IP address (check proxy headers first)
     const forwardedFor = request.headers.get('x-forwarded-for')
     const realIp = request.headers.get('x-real-ip')
-    const ip = forwardedFor?.split(',')[0].trim() || realIp || request.ip || 'unknown'
+    const ip = forwardedFor?.split(',')[0].trim() || realIp || 'unknown'
 
     console.log(`🌐 Sync request from IP: ${ip} (User: ${session.user.email})`)
 

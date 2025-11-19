@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/db/prisma'
 import { updateFeatureRequestSearchVector } from '@/lib/search/indexer'
+import { notifyNewFeature } from '@/lib/email/notification-service'
 
 // GET /api/features - List all feature requests with filters
 export async function GET(request: NextRequest) {
@@ -167,7 +168,11 @@ export async function POST(request: NextRequest) {
         // Update search vector
         await updateFeatureRequestSearchVector(feature.id)
 
-        // TODO: Queue email notification to admins
+        // Send email notification to subscribed users
+        notifyNewFeature(feature.id).catch((error) => {
+            console.error('Failed to send new feature notifications:', error)
+            // Don't fail the request if email fails
+        })
 
         return NextResponse.json({ feature }, { status: 201 })
     } catch (error) {

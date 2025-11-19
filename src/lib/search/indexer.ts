@@ -1,6 +1,7 @@
 // lib/search/indexer.ts
 import { prisma } from '@/lib/db/prisma'
 import { cacheDelPattern } from '@/lib/redis'
+import yaml from 'yaml'
 
 /**
  * Generate search vector for a text document
@@ -97,7 +98,7 @@ export async function updateBlogPostSearchVector(postId: string) {
  * Update search vector for an API spec
  */
 export async function updateApiSpecSearchVector(specId: string) {
-  const spec = await prisma.apiSpec.findUnique({
+  const spec = await prisma.aPISpec.findUnique({
     where: { id: specId },
     select: {
       name: true,
@@ -115,14 +116,24 @@ export async function updateApiSpecSearchVector(specId: string) {
   let specText = ''
   try {
     if (spec.specContent) {
-      const specObj = typeof spec.specContent === 'string' 
-        ? JSON.parse(spec.specContent) 
-        : spec.specContent
+      let specObj
+      
+      if (typeof spec.specContent === 'string') {
+        // Try parsing as YAML first (works for both YAML and JSON)
+        try {
+          specObj = yaml.parse(spec.specContent)
+        } catch {
+          // Fallback to JSON if YAML parsing fails
+          specObj = JSON.parse(spec.specContent)
+        }
+      } else {
+        specObj = spec.specContent
+      }
       
       // Extract endpoints, descriptions, tags from OpenAPI spec
       if (specObj.paths) {
         specText = JSON.stringify(specObj.paths)
-          .replace(/[{}":\[\]]/g, ' ') // Remove JSON syntax
+          .replace(/[{\}":\[\]]/g, ' ') // Remove JSON syntax
           .replace(/\s+/g, ' ')
       }
     }
