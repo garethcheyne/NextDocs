@@ -1,21 +1,20 @@
 import { auth } from '@/lib/auth/auth'
 import { redirect } from 'next/navigation'
-import { PanelLeft, ChevronRight, FileText } from 'lucide-react'
+import Link from 'next/link'
+import { FileText } from 'lucide-react'
 import {
   Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
 import { Separator } from '@/components/ui/separator'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
 import { prisma } from '@/lib/db/prisma'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
@@ -66,63 +65,69 @@ export default async function ApiDocsPage() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
           {/* Header */}
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-            <div className="flex items-center justify-between w-full gap-2 px-4">
-              <div className="flex items-center gap-2">
-              <SidebarTrigger className="-ml-1">
-                <PanelLeft />
-                <span className="sr-only">Toggle Sidebar</span>
-              </SidebarTrigger>
-              <Separator orientation="vertical" className="mr-2 h-4" />
-              <Breadcrumb>
-                <BreadcrumbList>
-                  <BreadcrumbItem className="hidden md:block">
-                    <BreadcrumbLink href="/">
-                      Home
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator className="hidden md:block">
-                    <ChevronRight />
-                  </BreadcrumbSeparator>
-                  <BreadcrumbItem>
-                    <BreadcrumbPage>API Documentation</BreadcrumbPage>
-                  </BreadcrumbItem>
-                </BreadcrumbList>
-              </Breadcrumb>
-              </div>
+          <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+            <BreadcrumbNavigation
+              items={[
+                { label: 'Home', href: '/', isLast: false },
+                { label: 'API Documentation', href: '/api-specs', isLast: true },
+              ]}
+            />
+            <div className="ml-auto flex items-center gap-2">
               <ThemeToggle />
             </div>
           </header>
 
           {/* Page Content */}
-          <main className="flex-1 px-12 py-6 overflow-auto">
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold mb-2">API Documentation</h1>
-              <p className="text-muted-foreground">
-                Browse and explore our API specifications
-              </p>
-            </div>
+          <main className="flex-1 p-6 space-y-6 overflow-auto">
+            <div className="max-w-7xl">
+              {/* Welcome Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-2xl">
+                    API Documentation
+                  </CardTitle>
+                  <CardDescription>
+                    Browse and explore interactive API specifications
+                  </CardDescription>
+                </CardHeader>
+              </Card>
 
-            {Object.keys(groupedSpecs).length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <FileText className="h-16 w-16 text-muted-foreground/50 mb-4" />
-                <h2 className="text-xl font-semibold mb-2">
-                  No API specifications available
-                </h2>
-                <p className="text-muted-foreground max-w-md">
-                  There are currently no API specifications to display. Check back
-                  later or contact your administrator.
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* API Specs List */}
+              <div>
+                <h2 className="text-xl font-bold mb-4">Available API Specifications</h2>
+
+                {Object.keys(groupedSpecs).length === 0 ? (
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="text-center py-12">
+                        <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">
+                          No API specifications available
+                        </h3>
+                        <p className="text-muted-foreground mb-6">
+                          API specifications will appear here once repositories are synced
+                        </p>
+                        {session.user?.role?.toLowerCase() === 'admin' && (
+                          <Link href="/admin/repositories">
+                            <Button>
+                              Configure Repositories
+                            </Button>
+                          </Link>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Object.entries(groupedSpecs).map(([slug, versions]) => {
                   const latestSpec = versions[0] // Latest version (sorted desc)
                   return (
-                    <Card key={slug} className="h-full hover:shadow-lg transition-shadow duration-200">
+                    <Card key={slug} className="hover:border-primary transition-all cursor-pointer group h-full">
                       <div className="p-6">
                         <div className="flex items-start justify-between mb-3">
-                          <h3 className="text-lg font-semibold line-clamp-2">
+                          <h3 className="text-lg font-semibold line-clamp-2 group-hover:text-primary transition-colors">
                             {latestSpec.name}
                           </h3>
                         </div>
@@ -180,9 +185,9 @@ export default async function ApiDocsPage() {
                 })}
               </div>
             )}
-          </main>
-        </div>
+          </div>
+        </main>
       </div>
-    </SidebarProvider>
-  )
+    </div>
+  </SidebarProvider>
 }

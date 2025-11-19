@@ -3,9 +3,11 @@ import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/db/prisma'
 import { ContentDetailLayout } from '@/components/layout/content-detail-layout'
 import { Calendar, User, Tag, Clock } from 'lucide-react'
-import ReactMarkdown from 'react-markdown'
+import { MarkdownWithMermaid } from '@/components/markdown-with-mermaid'
 import { Badge } from '@/components/ui/badge'
 import Image from 'next/image'
+import { getAuthorBySlug, getAuthorDocuments, getAuthorBlogPosts } from '@/lib/authors'
+import { AuthorHoverCard } from '@/components/author-hover-card'
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string[] }> }) {
     const session = await auth()
@@ -24,13 +26,51 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             slug: `blog/${fullSlug}`,
             isDraft: false,
         },
-        include: {
-            repository: true,
+        select: {
+            id: true,
+            title: true,
+            content: true,
+            excerpt: true,
+            slug: true,
+            category: true,
+            tags: true,
+            author: true,
+            publishedAt: true,
+            isDraft: true,
+            featuredImage: true,
+            createdAt: true,
+            updatedAt: true,
+            repositoryId: true,
+            repository: {
+                select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                },
+            },
         },
     })
 
     if (!blogPost) {
         notFound()
+    }
+
+    // Fetch author data if available
+    let authorData = null
+    let authorContent: {
+        documents: Awaited<ReturnType<typeof getAuthorDocuments>>
+        blogPosts: Awaited<ReturnType<typeof getAuthorBlogPosts>>
+    } = { documents: [], blogPosts: [] }
+    
+    if (blogPost.author) {
+        authorData = await getAuthorBySlug(blogPost.author)
+        if (authorData) {
+            const [documents, blogPosts] = await Promise.all([
+                getAuthorDocuments(blogPost.author),
+                getAuthorBlogPosts(blogPost.author),
+            ])
+            authorContent = { documents, blogPosts }
+        }
     }
 
     // Get blog categories with counts for sidebar
@@ -101,7 +141,15 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                                         {blogPost.author && (
                                             <div className="flex items-center gap-2">
                                                 <User className="w-4 h-4" />
-                                                <span>{blogPost.author}</span>
+                                                {authorData ? (
+                                                    <AuthorHoverCard author={authorData} content={authorContent}>
+                                                        <span className="cursor-pointer hover:text-brand-orange transition-colors">
+                                                            {authorData.name}
+                                                        </span>
+                                                    </AuthorHoverCard>
+                                                ) : (
+                                                    <span>{blogPost.author}</span>
+                                                )}
                                             </div>
                                         )}
 
@@ -154,9 +202,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                                     dark:prose-li:text-slate-300
                                     dark:prose-strong:text-slate-100
                                     dark:prose-code:bg-slate-800 dark:prose-code:text-slate-100">
-                                    <ReactMarkdown>
+                                    <MarkdownWithMermaid
+                                        repositorySlug={blogPost.repository.slug}
+                                        documentPath={`blog/${fullSlug}`}
+                                    >
                                         {blogPost.content}
-                                    </ReactMarkdown>
+                                    </MarkdownWithMermaid>
                                 </div>
 
                                 {/* Footer */}

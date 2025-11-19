@@ -25,6 +25,14 @@ model User {
   repositories  Repository[] // Repositories created by user
   ssoProviders  SSOProvider[] @relation("SSOProviderCreator")
   apiSpecs      APISpec[] @relation("APISpecCreator")
+  
+  // Feature Request Relations
+  featureRequests       FeatureRequest[] @relation("FeatureRequestCreator")
+  featureVotes          FeatureVote[] @relation("FeatureVotes")
+  featureComments       FeatureComment[] @relation("FeatureComments")
+  deletedComments       FeatureComment[] @relation("DeletedComments")
+  featureFollowers      FeatureFollower[] @relation("FeatureFollowers")
+  statusChanges         FeatureStatusHistory[] @relation("StatusChanges")
 }
 
 model Author {
@@ -106,6 +114,7 @@ model Repository {
   // Sync settings
   enabled         Boolean   @default(true)
   syncFrequency   Int       @default(3600) // Seconds
+  syncImages      Boolean   @default(false) // Sync images to /public/img/
   lastSyncAt      DateTime?
   lastSyncStatus  String?   // 'success', 'failed', 'in_progress'
   
@@ -126,6 +135,7 @@ model Repository {
   documents       Document[]
   blogPosts       BlogPost[]
   categoryMetadata CategoryMetadata[]
+  images          RepositoryImage[]
   
   @@index([enabled])
   @@index([source])
@@ -269,6 +279,9 @@ model APISpec {
   updatedAt       DateTime  @updatedAt
   createdBy       String    // User ID who created
   
+  // Search
+  searchVector    Unsupported("tsvector")? // For full-text search
+  
   // Relations
   repository      Repository? @relation(fields: [repositoryId], references: [id], onDelete: SetNull)
   creator         User      @relation("APISpecCreator", fields: [createdBy], references: [id])
@@ -301,7 +314,7 @@ model Document {
   updatedAt       DateTime  @updatedAt
   
   // Search optimization
-  searchVector    String?   @db.Text // For full-text search
+  searchVector    Unsupported("tsvector")? // For full-text search
   
   // Sync metadata
   sourceHash      String    // SHA hash of source content
@@ -344,7 +357,7 @@ model BlogPost {
   views           Int       @default(0)
   
   // Search optimization
-  searchVector    String?   @db.Text
+  searchVector    Unsupported("tsvector")? // For full-text search
   
   // Sync metadata
   sourceHash      String
@@ -361,4 +374,229 @@ model BlogPost {
   @@index([category])
   @@index([publishedAt])
   @@index([isDraft])
+}
+
+// Feature Request System Models
+
+model FeatureCategory {
+  id              String    @id @default(uuid())
+  name            String    @unique // e.g., "Dynamics 365 BC", "Dynamics 365 CE"
+  slug            String    @unique
+  description     String?   @db.Text
+  icon            String?   // Lucide icon name
+  color           String?   // Badge color
+  order           Int       @default(0)
+  
+  // Integration settings
+  integrationType String?   // 'github', 'azure-devops', null
+  integrationUrl  String?   // Repository URL or DevOps project URL
+  
+  // GitHub specific
+  githubOwner     String?
+  githubRepo      String?
+  
+  // Azure DevOps specific
+  devopsOrg       String?
+  devopsProject   String?
+  devopsAreaPath  String?   // Area path for work items
+  
+  // Encrypted credentials
+  patEncrypted    String?   @db.Text
+  
+  enabled         Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  featureRequests FeatureRequest[]
+  
+  @@index([enabled])
+  @@index([slug])
+}
+
+model FeatureRequest {
+  id              String    @id @default(uuid())
+  title           String
+  slug            String    @unique
+  description     String    @db.Text
+  
+  // Status workflow
+  status          String    @default("proposal") // proposal, approved, declined, in-progress, completed, on-hold
+  priority        String?   // low, medium, high, critical
+  targetVersion   String?   // e.g., "v2.1.0"
+  expectedDate    DateTime? // Expected completion date
+  
+  // User info
+  createdBy       String    // User ID
+  createdByName   String    // Cache for display
+  createdByEmail  String    // Cache for notifications
+  
+  // Categorization
+  categoryId      String?   // Nullable to allow orphaned requests
+  tags            String[]  @default([])
+  
+  // Search
+  searchVector    Unsupported("tsvector")? // For full-text search
+  
+  // Attachments
+  attachments     String[]  @default([]) // JSON array of file URLs
+  
+  // Integration tracking
+  externalId      String?   // GitHub Issue # or DevOps Work Item ID
+  externalUrl     String?   // Direct link to external item
+  syncEnabled     Boolean   @default(false)
+  lastSyncAt      DateTime?
+  syncStatus      String?   // 'synced', 'pending', 'error'
+  
+  // Engagement metrics (denormalized for performance)
+  voteCount       Int       @default(0)
+  commentCount    Int       @default(0)
+  followerCount   Int       @default(0)
+  
+  // Metadata
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  lastActivityAt  DateTime  @default(now()) // For sorting by activity
+  
+  // Relations
+  creator         User      @relation("FeatureRequestCreator", fields: [createdBy], references: [id])
+  category        FeatureCategory? @relation(fields: [categoryId], references: [id])
+  votes           FeatureVote[]
+  comments        FeatureComment[]
+  followers       FeatureFollower[]
+  statusHistory   FeatureStatusHistory[]
+  mergedInto      FeatureRequest? @relation("MergedRequests", fields: [mergedIntoId], references: [id])
+  mergedIntoId    String?
+  mergedRequests  FeatureRequest[] @relation("MergedRequests")
+  
+  @@index([status])
+  @@index([categoryId])
+  @@index([createdBy])
+  @@index([createdAt])
+  @@index([lastActivityAt])
+  @@index([voteCount])
+  @@index([slug])
+}
+
+model FeatureVote {
+  id              String    @id @default(uuid())
+  featureId       String
+  userId          String
+  voteType        Int       // +1 (upvote) or -1 (downvote)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  feature         FeatureRequest @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  user            User      @relation("FeatureVotes", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([featureId, userId]) // One vote per user per feature
+  @@index([featureId])
+  @@index([userId])
+}
+
+model FeatureComment {
+  id              String    @id @default(uuid())
+  featureId       String
+  userId          String
+  content         String    @db.Text
+  
+  // Threading support (flat for now, can add nested later)
+  parentId        String?   // For future nested replies
+  
+  // Moderation
+  isDeleted       Boolean   @default(false)
+  deletedAt       DateTime?
+  deletedBy       String?   // Admin who deleted it
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  feature         FeatureRequest @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  user            User      @relation("FeatureComments", fields: [userId], references: [id])
+  deletedByUser   User?     @relation("DeletedComments", fields: [deletedBy], references: [id])
+  
+  @@index([featureId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model FeatureFollower {
+  id              String    @id @default(uuid())
+  featureId       String
+  userId          String
+  
+  // Notification preferences
+  notifyOnComment Boolean   @default(true)
+  notifyOnStatus  Boolean   @default(true)
+  notifyOnUpdate  Boolean   @default(true)
+  
+  createdAt       DateTime  @default(now())
+  
+  feature         FeatureRequest @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  user            User      @relation("FeatureFollowers", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([featureId, userId])
+  @@index([userId])
+}
+
+model FeatureStatusHistory {
+  id              String    @id @default(uuid())
+  featureId       String
+  oldStatus       String?
+  newStatus       String
+  changedBy       String    // Admin user ID
+  reason          String?   @db.Text // Optional reason for change
+  createdAt       DateTime  @default(now())
+  
+  feature         FeatureRequest @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  user            User      @relation("StatusChanges", fields: [changedBy], references: [id])
+  
+  @@index([featureId])
+  @@index([createdAt])
+}
+
+model EmailQueue {
+  id              String    @id @default(uuid())
+  to              String[]  // Array of email addresses
+  subject         String
+  body            String    @db.Text
+  htmlBody        String?   @db.Text
+  
+  // Metadata
+  emailType       String    // 'feature_created', 'comment_added', 'status_changed'
+  relatedId       String?   // Feature request ID
+  
+  // Queue status
+  status          String    @default("pending") // pending, sent, failed
+  attempts        Int       @default(0)
+  maxAttempts     Int       @default(3)
+  lastAttemptAt   DateTime?
+  sentAt          DateTime?
+  error           String?   @db.Text
+  
+  createdAt       DateTime  @default(now())
+  
+  @@index([status])
+  @@index([emailType])
+  @@index([createdAt])
+}
+
+model RepositoryImage {
+  id              String    @id @default(uuid())
+  repositoryId    String
+  filePath        String    // Original path in repository (e.g., "docs/_img/screenshot.png" or "assets/diagram.svg")
+  localPath       String    // Path in /public/img/ (e.g., "img/repo-slug/docs/_img/screenshot.png")
+  sha             String    // Git SHA for change detection
+  size            Int       // File size in bytes
+  mimeType        String?   // e.g., "image/png"
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  lastSyncedAt    DateTime  @default(now())
+  
+  repository      Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  
+  @@unique([repositoryId, filePath])
+  @@index([repositoryId])
+  @@index([sha])
 }

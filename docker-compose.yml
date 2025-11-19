@@ -12,6 +12,8 @@ services:
     volumes:
       # Mount source code for hot reload
       - .:/app
+      # Expose public/img directory to host
+      - ./public/img:/app/public/img
       # Prevent overwriting node_modules and build artifacts
       - /app/node_modules
       - /app/.next
@@ -19,6 +21,7 @@ services:
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/nextdocs
+      - REDIS_URL=redis://redis:6379
       - NEXTAUTH_URL=http://localhost:9980
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-your-secret-key-min-32-chars-long}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
@@ -29,6 +32,8 @@ services:
       - CHOKIDAR_USEPOLLING=true
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - nextdocs-network
@@ -55,6 +60,24 @@ services:
       - nextdocs-network
     restart: unless-stopped
 
+  # Redis for caching search results and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: nextdocs-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - nextdocs-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
   # pgAdmin for database management (optional)
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -75,6 +98,8 @@ services:
 
 volumes:
   postgres-data:
+    driver: local
+  redis-data:
     driver: local
   pgadmin-data:
     driver: local

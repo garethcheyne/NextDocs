@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db/prisma'
 import { parseMarkdownDocument, isBlogPost, isDocument } from './document-parser'
+import { updateDocumentSearchVector, updateBlogPostSearchVector } from '@/lib/search/indexer'
 
 interface Change {
   changeType: 'added' | 'modified' | 'deleted'
@@ -58,6 +59,8 @@ export async function storeDocuments(
                 lastSyncedAt: new Date(),
               },
             })
+            // Update search index
+            await updateBlogPostSearchVector(existing.id)
             blogsUpdated++
             changes.push({
               changeType: 'modified',
@@ -70,7 +73,7 @@ export async function storeDocuments(
           }
         } else {
           // Create new blog post
-          await prisma.blogPost.create({
+          const newBlog = await prisma.blogPost.create({
             data: {
               repositoryId,
               filePath: doc.path,
@@ -87,6 +90,8 @@ export async function storeDocuments(
               sourceHash: parsed.sourceHash,
             },
           })
+          // Update search index
+          await updateBlogPostSearchVector(newBlog.id)
           blogsAdded++
           changes.push({
             changeType: 'added',
@@ -125,6 +130,8 @@ export async function storeDocuments(
                 lastSyncedAt: new Date(),
               },
             })
+            // Update search index
+            await updateDocumentSearchVector(existing.id)
             docsUpdated++
             changes.push({
               changeType: 'modified',
@@ -137,7 +144,7 @@ export async function storeDocuments(
           }
         } else {
           // Create new document
-          await prisma.document.create({
+          const newDoc = await prisma.document.create({
             data: {
               repositoryId,
               filePath: doc.path,
@@ -153,6 +160,8 @@ export async function storeDocuments(
               sourceHash: parsed.sourceHash,
             },
           })
+          // Update search index
+          await updateDocumentSearchVector(newDoc.id)
           docsAdded++
           changes.push({
             changeType: 'added',

@@ -12,7 +12,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Navigation } from '@/components/layout/navigation'
+import { SidebarTrigger } from '@/components/ui/sidebar'
+import { Separator } from '@/components/ui/separator'
+import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 function formatTimeAgo(date: string | null): string {
   if (!date) return 'Never'
@@ -127,23 +130,49 @@ export default function RepositoryDetailPage({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="flex items-center justify-center min-h-[60vh]">
+      <>
+        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <BreadcrumbNavigation
+            items={[
+              { label: 'Admin', href: '/admin' },
+              { label: 'Repositories', href: '/admin/repositories' },
+              { label: 'Loading...', href: '#' },
+            ]}
+          />
+          <div className="ml-auto flex items-center gap-2">
+            <ThemeToggle />
+          </div>
+        </header>
+        <div className="flex items-center justify-center min-h-[60vh] overflow-auto">
           <p className="text-muted-foreground">Loading...</p>
         </div>
-      </div>
+      </>
     )
   }
 
   if (!repository) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="flex items-center justify-center min-h-[60vh]">
+      <>
+        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <BreadcrumbNavigation
+            items={[
+              { label: 'Admin', href: '/admin' },
+              { label: 'Repositories', href: '/admin/repositories' },
+              { label: 'Not Found', href: '#' },
+            ]}
+          />
+          <div className="ml-auto flex items-center gap-2">
+            <ThemeToggle />
+          </div>
+        </header>
+        <div className="flex items-center justify-center min-h-[60vh] overflow-auto">
           <p className="text-muted-foreground">Repository not found</p>
         </div>
-      </div>
+      </>
     )
   }
 
@@ -160,12 +189,25 @@ export default function RepositoryDetailPage({
     : 'Disabled'
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <>
+      {/* Header */}
+      <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <BreadcrumbNavigation
+            items={[
+              { label: 'Admin', href: '/admin' },
+              { label: 'Repositories', href: '/admin/repositories' },
+              { label: repository.name, href: `/admin/repositories/${repoId}` },
+            ]}
+          />
+          <div className="ml-auto flex items-center gap-2">
+            <ThemeToggle />
+          </div>
+        </header>
 
-      {/* Main Content */}
-      <main className="container px-4 md:px-12 py-8">
-        <div className="space-y-6">
+      {/* Page Content */}
+      <div className="flex-1 p-6 space-y-6 overflow-auto">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -502,7 +544,6 @@ export default function RepositoryDetailPage({
             </div>
           </div>
         </div>
-      </main>
-    </div>
+      </>
   )
 }

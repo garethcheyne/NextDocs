@@ -2,9 +2,12 @@ import { auth } from '@/lib/auth/auth'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/db/prisma'
 import { ContentDetailLayout } from '@/components/layout/content-detail-layout'
+import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
 import { Clock, User } from 'lucide-react'
-import ReactMarkdown from 'react-markdown'
+import { MarkdownWithMermaid } from '@/components/markdown-with-mermaid'
 import { Badge } from '@/components/ui/badge'
+import { getAuthorBySlug, getAuthorDocuments, getAuthorBlogPosts } from '@/lib/authors'
+import { AuthorHoverCard } from '@/components/author-hover-card'
 
 export default async function DocPage({ params }: { params: Promise<{ slug: string[] }> }) {
     const session = await auth()
@@ -22,13 +25,49 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
         where: {
             slug: `docs/${fullSlug}`,
         },
-        include: {
-            repository: true,
+        select: {
+            id: true,
+            title: true,
+            content: true,
+            excerpt: true,
+            slug: true,
+            category: true,
+            tags: true,
+            author: true,
+            publishedAt: true,
+            updatedAt: true,
+            repositoryId: true,
+            repository: {
+                select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                },
+            },
         },
     })
 
+    // If no document found, return 404 (categories are dropdown-only, not pages)
     if (!document) {
         notFound()
+    }
+
+    // Fetch author data if available
+    let authorData = null
+    let authorContent: {
+        documents: Awaited<ReturnType<typeof getAuthorDocuments>>
+        blogPosts: Awaited<ReturnType<typeof getAuthorBlogPosts>>
+    } = { documents: [], blogPosts: [] }
+    
+    if (document.author) {
+        authorData = await getAuthorBySlug(document.author)
+        if (authorData) {
+            const [documents, blogPosts] = await Promise.all([
+                getAuthorDocuments(document.author),
+                getAuthorBlogPosts(document.author),
+            ])
+            authorContent = { documents, blogPosts }
+        }
     }
 
     // Fetch category metadata for sidebar
@@ -39,34 +78,51 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
         ],
     })
 
+    // Fetch all index documents to determine which categories have index.md
+    const indexDocuments = await prisma.document.findMany({
+        where: {
+            slug: {
+                in: categoryMetadata.map(cat => `docs/${cat.categorySlug}`),
+            },
+        },
+        select: {
+            slug: true,
+        },
+    })
+    
+    const indexDocumentSlugs = new Set(indexDocuments.map(doc => doc.slug.replace(/^docs\//, '')))
+
     // Build hierarchical category structure
     const buildCategoryTree = () => {
-        // Get categories that are children of 'commercial-wiki' (the main doc sections)
-        const rootCategories = categoryMetadata
-            .filter(cat => cat.parentSlug === 'commercial-wiki')
-            .map(cat => {
-                // Extract the last part of the slug (e.g., "commercial-wiki/eway" -> "eway")
-                const categoryName = cat.categorySlug.split('/').pop() || cat.categorySlug
+        // Recursive function to build children for any category
+        const buildChildren = (parentSlug: string): any[] => {
+            return categoryMetadata
+                .filter(child => child.parentSlug === parentSlug)
+                .map(child => ({
+                    slug: child.categorySlug,
+                    title: child.title,
+                    icon: child.icon,
+                    description: child.description,
+                    parentSlug: child.parentSlug,
+                    level: child.level,
+                    hasIndexDocument: indexDocumentSlugs.has(child.categorySlug),
+                    children: buildChildren(child.categorySlug), // Recursive call
+                }))
+        }
 
-                return {
-                    slug: cat.categorySlug,
-                    title: cat.title,
-                    icon: cat.icon,
-                    description: cat.description,
-                    parentSlug: cat.parentSlug,
-                    level: cat.level,
-                    children: categoryMetadata
-                        .filter(child => child.parentSlug === categoryName)
-                        .map(child => ({
-                            slug: child.categorySlug,
-                            title: child.title,
-                            icon: child.icon,
-                            description: child.description,
-                            parentSlug: child.parentSlug,
-                            level: child.level,
-                        }))
-                }
-            })
+        // Get root level categories (level 0, no parent)
+        const rootCategories = categoryMetadata
+            .filter(cat => cat.level === 0 && !cat.parentSlug)
+            .map(cat => ({
+                slug: cat.categorySlug,
+                title: cat.title,
+                icon: cat.icon,
+                description: cat.description,
+                parentSlug: cat.parentSlug,
+                level: cat.level,
+                hasIndexDocument: indexDocumentSlugs.has(cat.categorySlug),
+                children: buildChildren(cat.categorySlug), // Recursive call
+            }))
 
         return rootCategories
     }
@@ -93,48 +149,56 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
             content={document.content}
             categories={categoriesWithMeta}
         >
-                                {/* Document Header */}
-                                <div className="mb-8">
-                                    <h1 className="text-4xl font-bold mb-4">{document.title}</h1>
-                                    {document.excerpt && (
-                                        <p className="text-xl text-muted-foreground mb-4">{document.excerpt}</p>
-                                    )}
+            {/* Document Header */}
+            <div className="mb-8">
+                <h1 className="text-4xl font-bold mb-4">{document.title}</h1>
+                {document.excerpt && (
+                    <p className="text-xl text-muted-foreground mb-4">{document.excerpt}</p>
+                )}
 
-                                    {/* Metadata */}
-                                    <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                                        {document.category && (
-                                            <Badge variant="secondary" className="capitalize">
-                                                {document.category.replace(/-/g, ' ')}
-                                            </Badge>
-                                        )}
-                                        {document.author && (
-                                            <div className="flex items-center gap-1">
-                                                <User className="w-4 h-4" />
-                                                <span>{document.author}</span>
-                                            </div>
-                                        )}
-                                        {document.updatedAt && (
-                                            <div className="flex items-center gap-1">
-                                                <Clock className="w-4 h-4" />
-                                                <span>Updated {new Date(document.updatedAt).toLocaleDateString()}</span>
-                                            </div>
-                                        )}
-                                    </div>
+                {/* Metadata */}
+                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                    {document.category && (
+                        <Badge variant="secondary" className="capitalize">
+                            {document.category.replace(/-/g, ' ')}
+                        </Badge>
+                    )}
+                    {document.author && (
+                        <div className="flex items-center gap-1">
+                            <User className="w-4 h-4" />
+                            {authorData ? (
+                                <AuthorHoverCard author={authorData} content={authorContent}>
+                                    <span className="cursor-pointer hover:text-brand-orange transition-colors">
+                                        {authorData.name}
+                                    </span>
+                                </AuthorHoverCard>
+                            ) : (
+                                <span>{document.author}</span>
+                            )}
+                        </div>
+                    )}
+                    {document.updatedAt && (
+                        <div className="flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            <span>Updated {new Date(document.updatedAt).toLocaleDateString()}</span>
+                        </div>
+                    )}
+                </div>
 
-                                    {/* Tags */}
-                                    {document.tags && document.tags.length > 0 && (
-                                        <div className="flex flex-wrap gap-2 mt-4">
-                                            {document.tags.map((tag) => (
-                                                <Badge key={tag} variant="outline">
-                                                    {tag}
-                                                </Badge>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
+                {/* Tags */}
+                {document.tags && document.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-4">
+                        {document.tags.map((tag) => (
+                            <Badge key={tag} variant="outline">
+                                {tag}
+                            </Badge>
+                        ))}
+                    </div>
+                )}
+            </div>
 
-                                {/* Document Content */}
-                                <div className="prose prose-slate dark:prose-invert max-w-none 
+            {/* Document Content */}
+            <div className="prose prose-slate dark:prose-invert max-w-none 
                                     prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-foreground prose-headings:scroll-mt-20
                                     prose-h1:text-3xl prose-h1:mb-4 prose-h1:mt-8
                                     prose-h2:text-2xl prose-h2:mb-3 prose-h2:mt-6 prose-h2:border-b prose-h2:pb-2 dark:prose-h2:border-border
@@ -156,18 +220,21 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
                                     dark:prose-headings:text-slate-100
                                     dark:prose-p:text-slate-300
                                     dark:prose-li:text-slate-300
-                                    dark:prose-strong:text-slate-100
-                                    dark:prose-code:bg-slate-800 dark:prose-code:text-slate-100">
-                                    <ReactMarkdown>{document.content}</ReactMarkdown>
-                                </div>
-
-                                {/* Footer */}
-                                <div className="mt-12 pt-8 border-t">
-                                    <p className="text-sm text-muted-foreground">
-                                        Last synced from {document.repository.name} on{' '}
-                                        {new Date(document.lastSyncedAt).toLocaleString()}
-                                    </p>
-                                </div>
+                    dark:prose-strong:text-slate-100
+                    dark:prose-code:bg-slate-800 dark:prose-code:text-slate-100">
+                <MarkdownWithMermaid 
+                    repositorySlug={document.repository.slug}
+                    documentPath={`docs/${fullSlug}`}
+                >
+                    {document.content}
+                </MarkdownWithMermaid>
+            </div>            {/* Footer */}
+            <div className="mt-12 pt-8 border-t">
+                <p className="text-sm text-muted-foreground">
+                    Last updated on{' '}
+                    {new Date(document.updatedAt).toLocaleString()}
+                </p>
+            </div>
         </ContentDetailLayout>
     )
 }

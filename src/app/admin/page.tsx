@@ -1,7 +1,7 @@
 import { auth } from '@/lib/auth/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Users, GitBranch, Activity, Plus, BookOpen, PanelLeft, ChevronRight } from 'lucide-react'
+import { Users, GitBranch, Activity, Plus, BookOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -11,17 +11,10 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { SidebarTrigger } from '@/components/ui/sidebar'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
 import { Separator } from '@/components/ui/separator'
 import { prisma } from '@/lib/db/prisma'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
 
 export default async function AdminPage() {
   const session = await auth()
@@ -87,37 +80,21 @@ export default async function AdminPage() {
   return (
     <>
       {/* Header */}
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-        <div className="flex items-center justify-between w-full gap-2 px-4">
-          <div className="flex items-center gap-2">
-          <SidebarTrigger className="-ml-1">
-            <PanelLeft />
-            <span className="sr-only">Toggle Sidebar</span>
-          </SidebarTrigger>
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="/">
-                  Home
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="hidden md:block">
-                <ChevronRight />
-              </BreadcrumbSeparator>
-              <BreadcrumbItem>
-                <BreadcrumbPage>Admin Dashboard</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-          </div>
+      <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
+        <SidebarTrigger className="-ml-1" />
+        <Separator orientation="vertical" className="mr-2 h-4" />
+        <BreadcrumbNavigation
+          items={[
+            { label: 'Admin', href: '/admin' },
+          ]}
+        />
+        <div className="ml-auto flex items-center gap-2">
           <ThemeToggle />
         </div>
       </header>
 
       {/* Page Content */}
-      <main className="flex-1 px-12 py-6 overflow-auto">
-            <div className="max-w-7xl space-y-6">
+      <div className="flex-1 p-6 space-y-6 overflow-auto">
               {/* Welcome Section */}
               <Card>
                 <CardHeader>
@@ -357,18 +334,16 @@ export default async function AdminPage() {
                 })}
               </div>
             )}
-
-
           </div>
 
-              {/* System Activity */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
-                  <CardDescription>
-                    Latest system events and sync operations
-                  </CardDescription>
-                </CardHeader>
+          {/* System Activity */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>
+                Latest system events and sync operations
+              </CardDescription>
+            </CardHeader>
                 <CardContent>
                   {recentActivity.length === 0 ? (
                     <div className="text-center py-8">
@@ -409,8 +384,7 @@ export default async function AdminPage() {
                   )}  
                 </CardContent>
               </Card>
-            </div>
-          </main>
+          </div>
     </>
   )
 }

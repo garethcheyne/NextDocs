@@ -18,6 +18,8 @@ export function PageHeader({ breadcrumbs }: PageHeaderProps) {
             <span className="sr-only">Toggle Sidebar</span>
           </SidebarTrigger>
           <Separator orientation="vertical" className="mr-2 h-4" />
+        </div>
+        <div className="flex-1 min-w-0">
           <BreadcrumbNavigation items={breadcrumbs} />
         </div>
         <ThemeToggle />

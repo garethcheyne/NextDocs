@@ -1,0 +1,144 @@
+import Link from 'next/link'
+import { Lightbulb, Plus, Calendar, User } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+
+interface FeatureBannerProps {
+    totalRequests?: number
+    completedRequests?: number
+    // Detail page props
+    title?: string
+    status?: string
+    category?: { name: string; color?: string | null } | null
+    creator?: string
+    createdAt?: Date
+    voteCount?: number
+    upvotes?: number
+    downvotes?: number
+}
+
+const statusColors: Record<string, string> = {
+    PENDING: 'bg-yellow-500',
+    UNDER_REVIEW: 'bg-blue-500',
+    PLANNED: 'bg-purple-500',
+    IN_PROGRESS: 'bg-indigo-500',
+    COMPLETED: 'bg-green-500',
+    REJECTED: 'bg-red-500',
+}
+
+export function FeatureBanner({
+    totalRequests,
+    completedRequests,
+    title,
+    status,
+    category,
+    creator,
+    createdAt,
+    voteCount = 0,
+    upvotes = 0,
+    downvotes = 0
+}: FeatureBannerProps) {
+    // Detail page view
+    if (title) {
+        return (
+            <div className="bg-gradient-to-r from-brand-orange/10 to-orange-500/10 border-b">
+                <div className="px-12 py-8">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="flex items-start justify-between gap-8">
+                            <div className="flex-1 space-y-4">
+                                <h1 className="text-4xl font-bold tracking-tight">{title}</h1>
+                                <div className="flex items-center gap-3">
+                                    {status && (
+                                        <Badge className={`${statusColors[status]} text-white`}>
+                                            {status.replace('_', ' ')}
+                                        </Badge>
+                                    )}
+                                    {category && (
+                                        <Badge variant="outline" style={{ borderColor: category.color || undefined }}>
+                                            {category.name}
+                                        </Badge>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                    {creator && (
+                                        <div className="flex items-center gap-1">
+                                            <User className="w-4 h-4" />
+                                            {creator}
+                                        </div>
+                                    )}
+                                    {createdAt && (
+                                        <div className="flex items-center gap-1">
+                                            <Calendar className="w-4 h-4" />
+                                            {new Date(createdAt).toLocaleDateString()}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Vote Stats */}
+                            <div className="flex flex-col gap-4 text-right">
+                                <div>
+                                    <div className="text-4xl font-bold text-brand-orange">{voteCount}</div>
+                                    <div className="text-sm text-muted-foreground">Total Votes</div>
+                                </div>
+                                <div className="flex gap-4">
+                                    <div>
+                                        <div className="text-2xl font-bold text-green-600">{upvotes}</div>
+                                        <div className="text-xs text-muted-foreground">Upvotes</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-2xl font-bold text-red-600">{downvotes}</div>
+                                        <div className="text-xs text-muted-foreground">Downvotes</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    // List page view
+    return (
+        <div className="bg-gradient-to-r from-brand-orange/10 to-orange-500/10 border-b">
+            <div className="max-w-7xl mx-auto px-12 py-12">
+                <div className="flex items-start justify-between">
+                    <div className="space-y-4 max-w-2xl">
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 rounded-lg bg-brand-orange/20">
+                                <Lightbulb className="w-8 h-8 text-brand-orange" />
+                            </div>
+                            <h1 className="text-4xl font-bold tracking-tight">Request Features</h1>
+                        </div>
+                        <p className="text-lg text-muted-foreground">
+                            Share your ideas and help shape the future of our applications. Vote on features you'd like to see implemented.
+                        </p>
+
+                        <div className='pt-4'>
+
+                            <Link href="/features/new">
+                                <Button size="lg" className="bg-brand-orange hover:bg-brand-orange/90">
+                                    <Plus className="w-5 h-5 mr-2" />
+                                    Submit Feature Request
+                                </Button>
+                            </Link>
+                        </div>
+                    </div>
+                    <div className="hidden md:flex flex-col gap-4 text-right">
+                        <div>
+                            <div className="text-3xl font-bold text-brand-orange">{totalRequests}</div>
+                            <div className="text-sm text-muted-foreground">Total Requests</div>
+                        </div>
+                        <div>
+                            <div className="text-3xl font-bold text-green-500">
+                                {completedRequests}
+                            </div>
+                            <div className="text-sm text-muted-foreground">Completed</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div >
+    )
+}

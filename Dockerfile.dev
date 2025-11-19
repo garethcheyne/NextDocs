@@ -3,8 +3,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dependencies for node-gyp
-RUN apk add --no-cache python3 make g++
+# Install dependencies for node-gyp and curl for worker initialization
+RUN apk add --no-cache python3 make g++ curl
 
 # Copy package files
 COPY package.json package-lock.json* ./
@@ -33,5 +33,6 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN mkdir -p /app/scripts && \
     if [ -f /app/scripts/init-worker.sh ]; then chmod +x /app/scripts/init-worker.sh; fi
 
-# Start development server with hot reload and worker in background
-CMD sh -c "npm run dev & sleep 10 && if [ -f /app/scripts/init-worker.sh ]; then /app/scripts/init-worker.sh; fi && wait"
+# Install any missing packages on startup (in case package.json changed)
+# Then start development server with hot reload and worker in background
+CMD sh -c "npm install && npm run dev & sleep 10 && if [ -f /app/scripts/init-worker.sh ]; then /app/scripts/init-worker.sh; fi && wait"

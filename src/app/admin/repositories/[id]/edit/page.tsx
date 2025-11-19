@@ -14,6 +14,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { SidebarTrigger } from '@/components/ui/sidebar'
+import { Separator } from '@/components/ui/separator'
+import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 export default function EditRepositoryPage() {
   const router = useRouter()
@@ -106,48 +110,84 @@ export default function EditRepositoryPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-brand-navy/90 to-black flex items-center justify-center">
-        <p className="text-gray-400">Loading...</p>
-      </div>
+      <>
+        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <BreadcrumbNavigation
+            items={[
+              { label: 'Admin', href: '/admin' },
+              { label: 'Repositories', href: '/admin/repositories' },
+              { label: 'Loading...', href: '#' },
+            ]}
+          />
+          <div className="ml-auto flex items-center gap-2">
+            <ThemeToggle />
+          </div>
+        </header>
+        <div className="flex items-center justify-center min-h-[60vh] overflow-auto">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </>
     )
   }
 
   if (!repository) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-brand-navy/90 to-black flex items-center justify-center">
-        <p className="text-gray-400">Repository not found</p>
-      </div>
+      <>
+        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <BreadcrumbNavigation
+            items={[
+              { label: 'Admin', href: '/admin' },
+              { label: 'Repositories', href: '/admin/repositories' },
+              { label: 'Not Found', href: '#' },
+            ]}
+          />
+          <div className="ml-auto flex items-center gap-2">
+            <ThemeToggle />
+          </div>
+        </header>
+        <div className="flex items-center justify-center min-h-[60vh] overflow-auto">
+          <p className="text-muted-foreground">Repository not found</p>
+        </div>
+      </>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-brand-navy/90 to-black">
+    <>
       {/* Header */}
-      <header className="border-b border-gray-800/50 bg-black/20 backdrop-blur-md sticky top-0 z-50">
-        <div className="container px-12 py-4">
-          <div className="flex items-center gap-4">
-            <Link href={`/admin/repositories/${params.id}`}>
-              <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Details
-              </Button>
-            </Link>
+      <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <BreadcrumbNavigation
+            items={[
+              { label: 'Admin', href: '/admin' },
+              { label: 'Repositories', href: '/admin/repositories' },
+              { label: repository.name, href: `/admin/repositories/${params.id}` },
+              { label: 'Edit', href: `/admin/repositories/${params.id}/edit` },
+            ]}
+          />
+          <div className="ml-auto flex items-center gap-2">
+            <ThemeToggle />
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main Content */}
-      <main className="container px-12 py-8 max-w-4xl">
-        <div className="space-y-6">
-          {/* Page Header */}
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">
-              Edit Repository
-            </h1>
-            <p className="text-gray-400 mt-2">
-              Update repository settings and configuration
-            </p>
-          </div>
+      {/* Page Content */}
+      <div className="flex-1 p-6 overflow-auto">
+        <div className="max-w-4xl">
+          <div className="space-y-6">
+            {/* Page Header */}
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">
+                Edit Repository
+              </h1>
+              <p className="text-gray-400 mt-2">
+                Update repository settings and configuration
+              </p>
+            </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
@@ -304,7 +344,8 @@ export default function EditRepositoryPage() {
             </div>
           </form>
         </div>
-      </main>
+      </div>
     </div>
+    </>
   )
 }

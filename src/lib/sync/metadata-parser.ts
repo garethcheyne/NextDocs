@@ -16,52 +16,53 @@ export async function parseAndStoreMeta(
 ) {
   console.log(`📋 Processing ${metaFiles.length} _meta.json file(s)...`)
 
+  const processedSlugs: string[] = []
+
   for (const metaFile of metaFiles) {
     try {
       const meta: MetaJson = JSON.parse(metaFile.content)
       
       // Extract directory from path (e.g., /docs/eway/_meta.json -> docs/eway)
-      const pathParts = metaFile.path.split('/')
+      const pathParts = metaFile.path.split('/').filter(Boolean)
       const dir = pathParts.slice(0, -1).join('/')
       
-      // Skip root-level _meta.json (e.g., /docs/_meta.json)
-      const isRootMeta = dir.split('/').filter(Boolean).length === 1 // e.g., "docs"
-      
-      if (isRootMeta) {
-        console.log(`   ⏭️  Skipping root _meta.json: ${metaFile.path}`)
-        continue
-      }
-      
-      // Determine if this is a top-level category or nested
-      // For /docs/eway/_meta.json -> process as root categories (level 0)
-      // For /docs/eway/payment-methods/_meta.json -> process as eway subcategories (level 1)
-      
-      // Determine if this is a top-level category or nested
-      // For /docs/eway/_meta.json -> process as root categories (level 0)
-      // For /docs/eway/payment-methods/_meta.json -> process as eway subcategories (level 1)
-      const isCategoryMeta = dir.split('/').filter(Boolean).length === 2 // e.g., "docs/eway"
+      // Determine hierarchy level based on path depth
+      // /docs/_meta.json -> level 0 (root categories like commercial-wiki, eway)
+      // /docs/eway/_meta.json -> level 1 (eway subcategories like api-integration)
+      // /docs/eway/payment-methods/_meta.json -> level 2 (nested subcategories)
+      const pathDepth = pathParts.length - 1 // -1 for _meta.json file
       
       let order = 0
       for (const [slug, entry] of Object.entries(meta)) {
         // Skip index entries
         if (slug === 'index') continue
 
-        // For category-level _meta.json (e.g., /docs/eway/_meta.json)
-        // -> create root category with slug "eway"
-        // For nested _meta.json (e.g., /docs/eway/payment-methods/_meta.json)
-        // -> create child category with slug "eway/payment-methods"
-        let categorySlug = slug
+        let categorySlug: string
         let parentSlug: string | null = null
-        let level = 0
+        let level: number
         
-        if (!isCategoryMeta) {
-          // Extract parent category from path
-          // e.g., /docs/eway/payment-methods/_meta.json -> parent is "eway"
-          const parentCategory = pathParts[pathParts.length - 2]
-          parentSlug = parentCategory
+        if (pathDepth === 1) {
+          // Root level: /docs/_meta.json
+          // Create top-level categories (commercial-wiki, eway, dynamics-365-bc, etc.)
+          categorySlug = slug
+          parentSlug = null
+          level = 0
+        } else if (pathDepth === 2) {
+          // Category level: /docs/eway/_meta.json
+          // Create subcategories under eway (api-integration, payment-methods, etc.)
+          const parentCategory = pathParts[pathParts.length - 2] // e.g., "eway"
           categorySlug = `${parentCategory}/${slug}`
+          parentSlug = parentCategory
           level = 1
+        } else {
+          // Deeper nesting: /docs/eway/payment-methods/_meta.json
+          const parentPath = pathParts.slice(1, -1).join('/') // e.g., "eway/payment-methods"
+          categorySlug = `${parentPath}/${slug}`
+          parentSlug = parentPath
+          level = pathDepth - 1
         }
+
+        processedSlugs.push(categorySlug)
 
         await prisma.categoryMetadata.upsert({
           where: {
@@ -93,9 +94,33 @@ export async function parseAndStoreMeta(
         order++
       }
       
-      console.log(`   ✅ Processed metadata from ${metaFile.path} (${Object.keys(meta).length - 1} entries)`)
+      console.log(`   ✅ Processed metadata from ${metaFile.path} (${Object.keys(meta).length - 1} entries, level ${pathDepth - 1})`)
     } catch (error) {
       console.error(`   ❌ Failed to parse ${metaFile.path}:`, error)
     }
+  }
+
+  // Delete category metadata that no longer exists
+  const deletedCategories = await prisma.categoryMetadata.findMany({
+    where: {
+      repositoryId,
+      categorySlug: { notIn: processedSlugs.length > 0 ? processedSlugs : ['__none__'] },
+    },
+  })
+
+  for (const category of deletedCategories) {
+    await prisma.categoryMetadata.delete({ 
+      where: { 
+        repositoryId_categorySlug: {
+          repositoryId,
+          categorySlug: category.categorySlug,
+        }
+      } 
+    })
+    console.log(`   🗑️  Deleted category: ${category.title} (${category.categorySlug})`)
+  }
+
+  if (deletedCategories.length > 0) {
+    console.log(`   ✅ Cleaned up ${deletedCategories.length} orphaned categories`)
   }
 }

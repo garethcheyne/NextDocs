@@ -12,18 +12,11 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Edit, Shield, User as UserIcon, PanelLeft, ChevronRight } from 'lucide-react'
+import { Edit, Shield, User as UserIcon } from 'lucide-react'
 import { SidebarTrigger } from '@/components/ui/sidebar'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
 import { Separator } from '@/components/ui/separator'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
 
 export default async function UsersPage() {
     const session = await auth()
@@ -70,45 +63,22 @@ export default async function UsersPage() {
     return (
         <>
             {/* Header */}
-            <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-                <div className="flex items-center justify-between w-full gap-2 px-4">
-                    <div className="flex items-center gap-2">
-                    <SidebarTrigger className="-ml-1">
-                        <PanelLeft />
-                        <span className="sr-only">Toggle Sidebar</span>
-                    </SidebarTrigger>
+            <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
+                    <SidebarTrigger className="-ml-1" />
                     <Separator orientation="vertical" className="mr-2 h-4" />
-                    <Breadcrumb>
-                        <BreadcrumbList>
-                            <BreadcrumbItem className="hidden md:block">
-                                <BreadcrumbLink href="/">
-                                    Home
-                                </BreadcrumbLink>
-                            </BreadcrumbItem>
-                            <BreadcrumbSeparator className="hidden md:block">
-                                <ChevronRight />
-                            </BreadcrumbSeparator>
-                            <BreadcrumbItem>
-                                <BreadcrumbLink href="/admin">
-                                    Admin
-                                </BreadcrumbLink>
-                            </BreadcrumbItem>
-                            <BreadcrumbSeparator className="hidden md:block">
-                                <ChevronRight />
-                            </BreadcrumbSeparator>
-                            <BreadcrumbItem>
-                                <BreadcrumbPage>Users</BreadcrumbPage>
-                            </BreadcrumbItem>
-                        </BreadcrumbList>
-                    </Breadcrumb>
+                    <BreadcrumbNavigation
+                        items={[
+                            { label: 'Admin', href: '/admin' },
+                            { label: 'Users', href: '/admin/users' },
+                        ]}
+                    />
+                    <div className="ml-auto flex items-center gap-2">
+                        <ThemeToggle />
                     </div>
-                    <ThemeToggle />
-                </div>
-            </header>
+                </header>
 
-            {/* Page Content */}
-            <main className="flex-1 px-12 py-6 overflow-auto">
-                <div className="max-w-7xl space-y-6">
+                {/* Page Content */}
+                <div className="flex-1 p-6 space-y-6">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Users</h1>
@@ -192,7 +162,6 @@ export default async function UsersPage() {
                 <p>Showing {users.length} user{users.length !== 1 ? 's' : ''}</p>
             </div>
                 </div>
-            </main>
         </>
     )
 }

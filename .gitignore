@@ -52,3 +52,13 @@ prisma/*.db-journal
 
 # Sample directory (old content)
 sample/
+
+# Utility/debug scripts (temporary)
+prisma/check-*.ts
+prisma/trigger-*.ts
+prisma/enable-*.ts
+scripts/check-*.ts
+
+# Synced images
+public/img/**
+!public/img/.gitkeep

@@ -24,6 +24,7 @@
     --border: 214 32% 91%;
     --input: 214 32% 91%;
     --ring: 16 100% 60%;
+    --brand-orange: 16 100% 60%; /* Brand orange */
     --radius: 0.5rem;
     --chart-1: 16 100% 60%;
     --chart-2: 173 58% 39%;
@@ -61,6 +62,7 @@
     --border: 217 33% 17%;
     --input: 217 33% 17%;
     --ring: 16 100% 60%;
+    --brand-orange: 16 100% 60%; /* Brand orange */
     --chart-1: 16 100% 60%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -84,6 +86,42 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Custom Scrollbar Styles */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--brand-orange) / 0.3) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--brand-orange) / 0.5),
+    hsl(var(--brand-orange) / 0.3)
+  );
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--brand-orange) / 0.7),
+    hsl(var(--brand-orange) / 0.5)
+  );
+  background-clip: content-box;
 }
 
 /* API Spec Viewer Styling */

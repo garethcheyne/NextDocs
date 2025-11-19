@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Save, TestTube, CheckCircle, AlertCircle, Loader2, PanelLeft, ChevronRight } from 'lucide-react'
+import { Save, TestTube, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,16 +15,9 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { SidebarTrigger } from '@/components/ui/sidebar'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
 import { Separator } from '@/components/ui/separator'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
 
 type SyncStep = {
   id: string
@@ -204,53 +197,23 @@ export default function NewRepositoryPage() {
   return (
     <>
       {/* Header */}
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-        <div className="flex items-center justify-between w-full gap-2 px-4">
-          <div className="flex items-center gap-2">
-          <SidebarTrigger className="-ml-1">
-            <PanelLeft />
-            <span className="sr-only">Toggle Sidebar</span>
-          </SidebarTrigger>
+      <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
+          <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="/">
-                  Home
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="hidden md:block">
-                <ChevronRight />
-              </BreadcrumbSeparator>
-              <BreadcrumbItem>
-                <BreadcrumbLink href="/admin">
-                  Admin
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="hidden md:block">
-                <ChevronRight />
-              </BreadcrumbSeparator>
-              <BreadcrumbItem>
-                <BreadcrumbLink href="/admin/repositories">
-                  Repositories
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="hidden md:block">
-                <ChevronRight />
-              </BreadcrumbSeparator>
-              <BreadcrumbItem>
-                <BreadcrumbPage>New Repository</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+          <BreadcrumbNavigation
+            items={[
+              { label: 'Admin', href: '/admin' },
+              { label: 'Repositories', href: '/admin/repositories' },
+              { label: 'New Repository', href: '/admin/repositories/new' },
+            ]}
+          />
+          <div className="ml-auto flex items-center gap-2">
+            <ThemeToggle />
           </div>
-          <ThemeToggle />
-        </div>
-      </header>
+        </header>
 
-      {/* Main Content */}
-      <main className="flex-1 px-12 py-6 overflow-auto max-w-5xl w-full">
-        <div className="space-y-6">
+        {/* Main Content */}
+      <div className="flex-1 p-6 space-y-6 overflow-auto">
           {/* Page Header */}
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">
@@ -556,6 +519,7 @@ export default function NewRepositoryPage() {
                   </Label>
                   <select
                     id="syncSchedule"
+                    title="Sync Schedule"
                     value={formData.syncSchedule}
                     onChange={(e) =>
                       setFormData({ ...formData, syncSchedule: e.target.value })
@@ -623,11 +587,10 @@ export default function NewRepositoryPage() {
             </div>
           </form>
         </div>
-      </main>
 
-      {/* Sync Progress Modal */}
-      {showSyncModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        {/* Sync Progress Modal */}
+        {showSyncModal && (
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <Card className="bg-gray-900 border-gray-800 max-w-lg w-full">
             <CardHeader>
               <CardTitle className="text-white text-xl">
@@ -676,7 +639,7 @@ export default function NewRepositoryPage() {
               ))}
             </CardContent>
           </Card>
-        </div>
+      </div>
       )}
     </>
   )

@@ -12,6 +12,7 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/nextdocs
+      - REDIS_URL=redis://redis:6379
       - NEXTAUTH_URL=${NEXTAUTH_URL:-https://docs.harveynorman.com}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
@@ -20,6 +21,8 @@ services:
       - AZURE_AD_TENANT_ID=${AZURE_AD_TENANT_ID}
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - nextdocs-network
@@ -53,6 +56,24 @@ services:
       - nextdocs-network
     restart: always
 
+  # Redis for caching search results and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: nextdocs-redis-prod
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - nextdocs-network
+    restart: always
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-changeme}
+
   # Nginx reverse proxy (optional)
   nginx:
     image: nginx:alpine
@@ -73,6 +94,8 @@ services:
 
 volumes:
   postgres-data:
+    driver: local
+  redis-data:
     driver: local
 
 networks:

@@ -15,8 +15,15 @@ export async function POST(
 
     const { id } = await params
 
+    // Extract IP address (check proxy headers first)
+    const forwardedFor = request.headers.get('x-forwarded-for')
+    const realIp = request.headers.get('x-real-ip')
+    const ip = forwardedFor?.split(',')[0].trim() || realIp || request.ip || 'unknown'
+
+    console.log(`🌐 Sync request from IP: ${ip} (User: ${session.user.email})`)
+
     // Trigger sync in background
-    syncRepository(id).catch((error) => {
+    syncRepository(id, ip).catch((error) => {
       console.error('Sync failed:', error)
     })
 

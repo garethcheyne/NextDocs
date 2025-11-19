@@ -4,12 +4,27 @@ import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { AuthProvider } from '@/components/auth/auth-provider'
 import ParticlesBackground from '@/components/particles-background'
+import { SearchDialog } from '@/components/search/search-dialog'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Harvey Norman Commercial Apps Team',
   description: 'Enterprise Solutions Hub for Microsoft Technologies & Business Applications',
+  icons: {
+    icon: [
+      { url: '/icon.png', sizes: '192x192', type: 'image/png' },
+      { url: '/favicon.ico', sizes: '32x32' },
+    ],
+    apple: [
+      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
+  manifest: '/manifest.json',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
+  ],
 }
 
 export default function RootLayout({
@@ -27,6 +42,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
+            {/* Global Search Dialog (⌘K) */}
+            <SearchDialog />
+            
             {/* Particles Background - Site-wide */}
             <ParticlesBackground />
 

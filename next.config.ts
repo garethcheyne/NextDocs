@@ -15,6 +15,8 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '2mb',
     },
   },
+  // Exclude server-only packages from client bundle
+  serverExternalPackages: ['bcrypt', '@mapbox/node-pre-gyp'],
 }
 
 export default nextConfig

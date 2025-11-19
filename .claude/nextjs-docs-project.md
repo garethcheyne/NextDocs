@@ -1,13 +1,164 @@
-# Next.js Documentation Platform - Agent Directive
+# NextDocs - Enterprise Documentation Platform
 
 ## Project Overview
-Build a modern, enterprise-grade documentation and blog platform using Next.js 16, replacing Docusaurus with a fully customizable solution that fetches content from external Git repositories.
 
-**🔒 AUTHENTICATION MODEL:** Soft-gate approach with a beautiful public homepage that encourages sign-in. Once users click into any documentation or blog content, they must authenticate via Azure AD SSO or local credentials. Content marked as `[DRAFT]` or with `draft: true` in frontmatter is only visible to admin users.
+**Production-Ready Enterprise Documentation Platform** built with Next.js 16 for Harvey Norman Commercial Apps Team. Currently operational with 3,149+ images synced, multi-repository content aggregation, and comprehensive feature request system.
 
-**Homepage:** Public access with hero section and sign-in card - no authentication required.
-**Content Pages:** All `/docs/*`, `/blog/*`, `/api-docs/*` routes require authentication.
-**Admin Portal:** Requires authentication + admin role.
+**🔒 AUTHENTICATION:** Soft-gate approach with public homepage. All content routes require authentication via Azure AD SSO or local credentials. Draft content (`draft: true` frontmatter or `[DRAFT]` in title) is admin-only.
+
+**Live Environment:**
+- **URL:** http://localhost:9980 (Development)
+- **Status:** ✅ Fully Operational
+- **Content:** Dynamics 365 BC/CE/CE-AUS/CE-NZL, TMS-AUS, eWay, Deliver-eZY-NZL
+- **Features:** Image sync, feature requests with voting/comments, blog system, API docs
+
+**Route Protection:**
+- Public: `/` (homepage)
+- Protected: `/docs/*`, `/blog/*`, `/api-docs/*`, `/features/*`
+- Admin: `/admin/*` (requires admin role)
+
+## ✅ Implementation Status
+
+### Latest Updates (November 2025)
+
+**Image Sync System** ✅
+- 3,149+ images synced from Azure DevOps and GitHub
+- Content directory filtering (docs/, blog/, api-specs/)
+- SHA/objectId-based change detection
+- Images stored in /public/img/{repository-slug}/
+
+**Feature Request System** ✅
+- Submission form with category selection (/features/new)
+- Client-side voting with optimistic UI (VoteButton component)
+- Comment system with real-time updates (CommentForm component)
+- Admin status management (StatusUpdateDialog)
+- Category management with orphan/cascade deletion
+
+**Sidebar Enhancements** ✅
+- Infinite nesting support (truly recursive category tree)
+- Clickable parent categories with index.md detection
+- Dropdown-only categories without index.md
+- Tooltips for truncated items (300ms delay, side="right")
+- 15% wider sidebar (18.4rem) for better readability
+
+**Sync Service Improvements** ✅
+- IP address logging (X-Forwarded-For, X-Real-IP support)
+- Detailed sync progress logging with emojis
+- Source detection (Azure DevOps vs GitHub)
+
+**UI/UX Polish** ✅
+- Author hover cards with bio and content stats
+- Improved tooltip contrast (opacity-80)
+- Better dark mode support
+- Responsive mobile navigation
+
+**Project Cleanup** ✅
+- Updated package.json with modern description
+- Enhanced .gitignore (utility scripts, synced images)
+- README.md updated with 13 features
+- PROJECT_SUMMARY.md updated with November work
+
+**Pending:**
+- Email notifications (EWS integration)
+- Feature merging workflow
+- Following/notification preferences UI
+
+### Completed Features
+
+- ✅ **Authentication System**
+  - Azure AD SSO integration (NextAuth.js v5)
+  - Local credentials provider
+  - User registration and password reset
+  - Middleware-based route protection
+  - Role-based access control (admin/editor/user)
+  - Token encryption for secure PAT storage
+
+- ✅ **Content Management**
+  - Multi-repository support (Azure DevOps + GitHub)
+  - Dynamic repository configuration via admin UI
+  - Encrypted PAT/token storage
+  - MDX processing pipeline
+  - Draft content filtering (frontmatter + title pattern)
+  - Webhook integration for auto-sync
+  - Repository health monitoring
+
+- ✅ **API Documentation**
+  - Multi-version support for API specs
+  - Swagger UI + Redoc renderers
+  - Version selector in UI
+  - OpenAPI 3.0/3.1 YAML parsing
+  - Auto-sync from repositories
+  - Category-based organization
+
+- ✅ **Feature Request System**
+  - Feature categories with CRUD
+  - Smart category deletion (orphan vs cascade)
+  - Feature submission with voting/comments
+  - Status workflow (proposal → approved → in-progress → completed)
+  - Vote toggling (upvote/downvote)
+  - Comments system with moderation
+  - Following/notifications architecture
+  - Category-based navigation in sidebar
+  - Dropdown filters (Status, Sort)
+  - Feature detail pages with engagement
+
+- ✅ **Admin Portal**
+  - Repository management (CRUD)
+  - Connection testing
+  - Manual sync triggers
+  - Sync log viewing
+  - Category management for features
+  - User management UI
+  - Enhanced deletion workflows
+
+- ✅ **UI/UX**
+  - shadcn/ui component library
+  - Dark/light mode support
+  - Responsive sidebar navigation
+  - Collapsible menu sections
+  - Server/Client component separation
+  - Dropdown filters for better UX
+  - Active filter badges
+  - Feature submission form (/features/new) ✅
+  - Interactive voting with optimistic UI ✅
+  - Comment submission forms ✅
+  - Admin status management dialog ✅
+
+### In Progress
+- ⚠️ **Email Notifications**
+  - EWS integration (planned)
+  - Email templates (not started)
+  - Queue processing system (not started)
+  - Notifications for feature status changes
+  - Notifications for new comments to followers
+
+- ⚠️ **Feature Request Enhancements**
+  - Merge duplicate features workflow
+  - Feature following/unfollowing UI
+  - Activity timeline
+  - File attachments
+
+### Planned Features
+- 🔜 **External Integration**
+  - GitHub/DevOps two-way sync for features
+  - Webhook receivers for external updates
+  - Status mapping (external → internal)
+
+- 🔜 **Content Features**
+  - Mermaid diagram rendering
+  - Interactive code examples
+  - Search implementation (Pagefind/Flexsearch)
+  - Blog post system
+  - Author profiles
+  - Related content suggestions
+
+- 🔜 **Documentation**
+  - Table of contents component
+  - Breadcrumb navigation
+  - Pagination (prev/next)
+  - Category metadata (_meta.json)
+
+---
 
 ## Tech Stack
 
@@ -2969,24 +3120,384 @@ export async function POST(req: NextRequest) {
 }
 ```
 
+---
+
+## Feature Request System - Complete Implementation
+
+### Database Schema (Implemented)
+
+```prisma
+model FeatureCategory {
+  id              String    @id @default(uuid())
+  name            String    @unique
+  slug            String    @unique
+  description     String?   @db.Text
+  icon            String?
+  color           String?
+  order           Int       @default(0)
+  enabled         Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  featureRequests FeatureRequest[]
+}
+
+model FeatureRequest {
+  id              String    @id @default(uuid())
+  title           String
+  slug            String    @unique
+  description     String    @db.Text
+  status          String    @default("proposal")
+  priority        String?
+  targetVersion   String?
+  expectedDate    DateTime?
+  createdBy       String
+  createdByName   String
+  createdByEmail  String
+  categoryId      String?   // Now nullable (supports orphaned features)
+  tags            String[]  @default([])
+  voteCount       Int       @default(0)
+  commentCount    Int       @default(0)
+  followerCount   Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  lastActivityAt  DateTime  @default(now())
+  
+  creator         User      @relation("FeatureRequestCreator", fields: [createdBy], references: [id])
+  category        FeatureCategory? @relation(fields: [categoryId], references: [id])
+  votes           FeatureVote[]
+  comments        FeatureComment[]
+  statusHistory   FeatureStatusHistory[]
+}
+
+model FeatureVote {
+  id              String    @id @default(uuid())
+  featureId       String
+  userId          String
+  voteType        Int       // +1 (upvote) or -1 (downvote)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  feature         FeatureRequest @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  user            User      @relation("FeatureVotes", fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([featureId, userId])
+}
+
+model FeatureComment {
+  id              String    @id @default(uuid())
+  featureId       String
+  userId          String
+  content         String    @db.Text
+  isDeleted       Boolean   @default(false)
+  deletedAt       DateTime?
+  deletedBy       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  feature         FeatureRequest @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  user            User      @relation("FeatureComments", fields: [userId], references: [id])
+  deletedByUser   User?     @relation("DeletedComments", fields: [deletedBy], references: [id])
+}
+
+model FeatureStatusHistory {
+  id              String    @id @default(uuid())
+  featureId       String
+  oldStatus       String?
+  newStatus       String
+  changedBy       String
+  reason          String?   @db.Text
+  createdAt       DateTime  @default(now())
+  feature         FeatureRequest @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  user            User      @relation("StatusChanges", fields: [changedBy], references: [id])
+}
+```
+
+### API Routes (Implemented)
+
+**Public Routes:**
+```
+GET    /api/features              - List features (with filters)
+GET    /api/features/[id]         - Get single feature
+POST   /api/features/[id]/vote    - Toggle vote (upvote/downvote)
+GET    /api/features/[id]/vote    - Get user's current vote
+GET    /api/features/[id]/comments - Get comments
+POST   /api/features/[id]/comments - Add comment
+```
+
+**Admin Routes:**
+```
+GET    /api/admin/features/categories     - List categories
+POST   /api/admin/features/categories     - Create category
+PATCH  /api/admin/features/categories/[id] - Update category
+DELETE /api/admin/features/categories/[id] - Delete category (with orphan/cascade)
+```
+
+### Category Deletion Strategies
+
+**Orphan Strategy** (deleteRequests=false):
+1. Sets categoryId to null for all related features
+2. Deletes the category
+3. Features remain in database, accessible via "Uncategorized"
+
+**Cascade Delete** (deleteRequests=true):
+1. Deletes votes for all features in category
+2. Deletes comments for all features
+3. Deletes status history for all features
+4. Deletes all feature requests
+5. Deletes the category
+6. Uses transaction for data integrity
+
+### UI Components (Implemented)
+
+**Pages:**
+```
+/features                          - List view with dropdown filters
+/features/[slug]                   - Feature detail page
+/admin/features/categories         - Category management
+/admin/features/categories/new     - Create category
+/admin/features/categories/[id]    - Edit/delete category
+```
+
+**Components:**
+```
+/components/features/
+  features-client.tsx              - Client component with interactivity
+  
+/components/admin/features/
+  edit-category-form.tsx           - Category CRUD form
+  
+/components/layout/
+  app-sidebar.tsx                  - Enhanced with feature categories submenu
+```
+
+### Server/Client Component Pattern
+
+**Server Component** (features/page.tsx):
+- Fetches data from Prisma
+- Gets session for auth
+- Passes data to Client Component
+- Can be async
+
+**Client Component** (features-client.tsx):
+- Handles interactive elements (dropdowns, vote buttons)
+- Uses 'use client' directive
+- Receives pre-fetched data as props
+- Cannot be async
+
+### Voting System
+
+**Logic:**
+- If existing vote with same type → Remove vote
+- If existing vote with different type → Update vote
+- If no existing vote → Create vote
+- Updates denormalized voteCount field
+- Updates lastActivityAt timestamp
+
+**API:**
+```typescript
+POST /api/features/[id]/vote
+Body: { voteType: 1 or -1 }
+
+Response:
+{
+  success: true,
+  vote: { id, voteType },
+  voteCount: 42
+}
+```
+
+---
+
+## Authentication Setup Instructions (Completed)
+
+### 1. Generate Encryption Key ✅
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+Copy output to `.env.local` as `ENCRYPTION_KEY`.
+
+### 2. Generate NextAuth Secret ✅
+
+```bash
+openssl rand -base64 32
+```
+
+Copy output to `.env.local` as `NEXTAUTH_SECRET`.
+
+### 3. Configure Azure AD SSO ✅
+
+**Steps completed:**
+1. Azure Portal → Azure Active Directory → App registrations
+2. Created "NextDocs" registration
+3. Redirect URI: `http://localhost:9980/api/auth/callback/azure-ad`
+4. Configured `AZURE_AD_CLIENT_ID`, `AZURE_AD_TENANT_ID`, `AZURE_AD_CLIENT_SECRET`
+
+### 4. Database Initialization ✅
+
+```bash
+npm run db:generate   # Generate Prisma client
+npm run db:push       # Push schema to database
+npm run db:seed       # Seed test users
+```
+
+### 5. Test Credentials ✅
+
+Default seeded users:
+- **Admin**: admin@harveynorman.com / admin123
+- **Editor**: editor@harveynorman.com / editor123  
+- **User**: user@harveynorman.com / user123
+
+---
+
+## API Versioning Implementation (Completed)
+
+### Database Schema Changes ✅
+
+**Modified APISpec model:**
+```prisma
+model APISpec {
+  // ... other fields
+  slug            String    // Not unique (multiple versions allowed)
+  version         String    // e.g., "1.0.0", "2.0.0"
+  
+  @@unique([slug, version]) // Composite unique key
+  @@index([slug])
+}
+```
+
+**Migration:** `20251117081243_add_api_spec_versioning`
+
+### Version Support ✅
+
+**Composite Key Lookups:**
+```typescript
+await prisma.aPISpec.findUnique({
+  where: {
+    slug_version: { slug: "my-api", version: "1.0.0" }
+  }
+})
+```
+
+**File Structure:**
+```
+content/api-specs/
+  [category]/
+    my-api-v1.yaml   → slug: "category-my-api", version: "1.0.0"
+    my-api-v2.yaml   → slug: "category-my-api", version: "2.0.0"
+```
+
+**Version Extraction from YAML:**
+```yaml
+openapi: 3.0.0
+info:
+  title: NextDoc API
+  version: 1.0.0  # Extracted as version field
+```
+
+### UI Implementation ✅
+
+**List Page** (`/api-docs`):
+- Groups API specs by slug
+- Shows all versions for each API
+- Latest version displayed first
+- Version selector using badges
+
+**Detail Page** (`/api-docs/[slug]/[version]`):
+- Versioned route structure
+- Version selector in header
+- Swagger UI or Redoc renderer
+- Displays metadata and sync status
+
+**API Route** (`/api/spec/[slug]/[version]`):
+- Serves YAML spec files
+- Uses composite key to find spec
+- Returns YAML with caching (1 hour)
+
+---
+
+## Docker Workflow Commands
+
+### Development Environment
+
+```json
+{
+  "scripts": {
+    "docker:dev": "docker compose up",
+    "docker:build": "docker compose build",
+    "docker:reload": "docker compose exec app npm install && docker compose restart app",
+    "docker:down": "docker compose down",
+    "docker:clean": "docker compose down -v",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts"
+  }
+}
+```
+
+**Usage:**
+- `npm run docker:dev` - Start all containers (app, postgres, redis)
+- `npm run docker:reload` - Fast package update (no rebuild)
+- `npm run docker:clean` - Remove containers and volumes
+
+### Dockerfile Features ✅
+
+**Alpine Linux base:**
+- Node 20 Alpine
+- curl installed
+- Auto npm install on startup
+- Port 9980 exposed
+
+**docker-compose.yml:**
+- **app**: Next.js app (port 9980)
+- **postgres**: PostgreSQL 16 (port 5433)
+- **redis**: Redis 7 (port 6379)
+
+---
+
 ## Future Enhancements
+
+### Feature Request System
+- [x] Feature submission form - **COMPLETED** (/features/new)
+- [x] Client-side voting on detail pages - **COMPLETED** (VoteButton component)
+- [x] Comment form on detail pages - **COMPLETED** (CommentForm component)
+- [x] Status management UI for admins - **COMPLETED** (StatusUpdateDialog)
+- [ ] Merge duplicate features
+- [ ] GitHub/DevOps two-way sync
+- [ ] Email notifications (EWS integration)
+- [ ] Following/notification preferences UI
+
+### Content Features
 - [ ] Multi-language support (i18n)
-- [ ] Version switching for docs
+- [ ] Mermaid diagram rendering
+- [ ] Interactive code examples
+- [ ] Search implementation (Pagefind/Flexsearch)
+- [ ] Blog post system with RSS
+- [ ] Author profiles
+- [ ] Related content suggestions
+- [ ] Table of contents component
+- [ ] Breadcrumb navigation
+- [ ] Category metadata (_meta.json)
+
+### Admin Features
+- [ ] Repository performance analytics
+- [ ] Automated repo failover
+- [ ] Content sync scheduling per repository
+- [ ] Bulk operations for features
+- [ ] User role management UI
+- [ ] Webhook event viewer
+
+### General
 - [ ] PDF export for documentation
 - [ ] Interactive API playground
 - [ ] Video embeds and tutorials
 - [ ] Community contributions (via GitHub PRs)
 - [ ] Comments system (Giscus)
 - [ ] Newsletter integration
-- [ ] Repository performance analytics
-- [ ] Automated repo failover (if primary down, use backup)
-- [ ] Content sync scheduling per repository
 
 ---
 
 ## Quick Start Commands
 
-When ready to build this, start with:
+### Project Initialization
 
 ```bash
 # Create project
@@ -3016,11 +3527,63 @@ npx prisma init
 npx shadcn@latest init
 
 # Install shadcn components
-npx shadcn@latest add button card tabs dialog input separator breadcrumb navigation-menu form label avatar dropdown-menu
+npx shadcn@latest add button card tabs dialog input separator breadcrumb navigation-menu form label avatar dropdown-menu alert-dialog textarea
 
 # Create database schema and migrate
 npx prisma db push
 npx prisma generate
 ```
 
-This directive should guide the complete rebuild. Ready to modify or start building?
+### Development Workflow
+
+```bash
+# Docker development
+npm run docker:dev
+
+# Local development
+npm run dev
+
+# Database operations
+npm run db:generate  # Regenerate Prisma client
+npm run db:push      # Push schema changes
+npm run db:seed      # Seed test data
+
+# Package updates in Docker
+npm run docker:reload  # Faster than rebuild
+```
+
+---
+
+## Recent Implementation Notes
+
+### Server/Client Component Separation
+- **Issue**: Event handlers in Server Components caused errors
+- **Solution**: Created `features-client.tsx` for interactive UI, kept `features/page.tsx` as Server Component for data fetching
+- **Pattern**: Server fetches → Client displays with interactivity
+
+### Category Deletion Enhancement
+- **Issue**: Deleting categories orphaned feature requests
+- **Solution**: Implemented two strategies:
+  1. Orphan: Set categoryId to null (keep features)
+  2. Cascade: Delete features and all related data (votes, comments, status history)
+- **Implementation**: Radio button selection in delete dialog, transaction-based for data integrity
+
+### UI Restructure
+- **Issue**: Sidebar filters cluttered the interface
+- **Solution**: 
+  - Moved categories to collapsible sidebar menu under "Feature Requests"
+  - Converted filters to dropdown menus (Status, Sort)
+  - Added active filter badges
+  - Full-width layout for feature list
+
+### API Versioning
+- **Issue**: Multiple versions of same API couldn't coexist
+- **Solution**:
+  - Removed `@unique` from slug field
+  - Added composite unique constraint: `@@unique([slug, version])`
+  - Updated UI to group by slug and show version selector
+  - Versioned routes: `/api-docs/[slug]/[version]`
+
+---
+
+This consolidated directive represents the complete state of the NextDocs platform implementation.

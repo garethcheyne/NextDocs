@@ -14,6 +14,7 @@ interface Category {
     description?: string | null
     parentSlug?: string | null
     level: number
+    hasIndexDocument?: boolean  // True if category has an index.md
     children?: Category[]
 }
 

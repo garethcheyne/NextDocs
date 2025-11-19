@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth/auth'
 import { redirect } from 'next/navigation'
-import { BookOpen, PanelLeft, ChevronRight } from 'lucide-react'
+import { BookOpen } from 'lucide-react'
 import {
     Card,
     CardContent,
@@ -32,34 +32,51 @@ export default async function DocsPage() {
         ],
     })
 
+    // Fetch all index documents to determine which categories have index.md
+    const indexDocuments = await prisma.document.findMany({
+        where: {
+            slug: {
+                in: categoryMetadata.map(cat => `docs/${cat.categorySlug}`),
+            },
+        },
+        select: {
+            slug: true,
+        },
+    })
+    
+    const indexDocumentSlugs = new Set(indexDocuments.map(doc => doc.slug.replace(/^docs\//, '')))
+
     // Build hierarchical category structure
     const buildCategoryTree = () => {
-        // Get categories that are children of 'commercial-wiki' (the main doc sections)
-        const rootCategories = categoryMetadata
-            .filter(cat => cat.parentSlug === 'commercial-wiki')
-            .map(cat => {
-                // Extract the last part of the slug (e.g., "commercial-wiki/eway" -> "eway")
-                const categoryName = cat.categorySlug.split('/').pop() || cat.categorySlug
+        // Recursive function to build children for any category
+        const buildChildren = (parentSlug: string): any[] => {
+            return categoryMetadata
+                .filter(child => child.parentSlug === parentSlug)
+                .map(child => ({
+                    slug: child.categorySlug,
+                    title: child.title,
+                    icon: child.icon,
+                    description: child.description,
+                    parentSlug: child.parentSlug,
+                    level: child.level,
+                    hasIndexDocument: indexDocumentSlugs.has(child.categorySlug),
+                    children: buildChildren(child.categorySlug), // Recursive call
+                }))
+        }
 
-                return {
-                    slug: cat.categorySlug,
-                    title: cat.title,
-                    icon: cat.icon,
-                    description: cat.description,
-                    parentSlug: cat.parentSlug,
-                    level: cat.level,
-                    children: categoryMetadata
-                        .filter(child => child.parentSlug === categoryName)
-                        .map(child => ({
-                            slug: child.categorySlug,
-                            title: child.title,
-                            icon: child.icon,
-                            description: child.description,
-                            parentSlug: child.parentSlug,
-                            level: child.level,
-                        }))
-                }
-            })
+        // Get root level categories (level 0, no parent)
+        const rootCategories = categoryMetadata
+            .filter(cat => cat.level === 0 && !cat.parentSlug)
+            .map(cat => ({
+                slug: cat.categorySlug,
+                title: cat.title,
+                icon: cat.icon,
+                description: cat.description,
+                parentSlug: cat.parentSlug,
+                level: cat.level,
+                hasIndexDocument: indexDocumentSlugs.has(cat.categorySlug),
+                children: buildChildren(cat.categorySlug), // Recursive call
+            }))
 
         return rootCategories
     }
@@ -74,26 +91,23 @@ export default async function DocsPage() {
                 {/* Main Content */}
                 <div className="flex-1 flex flex-col">
                     {/* Header */}
-                    <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-                        <div className="flex items-center justify-between w-full gap-2 px-4">
-                            <div className="flex items-center gap-2">
-                                <SidebarTrigger className="-ml-1">
-                                    <PanelLeft />
-                                    <span className="sr-only">Toggle Sidebar</span>
-                                </SidebarTrigger>
-                                <Separator orientation="vertical" className="mr-2 h-4" />
-                                <BreadcrumbNavigation items={[
-                                    { label: 'Home', href: '/', isLast: false },
-                                    { label: 'Documentation', href: '/docs', isLast: true },
-                                ]} />
-                            </div>
+                    <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
+                        <SidebarTrigger className="-ml-1" />
+                        <Separator orientation="vertical" className="mr-2 h-4" />
+                        <BreadcrumbNavigation
+                            items={[
+                                { label: 'Home', href: '/', isLast: false },
+                                { label: 'Documentation', href: '/docs', isLast: true },
+                            ]}
+                        />
+                        <div className="ml-auto flex items-center gap-2">
                             <ThemeToggle />
                         </div>
                     </header>
 
                     {/* Page Content */}
-                    <main className="flex-1 px-12 py-6 overflow-auto">
-                        <div className="max-w-7xl space-y-6">
+                    <main className="flex-1 p-6 space-y-6 overflow-auto">
+                        <div className="max-w-7xl">
                             {/* Welcome Section */}
                             <Card>
                                 <CardHeader>
@@ -139,11 +153,8 @@ export default async function DocsPage() {
                                 ) : (
                                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                                         {categoriesWithMeta.map((category) => {
-                                            // Remove "commercial-wiki/" prefix from slug for links
-                                            const linkSlug = category.slug.replace('commercial-wiki/', '')
-                                            
                                             return (
-                                                <Link key={category.slug} href={`/docs/${linkSlug}`}>
+                                                <Link key={category.slug} href={`/docs/${category.slug}`}>
                                                     <Card className="hover:border-primary transition-all cursor-pointer group h-full">
                                                         <CardHeader>
                                                             <div className="flex items-start justify-between">

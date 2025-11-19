@@ -2,18 +2,10 @@ import { auth } from '@/lib/auth/auth'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/db/prisma'
 import EditUserForm from '@/components/admin/edit-user-form'
-import { PanelLeft, ChevronRight } from 'lucide-react'
 import { SidebarTrigger } from '@/components/ui/sidebar'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
 import { Separator } from '@/components/ui/separator'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
 
 export default async function EditUserPage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth()
@@ -36,64 +28,35 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
     return (
         <>
             {/* Header */}
-            <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-                <div className="flex items-center justify-between w-full gap-2 px-4">
-                    <div className="flex items-center gap-2">
-                    <SidebarTrigger className="-ml-1">
-                        <PanelLeft />
-                        <span className="sr-only">Toggle Sidebar</span>
-                    </SidebarTrigger>
-                    <Separator orientation="vertical" className="mr-2 h-4" />
-                    <Breadcrumb>
-                        <BreadcrumbList>
-                            <BreadcrumbItem className="hidden md:block">
-                                <BreadcrumbLink href="/">
-                                    Home
-                                </BreadcrumbLink>
-                            </BreadcrumbItem>
-                            <BreadcrumbSeparator className="hidden md:block">
-                                <ChevronRight />
-                            </BreadcrumbSeparator>
-                            <BreadcrumbItem>
-                                <BreadcrumbLink href="/admin">
-                                    Admin
-                                </BreadcrumbLink>
-                            </BreadcrumbItem>
-                            <BreadcrumbSeparator className="hidden md:block">
-                                <ChevronRight />
-                            </BreadcrumbSeparator>
-                            <BreadcrumbItem>
-                                <BreadcrumbLink href="/admin/users">
-                                    Users
-                                </BreadcrumbLink>
-                            </BreadcrumbItem>
-                            <BreadcrumbSeparator className="hidden md:block">
-                                <ChevronRight />
-                            </BreadcrumbSeparator>
-                            <BreadcrumbItem>
-                                <BreadcrumbPage>Edit User</BreadcrumbPage>
-                            </BreadcrumbItem>
-                        </BreadcrumbList>
-                    </Breadcrumb>
-                    </div>
+            <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
+                <SidebarTrigger className="-ml-1" />
+                <Separator orientation="vertical" className="mr-2 h-4" />
+                <BreadcrumbNavigation
+                    items={[
+                        { label: 'Admin', href: '/admin' },
+                        { label: 'Users', href: '/admin/users' },
+                        { label: 'Edit User', href: `/admin/users/${resolvedParams.id}/edit` },
+                    ]}
+                />
+                <div className="ml-auto flex items-center gap-2">
                     <ThemeToggle />
                 </div>
             </header>
 
             {/* Page Content */}
-            <main className="flex-1 px-12 py-6 overflow-auto">
-                <div className="max-w-4xl space-y-6">
-                    <EditUserForm user={{
-                        id: user.id,
-                        name: user.name,
-                        email: user.email,
-                        role: user.role,
-                        image: user.image,
-                        provider: user.provider,
-                        createdAt: user.createdAt.toISOString(),
-                    }} />
+            <div className="flex-1 p-6 overflow-auto">
+                <div className="max-w-2xl">
+                <EditUserForm user={{
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                    image: user.image,
+                    provider: user.provider,
+                    createdAt: user.createdAt.toISOString(),
+                }} />
                 </div>
-            </main>
+            </div>
         </>
     )
 }

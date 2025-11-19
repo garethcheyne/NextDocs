@@ -4,8 +4,9 @@ import { syncGitHub } from './github'
 import { storeDocuments } from './document-storage'
 import { parseAndStoreMeta } from './metadata-parser'
 import { storeApiSpecs } from './api-spec-storage'
+import { syncRepositoryImages, syncRepositoryImagesUnified } from './image-sync'
 
-export async function syncRepository(repositoryId: string) {
+export async function syncRepository(repositoryId: string, ipAddress?: string) {
   const repository = await prisma.repository.findUnique({
     where: { id: repositoryId },
   })
@@ -20,6 +21,9 @@ export async function syncRepository(repositoryId: string) {
 
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
   console.log(`🔄 SYNC START: ${repository.name}`)
+  if (ipAddress) {
+    console.log(`🌐 Initiated by IP: ${ipAddress}`)
+  }
   console.log(`📦 Source: ${repository.source.toUpperCase()}`)
   if (repository.source === 'azure') {
     console.log(`🏢 Organization: ${repository.organization}`)
@@ -97,6 +101,36 @@ export async function syncRepository(repositoryId: string) {
       apiSpecResult = await storeApiSpecs(repository.id, apiSpecs)
     }
 
+    // Sync images from repository
+    let imageResult = { synced: 0, updated: 0, deleted: 0, skipped: 0, errors: [] as string[] }
+    if (repository.syncImages) {
+      try {
+        if (repository.source === 'github') {
+          imageResult = await syncRepositoryImages(
+            repository.owner!,
+            repository.repo!,
+            repository.accessToken,
+            repository.id,
+            repository.slug,
+            repository.branch
+          )
+        } else if (repository.source === 'azure') {
+          imageResult = await syncRepositoryImagesUnified({
+            source: 'azure',
+            repositoryId: repository.id,
+            repositorySlug: repository.slug,
+            branch: repository.branch,
+            organization: repository.organization!,
+            project: repository.project!,
+            azureRepositoryId: repository.repositoryId!,
+            patEncrypted: repository.patEncrypted!,
+          })
+        }
+      } catch (error) {
+        console.error('⚠️  Image sync failed but continuing:', error)
+      }
+    }
+
     const duration = Date.now() - startTime
 
     // Update sync log
@@ -126,6 +160,9 @@ export async function syncRepository(repositoryId: string) {
     console.log(`📊 Documents: ${storageResult.totalAdded} added, ${storageResult.totalUpdated} changed, ${storageResult.totalDeleted} deleted`)
     if (apiSpecs.length > 0) {
       console.log(`📊 API Specs: ${apiSpecResult.totalAdded} added, ${apiSpecResult.totalUpdated} updated`)
+    }
+    if (imageResult.synced > 0 || imageResult.updated > 0 || imageResult.deleted > 0) {
+      console.log(`📊 Images: ${imageResult.synced} added, ${imageResult.updated} updated, ${imageResult.deleted} deleted, ${imageResult.skipped} unchanged`)
     }
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
 

@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db/prisma'
+import { updateApiSpecSearchVector } from '@/lib/search/indexer'
 import path from 'path'
 
 interface ApiSpecFile {
@@ -19,9 +20,12 @@ export async function storeApiSpecs(
   const results = {
     totalAdded: 0,
     totalUpdated: 0,
+    totalDeleted: 0,
     totalSkipped: 0,
     errors: [] as string[],
   }
+
+  const processedPaths: string[] = []
 
   for (const file of files) {
     try {
@@ -83,6 +87,8 @@ export async function storeApiSpecs(
       const specPath = file.path
       const specContent = file.content
 
+      processedPaths.push(specPath)
+
       if (existingSpec) {
         // Update existing spec version
         await prisma.aPISpec.update({
@@ -102,6 +108,9 @@ export async function storeApiSpecs(
           },
         })
         
+        // Update search vector
+        await updateApiSpecSearchVector(existingSpec.id)
+        
         console.log(`   ✏️  Updated: ${apiName} v${version} (${category})`)
         results.totalUpdated++
       } else {
@@ -116,7 +125,7 @@ export async function storeApiSpecs(
         }
 
         // Create new spec
-        await prisma.aPISpec.create({
+        const newSpec = await prisma.aPISpec.create({
           data: {
             name: apiName,
             slug,
@@ -131,6 +140,9 @@ export async function storeApiSpecs(
           },
         })
         
+        // Update search vector
+        await updateApiSpecSearchVector(newSpec.id)
+        
         console.log(`   ➕ Added: ${apiName} v${version} (${category})`)
         results.totalAdded++
       }
@@ -141,7 +153,21 @@ export async function storeApiSpecs(
     }
   }
 
-  console.log(`\n✅ API Specs: ${results.totalAdded} added, ${results.totalUpdated} updated, ${results.totalSkipped} skipped`)
+  // Delete API specs that no longer exist in the repository
+  const deletedSpecs = await prisma.aPISpec.findMany({
+    where: {
+      repositoryId,
+      specPath: { notIn: processedPaths.length > 0 ? processedPaths : ['__none__'] },
+    },
+  })
+
+  for (const spec of deletedSpecs) {
+    await prisma.aPISpec.delete({ where: { id: spec.id } })
+    console.log(`   🗑️  Deleted: ${spec.name} v${spec.version} (no longer exists)`)
+    results.totalDeleted++
+  }
+
+  console.log(`\n✅ API Specs: ${results.totalAdded} added, ${results.totalUpdated} updated, ${results.totalDeleted} deleted, ${results.totalSkipped} skipped`)
   if (results.errors.length > 0) {
     console.error(`⚠️  Errors: ${results.errors.length}`)
   }
