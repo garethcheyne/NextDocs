@@ -17,19 +17,69 @@ import { prisma } from '@/lib/db/prisma'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
+import { SectionHeader } from '@/components/layout/section-header'
+import { BlogFilters } from '@/components/blog/blog-filters'
 
-export default async function BlogPage() {
+export default async function BlogPage({
+    searchParams,
+}: {
+    searchParams: { category?: string; year?: string; month?: string; tags?: string }
+}) {
     const session = await auth()
 
     if (!session) {
         redirect('/')
     }
 
-    // Fetch all blog posts
+    // Build filter conditions
+    const whereConditions: any = {
+        isDraft: false,
+    }
+
+    // Filter by category if provided
+    if (searchParams.category) {
+        whereConditions.category = searchParams.category
+    }
+
+    // Filter by tags if provided
+    if (searchParams.tags) {
+        const tagList = searchParams.tags.split(',').filter(Boolean)
+        if (tagList.length > 0) {
+            whereConditions.tags = {
+                hasSome: tagList
+            }
+        }
+    }
+
+    // Filter by year and month if provided
+    if (searchParams.year || searchParams.month) {
+        const year = searchParams.year ? parseInt(searchParams.year) : new Date().getFullYear()
+        const month = searchParams.month !== undefined ? parseInt(searchParams.month) : undefined
+
+        if (month !== undefined) {
+            // Filter by specific month
+            const startDate = new Date(year, month, 1)
+            const endDate = new Date(year, month + 1, 0, 23, 59, 59, 999)
+            
+            whereConditions.publishedAt = {
+                gte: startDate,
+                lte: endDate,
+            }
+        } else {
+            // Filter by year only
+            const startDate = new Date(year, 0, 1)
+            const endDate = new Date(year, 11, 31, 23, 59, 59, 999)
+            
+            whereConditions.publishedAt = {
+                gte: startDate,
+                lte: endDate,
+            }
+        }
+    }
+
+    // Fetch all blog posts with filters
     const blogPosts = await prisma.blogPost.findMany({
-        where: {
-            isDraft: false, // Only show published posts
-        },
+        where: whereConditions,
         select: {
             id: true,
             title: true,
@@ -53,6 +103,15 @@ export default async function BlogPage() {
         },
     })
 
+    // Get all blog posts (unfiltered) for sidebar data
+    const allBlogPosts = await prisma.blogPost.findMany({
+        where: { isDraft: false },
+        select: {
+            publishedAt: true,
+            tags: true,
+        },
+    })
+
     // Get blog categories with counts
     const blogCategories = await prisma.blogPost.groupBy({
         by: ['category'],
@@ -71,10 +130,80 @@ export default async function BlogPage() {
         }))
         .sort((a, b) => a.category.localeCompare(b.category))
 
+    // Get all unique tags with counts
+    const tagCounts = allBlogPosts.reduce((acc, post) => {
+        post.tags.forEach(tag => {
+            acc[tag] = (acc[tag] || 0) + 1
+        })
+        return acc
+    }, {} as Record<string, number>)
+    
+    const tagData = Object.entries(tagCounts)
+        .map(([tag, count]) => ({ tag, count }))
+        .sort((a, b) => b.count - a.count)
+
+    // Group blog posts by year and month (using all posts for sidebar)
+    const postsByDate = allBlogPosts.reduce((acc, post) => {
+        if (!post.publishedAt) return acc
+        
+        const date = new Date(post.publishedAt)
+        const year = date.getFullYear()
+        const month = date.getMonth() // 0-11
+        
+        if (!acc[year]) {
+            acc[year] = {}
+        }
+        if (!acc[year][month]) {
+            acc[year][month] = 0
+        }
+        acc[year][month]++
+        return acc
+    }, {} as Record<number, Record<number, number>>)
+
+    // Convert to array format for sidebar, sorted newest first
+    const blogDateGroups = Object.entries(postsByDate)
+        .map(([year, months]) => ({
+            year: parseInt(year),
+            months: Object.entries(months)
+                .map(([month, count]) => ({
+                    month: parseInt(month),
+                    count: count
+                }))
+                .sort((a, b) => b.month - a.month) // Newest month first
+        }))
+        .sort((a, b) => b.year - a.year) // Newest year first
+
+    // Determine page title based on active filters
+    const hasFilters = searchParams.category || searchParams.year || searchParams.month || searchParams.tags
+    let pageTitle = "Recent Posts"
+    
+    if (hasFilters) {
+        const filters = []
+        if (searchParams.category) filters.push(searchParams.category)
+        if (searchParams.year && searchParams.month !== undefined) {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+            filters.push(`${monthNames[parseInt(searchParams.month)]} ${searchParams.year}`)
+        } else if (searchParams.year) {
+            filters.push(searchParams.year)
+        }
+        if (searchParams.tags) {
+            const tagList = searchParams.tags.split(',').filter(Boolean)
+            if (tagList.length > 0) {
+                filters.push(tagList.join(', '))
+            }
+        }
+        pageTitle = filters.length > 0 ? `Filtered Posts` : "Recent Posts"
+    }
+
     return (
         <SidebarProvider>
             <div className="flex min-h-screen w-full">
-                <AppSidebar user={session.user} currentPath="/blog" blogCategories={categoryData} />
+                <AppSidebar 
+                    user={session.user} 
+                    currentPath="/blog" 
+                    blogCategories={categoryData}
+                    blogDateGroups={blogDateGroups}
+                />
 
                 {/* Main Content */}
                 <div className="flex-1 flex flex-col">
@@ -94,23 +223,19 @@ export default async function BlogPage() {
                     </header>
 
                     {/* Page Content */}
-                    <main className="flex-1 p-6 space-y-6 overflow-auto">
-                        <div className="max-w-7xl">
-                            {/* Welcome Section */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="text-2xl">
-                                        Blog & Announcements
-                                    </CardTitle>
-                                    <CardDescription>
-                                        Latest updates, news, and insights from the Commercial Apps Team
-                                    </CardDescription>
-                                </CardHeader>
-                            </Card>
+                    <main className="flex-1 overflow-auto">
+                        {/* Banner */}
+                        <SectionHeader
+                            icon={FileText}
+                            title="Blog & Announcements"
+                            subtitle="Latest updates, news, and insights from the Commercial Apps Team"
+                        />
 
-                            {/* Blog Posts */}
-                            <div>
-                                <h2 className="text-xl font-bold mb-4">Recent Posts</h2>
+                        <div className="w-full p-6">
+                            <div className="flex gap-6">
+                                {/* Blog Posts */}
+                                <div className="flex-1 min-w-0">
+                                    <h2 className="text-xl font-bold mb-4">{pageTitle}</h2>
 
                                 {blogPosts.length === 0 ? (
                                     <Card>
@@ -155,7 +280,7 @@ export default async function BlogPage() {
                                                             )}
                                                             <div className="flex items-start justify-between">
                                                                 <div className="flex-1">
-                                                                    <CardTitle className="group-hover:text-primary transition-colors">
+                                                                    <CardTitle className="group-hover:text-primary transition-colors leading-relaxed">
                                                                         {post.title}
                                                                     </CardTitle>
                                                                     {post.category && (
@@ -213,6 +338,16 @@ export default async function BlogPage() {
                                         })}
                                     </div>
                                 )}
+                                </div>
+
+                                {/* Filter Sidebar */}
+                                <aside className="w-80 shrink-0">
+                                    <BlogFilters
+                                        categories={categoryData}
+                                        tags={tagData}
+                                        dateGroups={blogDateGroups}
+                                    />
+                                </aside>
                             </div>
                         </div>
                     </main>

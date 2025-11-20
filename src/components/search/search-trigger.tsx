@@ -196,7 +196,7 @@ export function SearchTrigger() {
                                 <X className="h-3 w-3" />
                             </button>
                         )}
-                        <kbd className="hidden sm:inline-flex h-6 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium">
+                        <kbd className="hidden sm:inline-flex h-6 select-none items-center gap-1 rounded-full border bg-muted px-1.5 font-mono text-[10px] font-medium">
                             <span className="text-xs">⌘</span>K
                         </kbd>
                     </div>

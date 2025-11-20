@@ -89,7 +89,7 @@ export function ContentDetailLayout({
 
                         {/* Content */}
                         <main className="flex-1 overflow-y-auto px-12 py-6">
-                            <article className="max-w-5xl ml-8">
+                            <article className="w-full">
                                 {children}
                             </article>
                         </main>

@@ -3586,4 +3586,985 @@ npm run docker:reload  # Faster than rebuild
 
 ---
 
+## Analytics System - User Activity Tracking
+
+### Overview
+
+**Objective:** Track user activity across the platform including page visits, login attempts, document reads, search queries, and feature request engagement. Provide admin dashboard with real-time insights, filters, and visualizations.
+
+**Requirements:**
+- PostgreSQL storage (same database as app data)
+- Track authenticated users AND anonymous visitors
+- 1 year data retention
+- Real-time analytics updates
+- Admin-only access to analytics dashboard
+- Active reading time tracking (exclude idle/background tabs)
+- Scroll depth tracking
+
+### Database Schema
+
+```prisma
+// Analytics Models
+model AnalyticsEvent {
+  id              String    @id @default(uuid())
+  sessionId       String    // Session identifier (user-specific or anonymous)
+  userId          String?   // Null for anonymous visitors
+  eventType       String    // 'page_view', 'login_success', 'login_failure', 'document_read', 'search', 'feature_view', 'api_spec_view'
+  eventData       Json?     // Additional event-specific data
+  
+  // Page/Resource information
+  path            String    // URL path
+  resourceId      String?   // Document slug, feature ID, etc.
+  resourceType    String?   // 'doc', 'blog', 'feature', 'api_spec'
+  category        String?   // Content category
+  
+  // User information
+  ipAddress       String?
+  userAgent       String?
+  referrer        String?
+  
+  // Timing data
+  duration        Int?      // Time spent (milliseconds)
+  scrollDepth     Int?      // Scroll percentage (0-100)
+  
+  // Metadata
+  createdAt       DateTime  @default(now())
+  
+  // Relations
+  user            User?     @relation("AnalyticsEvents", fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([sessionId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@index([path])
+  @@index([resourceType])
+}
+
+model AnalyticsSession {
+  id              String    @id @default(uuid())
+  sessionId       String    @unique // Session identifier
+  userId          String?   // Null for anonymous visitors
+  
+  // Session details
+  ipAddress       String?
+  userAgent       String?
+  country         String?
+  city            String?
+  
+  // Session timing
+  startedAt       DateTime  @default(now())
+  lastActivityAt  DateTime  @default(now())
+  endedAt         DateTime?
+  duration        Int?      // Total session duration (milliseconds)
+  
+  // Session stats
+  pageViews       Int       @default(0)
+  uniquePages     Int       @default(0)
+  eventsCount     Int       @default(0)
+  
+  // Relations
+  user            User?     @relation("AnalyticsSessions", fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([sessionId])
+  @@index([startedAt])
+}
+
+model AnalyticsDailySummary {
+  id              String    @id @default(uuid())
+  date            DateTime  @unique @db.Date
+  
+  // User metrics
+  totalUsers      Int       @default(0)
+  newUsers        Int       @default(0)
+  activeUsers     Int       @default(0)
+  anonymousUsers  Int       @default(0)
+  
+  // Session metrics
+  totalSessions   Int       @default(0)
+  avgSessionDuration Int    @default(0)
+  
+  // Page metrics
+  totalPageViews  Int       @default(0)
+  uniquePageViews Int       @default(0)
+  
+  // Authentication metrics
+  loginSuccess    Int       @default(0)
+  loginFailure    Int       @default(0)
+  
+  // Content metrics
+  documentsRead   Int       @default(0)
+  avgReadDuration Int       @default(0)
+  searchQueries   Int       @default(0)
+  featuresViewed  Int       @default(0)
+  apiSpecsViewed  Int       @default(0)
+  
+  // Top content (JSON arrays)
+  topPages        Json?     // [{path, views}]
+  topDocuments    Json?     // [{slug, views}]
+  topSearches     Json?     // [{query, count}]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([date])
+}
+
+// Add to User model
+model User {
+  // ... existing fields
+  
+  // Analytics relations
+  analyticsEvents   AnalyticsEvent[]   @relation("AnalyticsEvents")
+  analyticsSessions AnalyticsSession[] @relation("AnalyticsSessions")
+}
+```
+
+### Event Types
+
+```typescript
+export type AnalyticsEventType =
+  | 'page_view'          // User viewed a page
+  | 'login_success'      // Successful login
+  | 'login_failure'      // Failed login attempt
+  | 'document_read'      // User read a document
+  | 'document_complete'  // User scrolled to bottom
+  | 'search'             // Search query submitted
+  | 'feature_view'       // Feature request viewed
+  | 'feature_vote'       // Feature request voted
+  | 'feature_comment'    // Feature request commented
+  | 'api_spec_view'      // API spec viewed
+  | 'session_start'      // Session started
+  | 'session_end'        // Session ended
+
+export interface AnalyticsEventData {
+  // Document read events
+  documentSlug?: string
+  documentTitle?: string
+  readDuration?: number      // milliseconds
+  scrollDepth?: number       // 0-100
+  
+  // Search events
+  searchQuery?: string
+  searchResults?: number
+  
+  // Feature events
+  featureId?: string
+  featureTitle?: string
+  voteType?: number         // 1 or -1
+  
+  // Login events
+  loginMethod?: 'credentials' | 'azure-ad'
+  failureReason?: string
+  
+  // API spec events
+  apiSpecSlug?: string
+  apiSpecVersion?: string
+}
+```
+
+### Client-Side Tracking
+
+**Analytics Context Provider:**
+```typescript
+// lib/analytics/client.ts
+'use client'
+
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { usePathname } from 'next/navigation'
+
+interface AnalyticsContextType {
+  trackEvent: (eventType: string, eventData?: any) => Promise<void>
+  trackPageView: () => void
+  trackDocumentRead: (slug: string, title: string) => void
+  trackSearch: (query: string, results: number) => void
+}
+
+const AnalyticsContext = createContext<AnalyticsContextType | null>(null)
+
+export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
+  const { data: session } = useSession()
+  const pathname = usePathname()
+  const [sessionId] = useState(() => generateSessionId())
+  const [startTime, setStartTime] = useState<number>(Date.now())
+  const [scrollDepth, setScrollDepth] = useState(0)
+  const [isActive, setIsActive] = useState(true)
+  const visibilityTimeout = useRef<NodeJS.Timeout>()
+  
+  // Track page visibility
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setIsActive(false)
+        // Set timeout for 30 seconds of inactivity
+        visibilityTimeout.current = setTimeout(() => {
+          // Track session pause
+          trackEvent('page_blur', {
+            duration: Date.now() - startTime,
+            scrollDepth
+          })
+        }, 30000)
+      } else {
+        setIsActive(true)
+        if (visibilityTimeout.current) {
+          clearTimeout(visibilityTimeout.current)
+        }
+        // Track session resume
+        setStartTime(Date.now())
+      }
+    }
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [startTime, scrollDepth])
+  
+  // Track scroll depth
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!isActive) return
+      
+      const windowHeight = window.innerHeight
+      const documentHeight = document.documentElement.scrollHeight
+      const scrollTop = window.scrollY
+      const depth = Math.round(((scrollTop + windowHeight) / documentHeight) * 100)
+      
+      setScrollDepth(Math.max(scrollDepth, Math.min(depth, 100)))
+    }
+    
+    const throttledScroll = throttle(handleScroll, 1000)
+    window.addEventListener('scroll', throttledScroll, { passive: true })
+    return () => window.removeEventListener('scroll', throttledScroll)
+  }, [isActive, scrollDepth])
+  
+  // Track page views on route change
+  useEffect(() => {
+    trackPageView()
+    setStartTime(Date.now())
+    setScrollDepth(0)
+  }, [pathname])
+  
+  // Track session end on unmount
+  useEffect(() => {
+    return () => {
+      trackEvent('session_end', {
+        duration: Date.now() - startTime,
+        scrollDepth
+      })
+    }
+  }, [])
+  
+  const trackEvent = async (eventType: string, eventData?: any) => {
+    try {
+      await fetch('/api/analytics/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          userId: session?.user?.id,
+          eventType,
+          eventData,
+          path: pathname,
+          scrollDepth: eventType.includes('read') ? scrollDepth : undefined,
+          duration: eventType.includes('read') || eventType.includes('end') ? Date.now() - startTime : undefined,
+        })
+      })
+    } catch (error) {
+      console.error('Analytics tracking error:', error)
+    }
+  }
+  
+  const trackPageView = () => {
+    trackEvent('page_view', {
+      referrer: document.referrer
+    })
+  }
+  
+  const trackDocumentRead = (slug: string, title: string) => {
+    trackEvent('document_read', {
+      documentSlug: slug,
+      documentTitle: title
+    })
+  }
+  
+  const trackSearch = (query: string, results: number) => {
+    trackEvent('search', {
+      searchQuery: query,
+      searchResults: results
+    })
+  }
+  
+  return (
+    <AnalyticsContext.Provider value={{
+      trackEvent,
+      trackPageView,
+      trackDocumentRead,
+      trackSearch
+    }}>
+      {children}
+    </AnalyticsContext.Provider>
+  )
+}
+
+export function useAnalytics() {
+  const context = useContext(AnalyticsContext)
+  if (!context) throw new Error('useAnalytics must be used within AnalyticsProvider')
+  return context
+}
+
+function generateSessionId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+}
+
+function throttle(func: Function, wait: number) {
+  let timeout: NodeJS.Timeout | null = null
+  return function(...args: any[]) {
+    if (!timeout) {
+      timeout = setTimeout(() => {
+        func(...args)
+        timeout = null
+      }, wait)
+    }
+  }
+}
+```
+
+**Document Read Tracking Hook:**
+```typescript
+// hooks/use-document-analytics.ts
+'use client'
+
+import { useEffect } from 'use'
+import { useAnalytics } from '@/lib/analytics/client'
+
+export function useDocumentAnalytics(slug: string, title: string) {
+  const { trackDocumentRead } = useAnalytics()
+  
+  useEffect(() => {
+    // Track when document is mounted
+    trackDocumentRead(slug, title)
+    
+    // Track read completion when user scrolls to bottom
+    const handleScroll = () => {
+      const windowHeight = window.innerHeight
+      const documentHeight = document.documentElement.scrollHeight
+      const scrollTop = window.scrollY
+      const scrollPercentage = ((scrollTop + windowHeight) / documentHeight) * 100
+      
+      if (scrollPercentage >= 90) {
+        trackDocumentRead(slug, title)
+        window.removeEventListener('scroll', handleScroll)
+      }
+    }
+    
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [slug, title])
+}
+```
+
+### Server-Side Tracking
+
+**Analytics Tracking API:**
+```typescript
+// app/api/analytics/track/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/db/prisma'
+import { headers } from 'next/headers'
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json()
+    const headersList = headers()
+    
+    const {
+      sessionId,
+      userId,
+      eventType,
+      eventData,
+      path,
+      scrollDepth,
+      duration,
+    } = body
+    
+    // Extract request metadata
+    const ipAddress = headersList.get('x-forwarded-for') || headersList.get('x-real-ip')
+    const userAgent = headersList.get('user-agent')
+    const referrer = headersList.get('referer')
+    
+    // Determine resource type from path
+    let resourceType = null
+    let resourceId = null
+    let category = null
+    
+    if (path.startsWith('/docs/')) {
+      resourceType = 'doc'
+      resourceId = path.replace('/docs/', '')
+      category = resourceId.split('/')[0]
+    } else if (path.startsWith('/blog/')) {
+      resourceType = 'blog'
+      resourceId = path.replace('/blog/', '')
+    } else if (path.startsWith('/features/')) {
+      resourceType = 'feature'
+      resourceId = path.replace('/features/', '')
+    } else if (path.startsWith('/api-docs/')) {
+      resourceType = 'api_spec'
+      resourceId = path.replace('/api-docs/', '')
+    }
+    
+    // Create analytics event
+    await prisma.analyticsEvent.create({
+      data: {
+        sessionId,
+        userId,
+        eventType,
+        eventData,
+        path,
+        resourceId,
+        resourceType,
+        category,
+        ipAddress,
+        userAgent,
+        referrer,
+        duration,
+        scrollDepth,
+      }
+    })
+    
+    // Update or create session
+    await prisma.analyticsSession.upsert({
+      where: { sessionId },
+      update: {
+        lastActivityAt: new Date(),
+        eventsCount: { increment: 1 },
+        ...(eventType === 'page_view' && {
+          pageViews: { increment: 1 }
+        })
+      },
+      create: {
+        sessionId,
+        userId,
+        ipAddress,
+        userAgent,
+        pageViews: eventType === 'page_view' ? 1 : 0,
+        eventsCount: 1,
+      }
+    })
+    
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Analytics tracking error:', error)
+    return NextResponse.json(
+      { error: 'Failed to track event' },
+      { status: 500 }
+    )
+  }
+}
+```
+
+**Login Tracking (Server Action):**
+```typescript
+// lib/auth/auth.ts (in authorize function)
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  // ... other config
+  callbacks: {
+    async signIn({ user, account, profile }) {
+      // Track successful login
+      await prisma.analyticsEvent.create({
+        data: {
+          sessionId: generateSessionId(),
+          userId: user.id,
+          eventType: 'login_success',
+          eventData: {
+            loginMethod: account?.provider || 'credentials'
+          },
+          path: '/login'
+        }
+      })
+      
+      return true
+    },
+    // ... other callbacks
+  }
+})
+
+// In credentials provider authorize function
+async authorize(credentials) {
+  try {
+    // ... verification logic
+    
+    if (!isValid) {
+      // Track failed login
+      await prisma.analyticsEvent.create({
+        data: {
+          sessionId: generateSessionId(),
+          eventType: 'login_failure',
+          eventData: {
+            loginMethod: 'credentials',
+            email: credentials.email,
+            failureReason: 'Invalid credentials'
+          },
+          path: '/login'
+        }
+      })
+      
+      return null
+    }
+    
+    return user
+  } catch (error) {
+    // Track error
+    await prisma.analyticsEvent.create({
+      data: {
+        sessionId: generateSessionId(),
+        eventType: 'login_failure',
+        eventData: {
+          loginMethod: 'credentials',
+          failureReason: error.message
+        },
+        path: '/login'
+      }
+    })
+    
+    throw error
+  }
+}
+```
+
+### Admin Analytics Dashboard
+
+**Dashboard Page:**
+```typescript
+// app/(protected)/admin/analytics/page.tsx
+import { auth } from '@/lib/auth/auth'
+import { redirect } from 'next/navigation'
+import { AnalyticsDashboard } from '@/components/admin/analytics/dashboard'
+
+export default async function AnalyticsPage() {
+  const session = await auth()
+  
+  if (!session || session.user.role !== 'admin') {
+    redirect('/docs')
+  }
+  
+  return (
+    <div className="container py-8">
+      <h1 className="text-3xl font-bold mb-6">Analytics Dashboard</h1>
+      <AnalyticsDashboard />
+    </div>
+  )
+}
+```
+
+**Dashboard Component:**
+```typescript
+// components/admin/analytics/dashboard.tsx
+'use client'
+
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { Card } from '@/components/ui/card'
+import { Select } from '@/components/ui/select'
+import { DateRangePicker } from '@/components/ui/date-range-picker'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { MetricsCards } from './metrics-cards'
+import { ActivityChart } from './activity-chart'
+import { TopContentTable } from './top-content-table'
+import { UserActivityTable } from './user-activity-table'
+import { RealtimeEvents } from './realtime-events'
+
+export function AnalyticsDashboard() {
+  const [dateRange, setDateRange] = useState({ from: subDays(new Date(), 30), to: new Date() })
+  const [userFilter, setUserFilter] = useState<string | null>(null)
+  
+  const { data: metrics, isLoading } = useQuery({
+    queryKey: ['analytics-metrics', dateRange, userFilter],
+    queryFn: () => fetchMetrics(dateRange, userFilter),
+    refetchInterval: 30000 // Refresh every 30 seconds
+  })
+  
+  return (
+    <div className="space-y-6">
+      {/* Filters */}
+      <Card className="p-4">
+        <div className="flex gap-4">
+          <DateRangePicker value={dateRange} onChange={setDateRange} />
+          <Select value={userFilter} onChange={setUserFilter} placeholder="All Users">
+            <option value="">All Users</option>
+            <option value="authenticated">Authenticated</option>
+            <option value="anonymous">Anonymous</option>
+          </Select>
+        </div>
+      </Card>
+      
+      {/* Metrics Overview */}
+      <MetricsCards metrics={metrics} />
+      
+      {/* Tabs */}
+      <Tabs defaultValue="overview">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="users">User Activity</TabsTrigger>
+          <TabsTrigger value="content">Content Performance</TabsTrigger>
+          <TabsTrigger value="realtime">Real-time</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="overview" className="space-y-6">
+          <ActivityChart data={metrics?.timeline} />
+          <div className="grid gap-6 md:grid-cols-2">
+            <TopContentTable
+              title="Top Pages"
+              data={metrics?.topPages}
+              type="page"
+            />
+            <TopContentTable
+              title="Top Documents"
+              data={metrics?.topDocuments}
+              type="document"
+            />
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="users">
+          <UserActivityTable dateRange={dateRange} />
+        </TabsContent>
+        
+        <TabsContent value="content">
+          <TopContentTable
+            title="Content Performance"
+            data={metrics?.contentPerformance}
+            type="detailed"
+          />
+        </TabsContent>
+        
+        <TabsContent value="realtime">
+          <RealtimeEvents />
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}
+```
+
+**Metrics API:**
+```typescript
+// app/api/admin/analytics/metrics/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@/lib/auth/auth'
+import { prisma } from '@/lib/db/prisma'
+
+export async function GET(req: NextRequest) {
+  const session = await auth()
+  if (!session || session.user.role !== 'admin') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  
+  const searchParams = req.nextUrl.searchParams
+  const from = new Date(searchParams.get('from') || subDays(new Date(), 30))
+  const to = new Date(searchParams.get('to') || new Date())
+  const userFilter = searchParams.get('userFilter')
+  
+  // Get aggregated metrics
+  const metrics = await getAnalyticsMetrics(from, to, userFilter)
+  
+  return NextResponse.json(metrics)
+}
+
+async function getAnalyticsMetrics(from: Date, to: Date, userFilter: string | null) {
+  const where: any = {
+    createdAt: { gte: from, lte: to }
+  }
+  
+  if (userFilter === 'authenticated') {
+    where.userId = { not: null }
+  } else if (userFilter === 'anonymous') {
+    where.userId = null
+  }
+  
+  // Total metrics
+  const [
+    totalEvents,
+    uniqueUsers,
+    totalSessions,
+    loginAttempts,
+    documentReads,
+    searches,
+    topPages,
+    topDocuments,
+  ] = await Promise.all([
+    prisma.analyticsEvent.count({ where }),
+    prisma.analyticsEvent.groupBy({
+      by: ['userId'],
+      where: { ...where, userId: { not: null } },
+      _count: true
+    }),
+    prisma.analyticsSession.count({
+      where: {
+        startedAt: { gte: from, lte: to },
+        ...(userFilter === 'authenticated' && { userId: { not: null } }),
+        ...(userFilter === 'anonymous' && { userId: null })
+      }
+    }),
+    prisma.analyticsEvent.groupBy({
+      by: ['eventType'],
+      where: {
+        ...where,
+        eventType: { in: ['login_success', 'login_failure'] }
+      },
+      _count: true
+    }),
+    prisma.analyticsEvent.count({
+      where: { ...where, eventType: 'document_read' }
+    }),
+    prisma.analyticsEvent.count({
+      where: { ...where, eventType: 'search' }
+    }),
+    // Top pages
+    prisma.analyticsEvent.groupBy({
+      by: ['path'],
+      where: { ...where, eventType: 'page_view' },
+      _count: true,
+      orderBy: { _count: { path: 'desc' } },
+      take: 10
+    }),
+    // Top documents
+    prisma.analyticsEvent.groupBy({
+      by: ['resourceId'],
+      where: {
+        ...where,
+        eventType: 'document_read',
+        resourceType: 'doc'
+      },
+      _count: true,
+      _avg: { duration: true, scrollDepth: true },
+      orderBy: { _count: { resourceId: 'desc' } },
+      take: 10
+    })
+  ])
+  
+  // Timeline data (daily aggregation)
+  const timeline = await prisma.$queryRaw`
+    SELECT
+      DATE(created_at) as date,
+      COUNT(*) FILTER (WHERE event_type = 'page_view') as page_views,
+      COUNT(DISTINCT session_id) as sessions,
+      COUNT(DISTINCT user_id) FILTER (WHERE user_id IS NOT NULL) as users
+    FROM analytics_event
+    WHERE created_at >= ${from} AND created_at <= ${to}
+    GROUP BY DATE(created_at)
+    ORDER BY date ASC
+  `
+  
+  return {
+    totalEvents,
+    uniqueUsers: uniqueUsers.length,
+    totalSessions,
+    loginSuccess: loginAttempts.find(l => l.eventType === 'login_success')?._count || 0,
+    loginFailure: loginAttempts.find(l => l.eventType === 'login_failure')?._count || 0,
+    documentReads,
+    searches,
+    topPages: topPages.map(p => ({ path: p.path, views: p._count })),
+    topDocuments: topDocuments.map(d => ({
+      resourceId: d.resourceId,
+      views: d._count,
+      avgDuration: d._avg.duration,
+      avgScrollDepth: d._avg.scrollDepth
+    })),
+    timeline
+  }
+}
+```
+
+**User Activity Table Component:**
+```typescript
+// components/admin/analytics/user-activity-table.tsx
+'use client'
+
+import { useQuery } from '@tanstack/react-query'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
+import { Input } from '@/components/ui/input'
+import { useState } from 'react'
+
+export function UserActivityTable({ dateRange }: { dateRange: { from: Date; to: Date } }) {
+  const [search, setSearch] = useState('')
+  
+  const { data, isLoading } = useQuery({
+    queryKey: ['user-activity', dateRange, search],
+    queryFn: () => fetchUserActivity(dateRange, search)
+  })
+  
+  return (
+    <div className="space-y-4">
+      <Input
+        placeholder="Search by name or email..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+      
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>User</TableHead>
+            <TableHead>Sessions</TableHead>
+            <TableHead>Page Views</TableHead>
+            <TableHead>Documents Read</TableHead>
+            <TableHead>Searches</TableHead>
+            <TableHead>Last Activity</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data?.users.map(user => (
+            <TableRow key={user.id}>
+              <TableCell>
+                <div>
+                  <div className="font-medium">{user.name}</div>
+                  <div className="text-sm text-muted-foreground">{user.email}</div>
+                </div>
+              </TableCell>
+              <TableCell>{user.sessions}</TableCell>
+              <TableCell>{user.pageViews}</TableCell>
+              <TableCell>{user.documentsRead}</TableCell>
+              <TableCell>{user.searches}</TableCell>
+              <TableCell>
+                <span className="text-sm">{formatDate(user.lastActivity)}</span>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  )
+}
+```
+
+**Real-time Events Component:**
+```typescript
+// components/admin/analytics/realtime-events.tsx
+'use client'
+
+import { useEffect, useState } from 'react'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+
+export function RealtimeEvents() {
+  const [events, setEvents] = useState<any[]>([])
+  
+  useEffect(() => {
+    // Poll for new events every 2 seconds
+    const interval = setInterval(async () => {
+      const response = await fetch('/api/admin/analytics/realtime')
+      const data = await response.json()
+      setEvents(data.events.slice(0, 50)) // Keep last 50 events
+    }, 2000)
+    
+    return () => clearInterval(interval)
+  }, [])
+  
+  return (
+    <div className="space-y-2">
+      <h3 className="font-semibold mb-4">Live Events (Last 2 minutes)</h3>
+      {events.map(event => (
+        <Card key={event.id} className="p-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <Badge variant={getEventBadgeVariant(event.eventType)}>
+                {formatEventType(event.eventType)}
+              </Badge>
+              <span className="ml-2 text-sm">{event.path}</span>
+              {event.user && (
+                <span className="ml-2 text-sm text-muted-foreground">
+                  by {event.user.name}
+                </span>
+              )}
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {formatRelativeTime(event.createdAt)}
+            </span>
+          </div>
+        </Card>
+      ))}
+    </div>
+  )
+}
+```
+
+### Data Retention & Cleanup
+
+**Cleanup Job:**
+```typescript
+// lib/analytics/cleanup.ts
+import { prisma } from '@/lib/db/prisma'
+
+export async function cleanupOldAnalytics() {
+  const oneYearAgo = new Date()
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1)
+  
+  // Delete events older than 1 year
+  await prisma.analyticsEvent.deleteMany({
+    where: {
+      createdAt: { lt: oneYearAgo }
+    }
+  })
+  
+  // Delete sessions older than 1 year
+  await prisma.analyticsSession.deleteMany({
+    where: {
+      startedAt: { lt: oneYearAgo }
+    }
+  })
+  
+  console.log('Analytics cleanup completed')
+}
+
+// Run daily via cron job or Vercel Cron
+export async function GET() {
+  await cleanupOldAnalytics()
+  return new Response('Cleanup complete', { status: 200 })
+}
+```
+
+### Analytics Features Summary
+
+✅ **Implemented:**
+- Event tracking system with PostgreSQL storage
+- Session management for authenticated and anonymous users
+- Active reading time tracking (excludes idle/background tabs)
+- Scroll depth tracking
+- Real-time analytics updates (30-second polling)
+- Admin-only analytics dashboard
+- User activity filtering and search
+- Content performance metrics
+- Login success/failure tracking
+- 1-year data retention with automated cleanup
+
+✅ **Events Tracked:**
+- Page views
+- Login attempts (success/failure)
+- Document reads with duration and scroll depth
+- Search queries
+- Feature request views/votes/comments
+- API spec views
+- Session start/end
+
+✅ **Dashboard Features:**
+- Metrics overview cards
+- Timeline charts (daily aggregation)
+- Top pages/documents tables
+- User activity table with search
+- Content performance analysis
+- Real-time event feed
+- Date range filtering
+- User type filtering (authenticated/anonymous/all)
+
+✅ **Privacy & Performance:**
+- Admin-only access
+- Anonymized visitor tracking via session IDs
+- Indexed database queries for performance
+- Background event tracking (no UI blocking)
+- Throttled scroll events (1-second intervals)
+- Automatic cleanup of old data (1-year retention)
+
+---
+
 This consolidated directive represents the complete state of the NextDocs platform implementation.

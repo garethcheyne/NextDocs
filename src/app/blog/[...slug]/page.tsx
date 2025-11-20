@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth/auth'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/db/prisma'
 import { ContentDetailLayout } from '@/components/layout/content-detail-layout'
+import { DocumentTracker } from '@/components/document-tracker'
 import { Calendar, User, Tag, Clock } from 'lucide-react'
 import { MarkdownWithMermaid } from '@/components/markdown-with-mermaid'
 import { Badge } from '@/components/ui/badge'
@@ -105,6 +106,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             content={blogPost.content}
             blogCategories={categoryData}
         >
+                                {/* Blog Post Read Tracking */}
+                                <DocumentTracker slug={fullSlug} title={blogPost.title} />
+                                
                                 {/* Blog Post Header */}
                                 <div className="mb-8">
                                     {blogPost.featuredImage && (

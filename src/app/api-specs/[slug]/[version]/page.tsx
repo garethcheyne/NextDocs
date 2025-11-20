@@ -98,8 +98,8 @@ export default async function ApiDocDetailPage({ params }: ApiDocDetailPageProps
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
-        <AppSidebar 
-          user={session.user} 
+        <AppSidebar
+          user={session.user}
           currentPath={`/api-specs/${slug}/${version}`}
           apiSpecs={allApiSpecs}
         />
@@ -123,102 +123,13 @@ export default async function ApiDocDetailPage({ params }: ApiDocDetailPageProps
 
           {/* Page Content */}
           <main className="flex-1 px-12 py-6 overflow-auto">
-            {/* API Info Header */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h1 className="text-3xl font-bold">{apiSpec.name}</h1>
-                  <div className="flex items-center gap-2 mt-2">
-                    {apiSpec.category && (
-                      <Badge variant="outline" className="text-xs">
-                        {apiSpec.category}
-                      </Badge>
-                    )}
-                    <Badge variant="outline" className="text-xs">
-                      {apiSpec.renderer === 'swagger-ui' ? 'Swagger UI' : 'Redoc'}
-                    </Badge>
-                    <Badge variant="default" className="text-xs">
-                      v{version}
-                    </Badge>
-                  </div>
-                </div>
-
-                {/* Version Selector */}
-                {allVersions.length > 1 && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">Switch version:</span>
-                    <div className="flex gap-2">
-                      {allVersions.map((v: { version: string }) => (
-                        <Link key={v.version} href={`/api-specs/${slug}/${v.version}`}>
-                          <Badge
-                            variant={v.version === version ? 'default' : 'secondary'}
-                            className="cursor-pointer hover:opacity-80"
-                          >
-                            v{v.version}
-                          </Badge>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {apiSpec.description && (
-                <p className="text-muted-foreground max-w-3xl">
-                  {apiSpec.description}
-                </p>
-              )}
-            </div>
 
             {/* API Viewer */}
-            <div className="rounded-lg border bg-card overflow-hidden">
-              <ApiSpecViewer 
-                spec={specObject} 
-                renderer={apiSpec.renderer as 'swagger-ui' | 'redoc'} 
-              />
-            </div>
+            <ApiSpecViewer
+              spec={specObject}
+              renderer={apiSpec.renderer as 'swagger-ui' | 'redoc'}
+            />
 
-            {/* Footer Info */}
-            <div className="mt-6 p-4 rounded-lg border bg-card/50">
-              <div className="flex flex-col gap-4">
-                {apiSpec.autoSync && (
-                  <div className="flex items-start gap-2 text-sm">
-                    <GitBranch className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Auto-Sync Enabled</p>
-                      <p className="text-muted-foreground text-xs">
-                        This API specification is automatically synchronized from the
-                        repository every {Math.floor(apiSpec.syncFrequency / 60)} minutes.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {apiSpec.repository && (
-                  <div className="flex items-start gap-2 text-sm">
-                    <FileText className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Repository</p>
-                      <p className="text-muted-foreground text-xs">
-                        {apiSpec.repository.name}
-                        {apiSpec.repository.source === 'github' && ' (GitHub)'}
-                        {apiSpec.repository.source === 'azure' && ' (Azure DevOps)'}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-start gap-2 text-sm">
-                  <FileText className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium">Specification Path</p>
-                    <p className="text-xs text-muted-foreground font-mono break-all">
-                      {apiSpec.specPath}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
           </main>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { auth } from '@/lib/auth/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { FileText } from 'lucide-react'
+import { FileText, Code2 } from 'lucide-react'
 import {
   Card,
   CardContent,
@@ -17,6 +17,7 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
 import { prisma } from '@/lib/db/prisma'
 import { Badge } from '@/components/ui/badge'
+import { SectionHeader } from '@/components/layout/section-header'
 
 export default async function ApiDocsPage() {
   const session = await auth()
@@ -79,20 +80,15 @@ export default async function ApiDocsPage() {
           </header>
 
           {/* Page Content */}
-          <main className="flex-1 p-6 space-y-6 overflow-auto">
-            <div className="max-w-7xl">
-              {/* Welcome Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-2xl">
-                    API Documentation
-                  </CardTitle>
-                  <CardDescription>
-                    Browse and explore interactive API specifications
-                  </CardDescription>
-                </CardHeader>
-              </Card>
+          <main className="flex-1 overflow-auto">
+            {/* Banner */}
+            <SectionHeader
+              icon={Code2}
+              title="API Documentation"
+              subtitle="Browse and explore interactive API specifications with Swagger UI and Redoc"
+            />
 
+            <div className="max-w-7xl mx-auto p-6 space-y-6">
               {/* API Specs List */}
               <div>
                 <h2 className="text-xl font-bold mb-4">Available API Specifications</h2>

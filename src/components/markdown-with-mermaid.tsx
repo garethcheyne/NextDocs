@@ -1,13 +1,21 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import type { Components } from 'react-markdown'
 import { MarkdownImage } from './markdown-image'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogTitle,
+} from '@/components/ui/dialog'
+import { Maximize2 } from 'lucide-react'
 
 // Mermaid component that renders diagrams
 function MermaidDiagram({ chart }: { chart: string }) {
     const ref = useRef<HTMLDivElement>(null)
+    const [isOpen, setIsOpen] = useState(false)
 
     useEffect(() => {
         const renderDiagram = async () => {
@@ -100,7 +108,34 @@ function MermaidDiagram({ chart }: { chart: string }) {
         renderDiagram()
     }, [chart])
 
-    return <div ref={ref} className="my-4 flex justify-center" />
+    return (
+        <>
+            <div 
+                ref={ref} 
+                className="my-4 flex justify-center cursor-pointer group relative hover:bg-muted/30 rounded-lg transition-colors p-4"
+                onClick={() => setIsOpen(true)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && setIsOpen(true)}
+                aria-label="Click to view diagram in full screen"
+            >
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 rounded-md p-2">
+                    <Maximize2 className="w-4 h-4 text-muted-foreground" />
+                </div>
+            </div>
+            
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-auto p-6">
+                    <DialogTitle className="sr-only">Mermaid Diagram</DialogTitle>
+                    <DialogDescription className="sr-only">Full screen view of the diagram</DialogDescription>
+                    <div 
+                        className="flex items-center justify-center"
+                        dangerouslySetInnerHTML={{ __html: ref.current?.innerHTML || '' }}
+                    />
+                </DialogContent>
+            </Dialog>
+        </>
+    )
 }
 
 interface MarkdownWithMermaidProps {

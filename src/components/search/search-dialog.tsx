@@ -12,7 +12,7 @@ import {
     CommandList,
     CommandSeparator,
 } from '@/components/ui/command'
-import { FileText, Newspaper, Code, Hash, Loader2 } from 'lucide-react'
+import { FileText, Newspaper, Code, Hash, Loader2, Book } from 'lucide-react'
 import { useDebounce } from '@/hooks/use-debounce'
 
 interface SearchResult {
@@ -24,6 +24,11 @@ interface SearchResult {
     category?: string
     tags: string[]
     highlight?: string
+    repository?: {
+        id: string
+        name: string
+        slug: string
+    }
 }
 
 export function SearchDialog() {
@@ -149,6 +154,11 @@ export function SearchDialog() {
                                     {getIcon(result.type)}
                                     <div className="flex-1 overflow-hidden">
                                         <div className="font-medium truncate">{result.title}</div>
+                                        {result.category && (
+                                            <div className="text-xs text-muted-foreground mt-0.5">
+                                                {result.category}
+                                            </div>
+                                        )}
                                         {result.highlight && (
                                             <div
                                                 className="text-xs text-muted-foreground truncate"

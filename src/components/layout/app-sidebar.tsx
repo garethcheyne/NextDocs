@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Home, BookOpen, FileText, Settings, LogOut, User, GitBranch, Activity, Users, ChevronsUpDown, ChevronRight, Code2, Lightbulb } from 'lucide-react'
+import { Home, BookOpen, FileText, Settings, LogOut, User, GitBranch, Activity, Users, ChevronsUpDown, ChevronRight, Code2, Lightbulb, BarChart3, Calendar, Tag } from 'lucide-react'
 import { SignOutButton } from '@/components/auth/signout-button'
 import {
     Sidebar,
@@ -56,6 +56,14 @@ interface BlogCategory {
     count: number
 }
 
+interface BlogDateGroup {
+    year: number
+    months: {
+        month: number
+        count: number
+    }[]
+}
+
 interface ApiSpec {
     slug: string
     name: string
@@ -80,6 +88,7 @@ interface AppSidebarProps {
     currentPath?: string
     categories?: Category[]
     blogCategories?: BlogCategory[]
+    blogDateGroups?: BlogDateGroup[]
     apiSpecs?: ApiSpec[]
     featureCategories?: FeatureCategory[]
 }
@@ -184,8 +193,10 @@ function renderCategoryTree(category: Category, currentPath: string): JSX.Elemen
     )
 }
 
-export async function AppSidebar({ user = { name: null, email: null, role: null }, currentPath = '', categories, blogCategories, apiSpecs, featureCategories }: AppSidebarProps) {
+export async function AppSidebar({ user = { name: null, email: null, role: null }, currentPath = '', categories, blogCategories, blogDateGroups, apiSpecs, featureCategories }: AppSidebarProps) {
     const isAdmin = user?.role?.toLowerCase() === 'admin'
+    
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
     // Group API specs by category
     const groupedApiSpecs = apiSpecs?.reduce((acc, spec) => {
@@ -241,6 +252,15 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
 
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton asChild isActive={currentPath.startsWith('/docs')}>
+                                        <Link href="/docs">
+                                            <BookOpen className="w-4 h-4" />
+                                            <span>Documentation</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+
                                 {featureCategories && featureCategories.length > 0 ? (
                                     <Collapsible asChild defaultOpen={currentPath.startsWith('/features')}>
                                         <SidebarMenuItem>
@@ -290,14 +310,7 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                                     </SidebarMenuItem>
                                 )}
 
-                                <SidebarMenuItem>
-                                    <SidebarMenuButton asChild isActive={currentPath.startsWith('/docs')}>
-                                        <Link href="/docs">
-                                            <BookOpen className="w-4 h-4" />
-                                            <span>Documentation</span>
-                                        </Link>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
+
 
                                 <SidebarMenuItem>
                                     <SidebarMenuButton asChild isActive={currentPath.startsWith('/api-specs')}>
@@ -311,15 +324,15 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                         </SidebarGroupContent>
                     </SidebarGroup>
 
-                    {blogCategories && blogCategories.length > 0 && currentPath.startsWith('/blog') && (
+                    {blogDateGroups && blogDateGroups.length > 0 && currentPath.startsWith('/blog') && (
                         <SidebarGroup>
-                            <SidebarGroupLabel>Blog Categories</SidebarGroupLabel>
+                            <SidebarGroupLabel>Blog Archive</SidebarGroupLabel>
                             <SidebarGroupContent>
                                 <SidebarMenu>
                                     <SidebarMenuItem>
                                         <SidebarMenuButton
                                             asChild
-                                            isActive={currentPath === '/blog'}
+                                            isActive={currentPath === '/blog' && !currentPath.includes('year=')}
                                         >
                                             <Link href="/blog">
                                                 <FileText className="w-4 h-4" />
@@ -327,6 +340,46 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                                             </Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
+                                    {blogDateGroups.map((yearGroup) => (
+                                        <Collapsible key={yearGroup.year} asChild defaultOpen={currentPath.includes(`year=${yearGroup.year}`)}>
+                                            <SidebarMenuItem>
+                                                <CollapsibleTrigger asChild>
+                                                    <SidebarMenuButton>
+                                                        <Calendar className="w-4 h-4" />
+                                                        <span>{yearGroup.year}</span>
+                                                        <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                                    </SidebarMenuButton>
+                                                </CollapsibleTrigger>
+                                                <CollapsibleContent>
+                                                    <SidebarMenuSub>
+                                                        {yearGroup.months.map((monthData) => (
+                                                            <SidebarMenuSubItem key={monthData.month}>
+                                                                <SidebarMenuSubButton
+                                                                    asChild
+                                                                    isActive={currentPath.includes(`year=${yearGroup.year}&month=${monthData.month}`)}
+                                                                >
+                                                                    <Link href={`/blog?year=${yearGroup.year}&month=${monthData.month}`}>
+                                                                        <span>{monthNames[monthData.month]}</span>
+                                                                        <span className="ml-auto text-xs text-muted-foreground">({monthData.count})</span>
+                                                                    </Link>
+                                                                </SidebarMenuSubButton>
+                                                            </SidebarMenuSubItem>
+                                                        ))}
+                                                    </SidebarMenuSub>
+                                                </CollapsibleContent>
+                                            </SidebarMenuItem>
+                                        </Collapsible>
+                                    ))}
+                                </SidebarMenu>
+                            </SidebarGroupContent>
+                        </SidebarGroup>
+                    )}
+
+                    {blogCategories && blogCategories.length > 0 && currentPath.startsWith('/blog') && (
+                        <SidebarGroup>
+                            <SidebarGroupLabel>Categories</SidebarGroupLabel>
+                            <SidebarGroupContent>
+                                <SidebarMenu>
                                     {blogCategories.map((cat) => (
                                         <SidebarMenuItem key={cat.category}>
                                             <SidebarMenuButton
@@ -334,7 +387,7 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                                                 isActive={currentPath.includes(`category=${cat.category}`)}
                                             >
                                                 <Link href={`/blog?category=${encodeURIComponent(cat.category)}`}>
-                                                    <FileText className="w-4 h-4" />
+                                                    <Tag className="w-4 h-4" />
                                                     <span>{cat.category}</span>
                                                     <span className="ml-auto text-xs text-muted-foreground">({cat.count})</span>
                                                 </Link>
@@ -462,6 +515,14 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                                             <Link href="/admin/features">
                                                 <Lightbulb className="w-4 h-4" />
                                                 <span>Features</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                    <SidebarMenuItem>
+                                        <SidebarMenuButton asChild isActive={currentPath.startsWith('/admin/analytics')}>
+                                            <Link href="/admin/analytics">
+                                                <BarChart3 className="w-4 h-4" />
+                                                <span>Analytics</span>
                                             </Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>

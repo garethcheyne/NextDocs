@@ -16,6 +16,7 @@ import { Separator } from '@/components/ui/separator'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
+import { SectionHeader } from '@/components/layout/section-header'
 
 export default async function DocsPage() {
     const session = await auth()
@@ -43,7 +44,7 @@ export default async function DocsPage() {
             slug: true,
         },
     })
-    
+
     const indexDocumentSlugs = new Set(indexDocuments.map(doc => doc.slug.replace(/^docs\//, '')))
 
     // Build hierarchical category structure
@@ -106,28 +107,16 @@ export default async function DocsPage() {
                     </header>
 
                     {/* Page Content */}
-                    <main className="flex-1 p-6 space-y-6 overflow-auto">
-                        <div className="max-w-7xl">
-                            {/* Welcome Section */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="text-2xl">
-                                        Welcome to Wiki
-                                    </CardTitle>
-                                    <CardDescription>
-                                        Your centralized enterprise documentation platform
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="text-muted-foreground">
-                                    <p>
-                                        Access all your organization's documentation in one place. Our platform automatically syncs content from Azure DevOps and GitHub repositories, providing version-controlled, searchable documentation for your enterprise applications.
-                                    </p>
-                                </CardContent>
-                            </Card>
+                    <main className="flex-1 overflow-auto">
+                        <SectionHeader
+                            icon={BookOpen}
+                            title="Documentation"
+                            subtitle="Access all your organization's documentation in one place. Our platform automatically syncs content from Azure DevOps and GitHub repositories."
+                        />
 
+                        <div className="max-w-7xl mx-auto p-6 space-y-6">
                             {/* Documentation Categories */}
                             <div>
-                                <h2 className="text-xl font-bold mb-4">Documentation Categories</h2>
 
                                 {categoriesWithMeta.length === 0 ? (
                                     <Card>
@@ -151,31 +140,41 @@ export default async function DocsPage() {
                                         </CardContent>
                                     </Card>
                                 ) : (
-                                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                                         {categoriesWithMeta.map((category) => {
                                             return (
                                                 <Link key={category.slug} href={`/docs/${category.slug}`}>
-                                                    <Card className="hover:border-primary transition-all cursor-pointer group h-full">
-                                                        <CardHeader>
+                                                    <Card className="hover:border-brand-orange hover:shadow-lg hover:shadow-brand-orange/20 transition-all duration-300 cursor-pointer group h-full relative overflow-hidden">
+                                                        {/* Gradient overlay on hover */}
+                                                        <div className="absolute inset-0 bg-gradient-to-br from-brand-orange/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                                                        <CardHeader className="relative">
                                                             <div className="flex items-start justify-between">
                                                                 <div className="flex-1">
-                                                                    <CardTitle className="group-hover:text-primary transition-colors">
+                                                                    <CardTitle className="group-hover:text-brand-orange transition-colors text-lg">
                                                                         {category.title}
                                                                     </CardTitle>
                                                                 </div>
-                                                                <BookOpen className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                                                                <div className="p-2 rounded-lg bg-brand-orange/10 group-hover:bg-brand-orange/20 group-hover:scale-110 transition-all duration-300">
+                                                                    <BookOpen className="w-5 h-5 text-brand-orange" />
+                                                                </div>
                                                             </div>
                                                         </CardHeader>
                                                         {category.description && (
-                                                            <CardContent>
+                                                            <CardContent className="relative">
                                                                 <p className="text-sm text-muted-foreground line-clamp-3">
                                                                     {category.description}
                                                                 </p>
                                                                 {category.children && category.children.length > 0 && (
-                                                                    <div className="mt-3 pt-3 border-t">
-                                                                        <p className="text-xs text-muted-foreground">
-                                                                            {category.children.length} {category.children.length === 1 ? 'section' : 'sections'}
-                                                                        </p>
+                                                                    <div className="mt-4 pt-3 border-t flex items-center gap-2">
+                                                                        <div className="flex-1">
+                                                                            <p className="text-xs font-medium text-muted-foreground">
+                                                                                {category.children.length} {category.children.length === 1 ? 'section' : 'sections'}
+                                                                            </p>
+                                                                        </div>
+                                                                        <div className="text-brand-orange group-hover:translate-x-1 transition-transform duration-300">
+                                                                            →
+                                                                        </div>
                                                                     </div>
                                                                 )}
                                                             </CardContent>

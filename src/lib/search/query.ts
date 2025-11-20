@@ -13,6 +13,11 @@ export interface SearchResult {
   tags: string[]
   rank: number
   highlight?: string
+  repository?: {
+    id: string
+    name: string
+    slug: string
+  }
 }
 
 export interface SearchOptions {
@@ -64,19 +69,23 @@ export async function searchContent(
     if (category && tags && tags.length > 0) {
       docs = await prisma.$queryRaw`
         SELECT 
-          id,
-          title,
-          excerpt,
-          slug,
-          category,
-          tags,
-          ts_rank("searchVector", to_tsquery('english', ${tsQuery})) as rank,
-          ts_headline('english', content, to_tsquery('english', ${tsQuery}),
-            'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight
-        FROM "Document"
-        WHERE "searchVector" @@ to_tsquery('english', ${tsQuery})
-          AND category = ${category}
-          AND tags && ARRAY[${Prisma.join(tags)}]::text[]
+          d.id,
+          d.title,
+          d.excerpt,
+          d.slug,
+          d.category,
+          d.tags,
+          ts_rank(d."searchVector", to_tsquery('english', ${tsQuery})) as rank,
+          ts_headline('english', d.content, to_tsquery('english', ${tsQuery}),
+            'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight,
+          r.id as "repositoryId",
+          r.name as "repositoryName",
+          r.slug as "repositorySlug"
+        FROM "Document" d
+        JOIN "Repository" r ON d."repositoryId" = r.id
+        WHERE d."searchVector" @@ to_tsquery('english', ${tsQuery})
+          AND d.category = ${category}
+          AND d.tags && ARRAY[${Prisma.join(tags)}]::text[]
         ORDER BY rank DESC
         LIMIT ${limit}
         OFFSET ${offset}
@@ -84,18 +93,22 @@ export async function searchContent(
     } else if (category) {
       docs = await prisma.$queryRaw`
         SELECT 
-          id,
-          title,
-          excerpt,
-          slug,
-          category,
-          tags,
-          ts_rank("searchVector", to_tsquery('english', ${tsQuery})) as rank,
-          ts_headline('english', content, to_tsquery('english', ${tsQuery}),
-            'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight
-        FROM "Document"
-        WHERE "searchVector" @@ to_tsquery('english', ${tsQuery})
-          AND category = ${category}
+          d.id,
+          d.title,
+          d.excerpt,
+          d.slug,
+          d.category,
+          d.tags,
+          ts_rank(d."searchVector", to_tsquery('english', ${tsQuery})) as rank,
+          ts_headline('english', d.content, to_tsquery('english', ${tsQuery}),
+            'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight,
+          r.id as "repositoryId",
+          r.name as "repositoryName",
+          r.slug as "repositorySlug"
+        FROM "Document" d
+        JOIN "Repository" r ON d."repositoryId" = r.id
+        WHERE d."searchVector" @@ to_tsquery('english', ${tsQuery})
+          AND d.category = ${category}
         ORDER BY rank DESC
         LIMIT ${limit}
         OFFSET ${offset}
@@ -103,18 +116,22 @@ export async function searchContent(
     } else if (tags && tags.length > 0) {
       docs = await prisma.$queryRaw`
         SELECT 
-          id,
-          title,
-          excerpt,
-          slug,
-          category,
-          tags,
-          ts_rank("searchVector", to_tsquery('english', ${tsQuery})) as rank,
-          ts_headline('english', content, to_tsquery('english', ${tsQuery}),
-            'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight
-        FROM "Document"
-        WHERE "searchVector" @@ to_tsquery('english', ${tsQuery})
-          AND tags && ARRAY[${Prisma.join(tags)}]::text[]
+          d.id,
+          d.title,
+          d.excerpt,
+          d.slug,
+          d.category,
+          d.tags,
+          ts_rank(d."searchVector", to_tsquery('english', ${tsQuery})) as rank,
+          ts_headline('english', d.content, to_tsquery('english', ${tsQuery}),
+            'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight,
+          r.id as "repositoryId",
+          r.name as "repositoryName",
+          r.slug as "repositorySlug"
+        FROM "Document" d
+        JOIN "Repository" r ON d."repositoryId" = r.id
+        WHERE d."searchVector" @@ to_tsquery('english', ${tsQuery})
+          AND d.tags && ARRAY[${Prisma.join(tags)}]::text[]
         ORDER BY rank DESC
         LIMIT ${limit}
         OFFSET ${offset}
@@ -122,17 +139,21 @@ export async function searchContent(
     } else {
       docs = await prisma.$queryRaw`
         SELECT 
-          id,
-          title,
-          excerpt,
-          slug,
-          category,
-          tags,
-          ts_rank("searchVector", to_tsquery('english', ${tsQuery})) as rank,
-          ts_headline('english', content, to_tsquery('english', ${tsQuery}),
-            'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight
-        FROM "Document"
-        WHERE "searchVector" @@ to_tsquery('english', ${tsQuery})
+          d.id,
+          d.title,
+          d.excerpt,
+          d.slug,
+          d.category,
+          d.tags,
+          ts_rank(d."searchVector", to_tsquery('english', ${tsQuery})) as rank,
+          ts_headline('english', d.content, to_tsquery('english', ${tsQuery}),
+            'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight,
+          r.id as "repositoryId",
+          r.name as "repositoryName",
+          r.slug as "repositorySlug"
+        FROM "Document" d
+        JOIN "Repository" r ON d."repositoryId" = r.id
+        WHERE d."searchVector" @@ to_tsquery('english', ${tsQuery})
         ORDER BY rank DESC
         LIMIT ${limit}
         OFFSET ${offset}
@@ -150,6 +171,11 @@ export async function searchContent(
         tags: doc.tags || [],
         rank: parseFloat(doc.rank),
         highlight: doc.highlight,
+        repository: {
+          id: doc.repositoryId,
+          name: doc.repositoryName,
+          slug: doc.repositorySlug,
+        },
       }))
     )
   }
@@ -161,20 +187,24 @@ export async function searchContent(
     if (category && tags && tags.length > 0) {
       posts = await prisma.$queryRaw`
         SELECT 
-          id,
-          title,
-          excerpt,
-          slug,
-          category,
-          tags,
-          ts_rank("searchVector", to_tsquery('english', ${tsQuery})) as rank,
-          ts_headline('english', content, to_tsquery('english', ${tsQuery}),
-            'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight
-        FROM "BlogPost"
-        WHERE "searchVector" @@ to_tsquery('english', ${tsQuery})
-          AND "isDraft" = false
-          AND category = ${category}
-          AND tags && ARRAY[${Prisma.join(tags)}]::text[]
+          b.id,
+          b.title,
+          b.excerpt,
+          b.slug,
+          b.category,
+          b.tags,
+          ts_rank(b."searchVector", to_tsquery('english', ${tsQuery})) as rank,
+          ts_headline('english', b.content, to_tsquery('english', ${tsQuery}),
+            'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight,
+          r.id as "repositoryId",
+          r.name as "repositoryName",
+          r.slug as "repositorySlug"
+        FROM "BlogPost" b
+        JOIN "Repository" r ON b."repositoryId" = r.id
+        WHERE b."searchVector" @@ to_tsquery('english', ${tsQuery})
+          AND b."isDraft" = false
+          AND b.category = ${category}
+          AND b.tags && ARRAY[${Prisma.join(tags)}]::text[]
         ORDER BY rank DESC
         LIMIT ${limit}
         OFFSET ${offset}
@@ -182,19 +212,23 @@ export async function searchContent(
     } else if (category) {
       posts = await prisma.$queryRaw`
         SELECT 
-          id,
-          title,
-          excerpt,
-          slug,
-          category,
-          tags,
-          ts_rank("searchVector", to_tsquery('english', ${tsQuery})) as rank,
-          ts_headline('english', content, to_tsquery('english', ${tsQuery}),
-            'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight
-        FROM "BlogPost"
-        WHERE "searchVector" @@ to_tsquery('english', ${tsQuery})
-          AND "isDraft" = false
-          AND category = ${category}
+          b.id,
+          b.title,
+          b.excerpt,
+          b.slug,
+          b.category,
+          b.tags,
+          ts_rank(b."searchVector", to_tsquery('english', ${tsQuery})) as rank,
+          ts_headline('english', b.content, to_tsquery('english', ${tsQuery}),
+            'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight,
+          r.id as "repositoryId",
+          r.name as "repositoryName",
+          r.slug as "repositorySlug"
+        FROM "BlogPost" b
+        JOIN "Repository" r ON b."repositoryId" = r.id
+        WHERE b."searchVector" @@ to_tsquery('english', ${tsQuery})
+          AND b."isDraft" = false
+          AND b.category = ${category}
         ORDER BY rank DESC
         LIMIT ${limit}
         OFFSET ${offset}
@@ -202,19 +236,23 @@ export async function searchContent(
     } else if (tags && tags.length > 0) {
       posts = await prisma.$queryRaw`
         SELECT 
-          id,
-          title,
-          excerpt,
-          slug,
-          category,
-          tags,
-          ts_rank("searchVector", to_tsquery('english', ${tsQuery})) as rank,
-          ts_headline('english', content, to_tsquery('english', ${tsQuery}),
-            'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight
-        FROM "BlogPost"
-        WHERE "searchVector" @@ to_tsquery('english', ${tsQuery})
-          AND "isDraft" = false
-          AND tags && ARRAY[${Prisma.join(tags)}]::text[]
+          b.id,
+          b.title,
+          b.excerpt,
+          b.slug,
+          b.category,
+          b.tags,
+          ts_rank(b."searchVector", to_tsquery('english', ${tsQuery})) as rank,
+          ts_headline('english', b.content, to_tsquery('english', ${tsQuery}),
+            'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight,
+          r.id as "repositoryId",
+          r.name as "repositoryName",
+          r.slug as "repositorySlug"
+        FROM "BlogPost" b
+        JOIN "Repository" r ON b."repositoryId" = r.id
+        WHERE b."searchVector" @@ to_tsquery('english', ${tsQuery})
+          AND b."isDraft" = false
+          AND b.tags && ARRAY[${Prisma.join(tags)}]::text[]
         ORDER BY rank DESC
         LIMIT ${limit}
         OFFSET ${offset}
@@ -222,18 +260,22 @@ export async function searchContent(
     } else {
       posts = await prisma.$queryRaw`
         SELECT 
-          id,
-          title,
-          excerpt,
-          slug,
-          category,
-          tags,
-          ts_rank("searchVector", to_tsquery('english', ${tsQuery})) as rank,
-          ts_headline('english', content, to_tsquery('english', ${tsQuery}),
-            'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight
-        FROM "BlogPost"
-        WHERE "searchVector" @@ to_tsquery('english', ${tsQuery})
-          AND "isDraft" = false
+          b.id,
+          b.title,
+          b.excerpt,
+          b.slug,
+          b.category,
+          b.tags,
+          ts_rank(b."searchVector", to_tsquery('english', ${tsQuery})) as rank,
+          ts_headline('english', b.content, to_tsquery('english', ${tsQuery}),
+            'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight,
+          r.id as "repositoryId",
+          r.name as "repositoryName",
+          r.slug as "repositorySlug"
+        FROM "BlogPost" b
+        JOIN "Repository" r ON b."repositoryId" = r.id
+        WHERE b."searchVector" @@ to_tsquery('english', ${tsQuery})
+          AND b."isDraft" = false
         ORDER BY rank DESC
         LIMIT ${limit}
         OFFSET ${offset}
@@ -251,6 +293,11 @@ export async function searchContent(
         tags: post.tags || [],
         rank: parseFloat(post.rank),
         highlight: post.highlight,
+        repository: {
+          id: post.repositoryId,
+          name: post.repositoryName,
+          slug: post.repositorySlug,
+        },
       }))
     )
   }

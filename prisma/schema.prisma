@@ -40,6 +40,10 @@ model User {
   deletedComments       FeatureComment[] @relation("DeletedComments")
   featureFollowers      FeatureFollower[] @relation("FeatureFollowers")
   statusChanges         FeatureStatusHistory[] @relation("StatusChanges")
+  
+  // Analytics Relations
+  analyticsEvents       AnalyticsEvent[] @relation("AnalyticsEvents")
+  analyticsSessions     AnalyticsSession[] @relation("AnalyticsSessions")
 }
 
 model Author {
@@ -606,4 +610,112 @@ model RepositoryImage {
   @@unique([repositoryId, filePath])
   @@index([repositoryId])
   @@index([sha])
+}
+
+// Analytics Models
+
+model AnalyticsEvent {
+  id              String    @id @default(uuid())
+  sessionId       String    // Session identifier (user-specific or anonymous)
+  userId          String?   // Null for anonymous visitors
+  eventType       String    // 'page_view', 'login_success', 'login_failure', 'document_read', 'search', 'feature_view', 'api_spec_view', etc.
+  eventData       Json?     // Additional event-specific data
+  
+  // Page/Resource information
+  path            String    // URL path
+  resourceId      String?   // Document slug, feature ID, etc.
+  resourceType    String?   // 'doc', 'blog', 'feature', 'api_spec'
+  category        String?   // Content category
+  
+  // User information
+  ipAddress       String?
+  userAgent       String?   @db.Text
+  referrer        String?
+  
+  // Timing data
+  duration        Int?      // Time spent (milliseconds)
+  scrollDepth     Int?      // Scroll percentage (0-100)
+  
+  // Metadata
+  createdAt       DateTime  @default(now())
+  
+  // Relations
+  user            User?     @relation("AnalyticsEvents", fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([sessionId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@index([path])
+  @@index([resourceType])
+}
+
+model AnalyticsSession {
+  id              String    @id @default(uuid())
+  sessionId       String    @unique // Session identifier
+  userId          String?   // Null for anonymous visitors
+  
+  // Session details
+  ipAddress       String?
+  userAgent       String?   @db.Text
+  country         String?
+  city            String?
+  
+  // Session timing
+  startedAt       DateTime  @default(now())
+  lastActivityAt  DateTime  @default(now())
+  endedAt         DateTime?
+  duration        Int?      // Total session duration (milliseconds)
+  
+  // Session stats
+  pageViews       Int       @default(0)
+  uniquePages     Int       @default(0)
+  eventsCount     Int       @default(0)
+  
+  // Relations
+  user            User?     @relation("AnalyticsSessions", fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([sessionId])
+  @@index([startedAt])
+}
+
+model AnalyticsDailySummary {
+  id              String    @id @default(uuid())
+  date            DateTime  @unique @db.Date
+  
+  // User metrics
+  totalUsers      Int       @default(0)
+  newUsers        Int       @default(0)
+  activeUsers     Int       @default(0)
+  anonymousUsers  Int       @default(0)
+  
+  // Session metrics
+  totalSessions   Int       @default(0)
+  avgSessionDuration Int    @default(0)
+  
+  // Page metrics
+  totalPageViews  Int       @default(0)
+  uniquePageViews Int       @default(0)
+  
+  // Authentication metrics
+  loginSuccess    Int       @default(0)
+  loginFailure    Int       @default(0)
+  
+  // Content metrics
+  documentsRead   Int       @default(0)
+  avgReadDuration Int       @default(0)
+  searchQueries   Int       @default(0)
+  featuresViewed  Int       @default(0)
+  apiSpecsViewed  Int       @default(0)
+  
+  // Top content (JSON arrays)
+  topPages        Json?     // [{path, views}]
+  topDocuments    Json?     // [{slug, views}]
+  topSearches     Json?     // [{query, count}]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([date])
 }

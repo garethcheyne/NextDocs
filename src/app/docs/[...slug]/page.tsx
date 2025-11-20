@@ -3,6 +3,7 @@ import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/db/prisma'
 import { ContentDetailLayout } from '@/components/layout/content-detail-layout'
 import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
+import { DocumentTracker } from '@/components/document-tracker'
 import { Clock, User } from 'lucide-react'
 import { MarkdownWithMermaid } from '@/components/markdown-with-mermaid'
 import { Badge } from '@/components/ui/badge'
@@ -148,6 +149,9 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
             content={document.content}
             categories={categoriesWithMeta}
         >
+            {/* Document Read Tracking */}
+            <DocumentTracker slug={fullSlug} title={document.title} />
+            
             {/* Document Header */}
             <div className="mb-8">
                 <h1 className="text-4xl font-bold mb-4">{document.title}</h1>

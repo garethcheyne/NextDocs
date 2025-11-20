@@ -26,6 +26,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         
         if (!credentials?.email || !credentials?.password) {
           console.log('❌ Missing credentials')
+          
+          // Track failed login - missing credentials
+          try {
+            await prisma.analyticsEvent.create({
+              data: {
+                sessionId: `login-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                eventType: 'login_failure',
+                eventData: {
+                  loginMethod: 'credentials',
+                  failureReason: 'Missing credentials'
+                },
+                path: '/login'
+              }
+            })
+          } catch (error) {
+            console.error('Analytics tracking error:', error)
+          }
+          
           return null
         }
 
@@ -33,11 +51,50 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         
         if (!user) {
           console.log('❌ User not found:', credentials.email)
+          
+          // Track failed login - user not found
+          try {
+            await prisma.analyticsEvent.create({
+              data: {
+                sessionId: `login-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                eventType: 'login_failure',
+                eventData: {
+                  loginMethod: 'credentials',
+                  email: credentials.email,
+                  failureReason: 'User not found'
+                },
+                path: '/login'
+              }
+            })
+          } catch (error) {
+            console.error('Analytics tracking error:', error)
+          }
+          
           return null
         }
         
         if (!user.password) {
           console.log('❌ User has no password (OAuth only):', credentials.email)
+          
+          // Track failed login - OAuth user
+          try {
+            await prisma.analyticsEvent.create({
+              data: {
+                sessionId: `login-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                userId: user.id,
+                eventType: 'login_failure',
+                eventData: {
+                  loginMethod: 'credentials',
+                  email: credentials.email,
+                  failureReason: 'OAuth user - no password'
+                },
+                path: '/login'
+              }
+            })
+          } catch (error) {
+            console.error('Analytics tracking error:', error)
+          }
+          
           return null
         }
 
@@ -49,10 +106,49 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!isValid) {
           console.log('❌ Invalid password for:', credentials.email)
+          
+          // Track failed login - invalid password
+          try {
+            await prisma.analyticsEvent.create({
+              data: {
+                sessionId: `login-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                userId: user.id,
+                eventType: 'login_failure',
+                eventData: {
+                  loginMethod: 'credentials',
+                  email: credentials.email,
+                  failureReason: 'Invalid password'
+                },
+                path: '/login'
+              }
+            })
+          } catch (error) {
+            console.error('Analytics tracking error:', error)
+          }
+          
           return null
         }
 
         console.log('✅ Login successful:', credentials.email, 'Role:', user.role)
+        
+        // Track successful login
+        try {
+          await prisma.analyticsEvent.create({
+            data: {
+              sessionId: `login-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              userId: user.id,
+              eventType: 'login_success',
+              eventData: {
+                loginMethod: 'credentials',
+                email: credentials.email
+              },
+              path: '/login'
+            }
+          })
+        } catch (error) {
+          console.error('Analytics tracking error:', error)
+        }
+        
         return {
           id: user.id,
           email: user.email,
