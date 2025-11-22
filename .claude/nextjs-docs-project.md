@@ -4567,4 +4567,587 @@ export async function GET() {
 
 ---
 
+## 🚀 Production Deployment
+
+### Prerequisites
+
+- Docker Engine 20.10+ installed
+- Docker Compose 2.0+ installed
+- Domain name configured (optional but recommended)
+- SSL certificates (if using Nginx profile)
+
+### Quick Start Deployment
+
+#### 1. Environment Configuration
+
+Create `.env.production` from the template:
+
+```bash
+cp .env.production.example .env.production
+```
+
+Update the following required variables in `.env.production`:
+
+```env
+# Strong passwords (use openssl rand -base64 32)
+DATABASE_URL="postgresql://postgres:YOUR_STRONG_DB_PASSWORD@postgres:5432/nextdocs?schema=public"
+REDIS_URL="redis://:YOUR_STRONG_REDIS_PASSWORD@redis:6379"
+NEXTAUTH_SECRET="YOUR_GENERATED_SECRET"
+ENCRYPTION_KEY="YOUR_GENERATED_KEY"
+WORKER_SECRET="YOUR_GENERATED_SECRET"
+
+# Your production domain
+NEXTAUTH_URL="https://yourdomain.com"
+
+# Azure AD credentials
+AZURE_AD_CLIENT_ID="..."
+AZURE_AD_CLIENT_SECRET="..."
+AZURE_AD_TENANT_ID="..."
+
+# Azure DevOps credentials
+AZURE_DEVOPS_ORG_URL="..."
+AZURE_DEVOPS_PAT="..."
+AZURE_DEVOPS_PROJECT="..."
+
+# EWS Email (if using notifications)
+EWS_USERNAME="notifications@yourdomain.com"
+EWS_PASSWORD="..."
+```
+
+**Generate secure secrets:**
+
+```bash
+# Generate NEXTAUTH_SECRET
+openssl rand -base64 32
+
+# Generate ENCRYPTION_KEY
+openssl rand -base64 32
+
+# Generate WORKER_SECRET
+openssl rand -base64 32
+```
+
+#### 2. Update docker-compose.prod.yml
+
+Update the Redis password in `docker-compose.prod.yml` to match your `.env.production`:
+
+```yaml
+redis:
+  command: redis-server --requirepass YOUR_STRONG_REDIS_PASSWORD --appendonly yes
+```
+
+Update the PostgreSQL password environment variable:
+
+```yaml
+postgres:
+  environment:
+    POSTGRES_PASSWORD: YOUR_STRONG_DB_PASSWORD
+```
+
+#### 3. Build and Start Services
+
+```bash
+# Build the production image
+docker-compose -f docker-compose.prod.yml build
+
+# Start all services
+docker-compose -f docker-compose.prod.yml up -d
+
+# View logs
+docker-compose -f docker-compose.prod.yml logs -f
+```
+
+#### 4. Initialize Database
+
+Run Prisma migrations:
+
+```bash
+# Access the app container
+docker-compose -f docker-compose.prod.yml exec app sh
+
+# Inside container: Run migrations
+npx prisma migrate deploy
+
+# Seed database (optional)
+npx prisma db seed
+
+# Exit container
+exit
+```
+
+#### 5. Verify Deployment
+
+Check health status:
+
+```bash
+curl http://localhost:9980/api/health
+```
+
+Expected response:
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "services": {
+    "database": "connected",
+    "application": "running"
+  }
+}
+```
+
+Check service status:
+
+```bash
+docker-compose -f docker-compose.prod.yml ps
+```
+
+All services should show "Up (healthy)".
+
+#### 6. Access Application
+
+- Application: http://localhost:9980
+- With Nginx (if using): http://localhost (port 80) or https://localhost (port 443)
+
+### Database Management
+
+#### Backup Database
+
+```bash
+# Create backup directory
+mkdir -p backups
+
+# Backup database
+docker-compose -f docker-compose.prod.yml exec postgres pg_dump -U postgres nextdocs > backups/nextdocs_$(date +%Y%m%d_%H%M%S).sql
+```
+
+#### Restore Database
+
+```bash
+# Restore from backup
+cat backups/nextdocs_YYYYMMDD_HHMMSS.sql | docker-compose -f docker-compose.prod.yml exec -T postgres psql -U postgres nextdocs
+```
+
+#### Access Database CLI
+
+```bash
+docker-compose -f docker-compose.prod.yml exec postgres psql -U postgres nextdocs
+```
+
+### Monitoring and Logs
+
+#### View Application Logs
+
+```bash
+# All services
+docker-compose -f docker-compose.prod.yml logs -f
+
+# Specific service
+docker-compose -f docker-compose.prod.yml logs -f app
+docker-compose -f docker-compose.prod.yml logs -f postgres
+docker-compose -f docker-compose.prod.yml logs -f redis
+```
+
+#### Check Resource Usage
+
+```bash
+docker stats
+```
+
+#### Check Health Status
+
+```bash
+# All services health check
+docker-compose -f docker-compose.prod.yml ps
+
+# Application health endpoint
+curl http://localhost:9980/api/health
+```
+
+### Updates and Maintenance
+
+#### Update Application
+
+```bash
+# Pull latest code
+git pull
+
+# Rebuild image
+docker-compose -f docker-compose.prod.yml build app
+
+# Restart application
+docker-compose -f docker-compose.prod.yml up -d app
+
+# Run new migrations
+docker-compose -f docker-compose.prod.yml exec app npx prisma migrate deploy
+```
+
+#### Restart Services
+
+```bash
+# Restart all services
+docker-compose -f docker-compose.prod.yml restart
+
+# Restart specific service
+docker-compose -f docker-compose.prod.yml restart app
+```
+
+#### Stop Services
+
+```bash
+# Stop all services (keeps data)
+docker-compose -f docker-compose.prod.yml down
+
+# Stop and remove volumes (DELETES ALL DATA)
+docker-compose -f docker-compose.prod.yml down -v
+```
+
+### Security Checklist
+
+- [ ] Strong passwords set for PostgreSQL and Redis
+- [ ] `NEXTAUTH_SECRET` generated with `openssl rand -base64 32`
+- [ ] `ENCRYPTION_KEY` generated with `openssl rand -base64 32`
+- [ ] `WORKER_SECRET` generated with `openssl rand -base64 32`
+- [ ] `.env.production` not committed to Git (in `.gitignore`)
+- [ ] SSL certificates configured (if using Nginx)
+- [ ] Firewall rules configured (only expose necessary ports)
+- [ ] Regular database backups scheduled
+- [ ] Azure AD credentials are production-specific
+- [ ] EWS service account has minimum required permissions
+
+### Production Architecture
+
+```
+┌─────────────────────────────────────────┐
+│          Nginx (Optional)               │
+│  - SSL Termination                      │
+│  - Reverse Proxy                        │
+│  - Static Asset Caching                 │
+└──────────────┬──────────────────────────┘
+               │
+┌──────────────▼──────────────────────────┐
+│          Next.js Application            │
+│  - Port 9980                            │
+│  - Multi-stage Docker Build             │
+│  - Non-root User (nextjs:nodejs)        │
+│  - Health Check: /api/health            │
+└──────┬───────────────────────┬──────────┘
+       │                       │
+┌──────▼──────────┐    ┌──────▼──────────┐
+│   PostgreSQL 16 │    │    Redis 7      │
+│  - Port 5432    │    │  - Port 6379    │
+│  - Named Volume │    │  - AOF Enabled  │
+│  - Health Check │    │  - Named Volume │
+└─────────────────┘    └─────────────────┘
+```
+
+---
+
+## 🔧 Webhook Configuration
+
+### Overview
+
+NextDocs supports three methods for syncing comments from external systems:
+
+1. **Webhooks** (Real-time) - Instant synchronization when comments are added
+2. **On-Demand Sync** - Manual sync via button in the UI
+3. **Background Polling** - Automatic sync every 30 minutes as fallback
+
+### Environment Variables
+
+Add these to your `.env.local` and `.env.production` files:
+
+```bash
+# GitHub Webhook Secret (for verifying webhook signatures)
+GITHUB_WEBHOOK_SECRET="your-secret-here"
+
+# Azure DevOps Webhook Secret (used as Basic Auth password)
+AZURE_WEBHOOK_SECRET="your-secret-here"
+
+# Comment Sync Interval (minutes, default: 30)
+COMMENT_SYNC_INTERVAL_MINUTES="30"
+```
+
+Generate secure secrets with:
+```bash
+openssl rand -hex 32
+```
+
+### GitHub Webhook Setup
+
+#### 1. Configure Webhook in GitHub Repository
+
+1. Go to your repository **Settings** → **Webhooks** → **Add webhook**
+2. Configure the webhook:
+   - **Payload URL**: `https://yourdomain.com/api/webhooks/github`
+   - **Content type**: `application/json`
+   - **Secret**: Enter the value from `GITHUB_WEBHOOK_SECRET`
+   - **SSL verification**: Enable SSL verification (recommended)
+   - **Which events**: Select "Let me select individual events"
+     - ✅ Issue comments
+   - **Active**: ✅ Checked
+
+#### 2. Test the Webhook
+
+1. After creating the webhook, GitHub will send a `ping` event
+2. Check the webhook delivery status in GitHub
+3. Add a comment to a linked GitHub issue
+4. Verify the comment appears in NextDocs
+
+### Azure DevOps Webhook Setup
+
+#### 1. Configure Service Hook in Azure DevOps
+
+1. Go to **Project Settings** → **Service hooks**
+2. Click **Create subscription** → **Web Hooks**
+3. Configure the trigger:
+   - **Event**: `Work item commented on`
+   - **Filters**: (Optional) Filter by work item type or area path
+4. Configure the action:
+   - **URL**: `https://yourdomain.com/api/webhooks/azure-devops`
+   - **HTTP headers**: Leave blank
+   - **Basic authentication username**: `webhook` (can be any value)
+   - **Basic authentication password**: Enter the value from `AZURE_WEBHOOK_SECRET`
+   - **Resource details to send**: All
+   - **Messages to send**: All
+   - **Detailed messages to send**: All
+
+#### 2. Test the Service Hook
+
+1. After creating the subscription, click **Test** to send a test payload
+2. Verify the test succeeds with a 200 OK response
+3. Add a comment to a linked work item
+4. Verify the comment appears in NextDocs
+
+### Local Development with ngrok
+
+When developing locally, external webhooks cannot reach `localhost`. Use ngrok to create a public URL:
+
+#### 1. Install ngrok
+
+```bash
+# macOS
+brew install ngrok
+
+# Windows
+choco install ngrok
+
+# Or download from https://ngrok.com/download
+```
+
+#### 2. Start ngrok
+
+```bash
+# Expose your local NextDocs instance
+ngrok http 9980
+```
+
+#### 3. Update Webhook URLs
+
+Use the ngrok HTTPS URL in your webhook configurations:
+- GitHub: `https://your-subdomain.ngrok.io/api/webhooks/github`
+- Azure DevOps: `https://your-subdomain.ngrok.io/api/webhooks/azure-devops`
+
+---
+
+## 🧪 Testing Infrastructure
+
+### Overview
+
+NextDocs includes a comprehensive testing suite with **110+ automated tests** covering all major functionality.
+
+### Test Organization
+
+```
+tests/
+├── cli/                          # Jest Unit Tests (30+)
+│   ├── database.test.ts         # Database integrity
+│   ├── search.test.ts           # Search functionality
+│   ├── auth.test.ts             # Authentication
+│   ├── repository-sync.test.ts  # GitHub/Azure sync
+│   └── content.test.ts          # Content management
+│
+├── playwright/                   # E2E Browser Tests (80+)
+│   ├── global-setup.ts          # 🔐 Secure auth setup
+│   ├── global-teardown.ts       # Cleanup
+│   ├── fixtures.ts              # Test utilities
+│   ├── auth.spec.ts             # Login/logout flows
+│   ├── homepage.spec.ts         # Homepage & navigation
+│   ├── documentation.spec.ts    # Doc viewing
+│   ├── search.spec.ts           # Global search
+│   ├── blog.spec.ts             # Blog posts
+│   ├── api-specs.spec.ts        # API specifications
+│   ├── features.spec.ts         # Feature requests
+│   └── admin.spec.ts            # Admin panel
+│
+└── Documentation Files
+    ├── README.md                # Complete guide
+    ├── QUICK_START.md           # Quick reference
+    ├── QUICK_START_SECURE.md    # 🔐 Security quick ref
+    ├── AUTHENTICATION.md        # 🔐 Auth setup guide
+    └── TEST_SUITE_SUMMARY.md    # Test overview
+```
+
+### Quick Test Commands
+
+```bash
+# All tests (CLI + E2E)
+npm test
+
+# Just E2E tests (you'll be prompted for login)
+npm run test:e2e
+
+# Watch browser while testing
+npm run test:e2e:headed
+
+# Interactive test UI (best for debugging)
+npm run test:e2e:ui
+
+# Just CLI/unit tests (no auth needed)
+npm run test:cli
+
+# View HTML report
+npm run test:report
+
+# Generate markdown report
+npm run test:generate-report
+```
+
+### Security-First Credential Management 🔐
+
+**Interactive Credential Prompting**
+- ✅ Runtime prompting for credentials (nothing stored in files)
+- ✅ Press Enter for safe defaults (admin@nextdocs.local / admin)
+- ✅ Automatic CI/CD detection (uses environment variables)
+- ✅ Session-only storage (cookies/tokens, not passwords)
+
+**First Time? Start Here!**
+
+```bash
+# 1. Install dependencies
+npm install
+npx playwright install --with-deps
+
+# 2. Make sure app is running
+docker-compose -f docker-compose.prod.yml up -d
+
+# 3. Run tests (press Enter twice when prompted)
+npm run test:e2e
+```
+
+**When prompted for credentials, just press Enter twice!**
+- Email: `admin@nextdocs.local` (default)
+- Password: `admin` (default)
+
+### Test Coverage
+
+#### CLI/Unit Tests (Jest) - 30+ Tests
+
+✅ **Database Tests**
+- Connection validation
+- Schema integrity
+- Table structure
+- Foreign key relationships
+
+✅ **Search Tests**
+- Full-text search
+- Vector search
+- Result ranking
+
+✅ **Authentication Tests**
+- Password hashing
+- User roles
+- Session management
+
+✅ **Repository Sync Tests**
+- GitHub integration
+- Azure DevOps integration
+- File change detection
+
+✅ **Content Tests**
+- Blog CRUD operations
+- API spec validation
+- Feature request management
+
+#### E2E Browser Tests (Playwright) - 80+ Tests
+
+✅ **Multi-Browser Support**
+- Chrome, Firefox, Safari
+- Mobile (iPhone, Pixel)
+
+✅ **Features Tested**
+- Authentication flows
+- Homepage & navigation
+- Documentation viewing
+- Global search
+- Blog functionality
+- API specifications
+- Feature requests
+- Admin panel
+
+### Authentication Flow
+
+```
+┌──────────────┐
+│ Test Starts  │
+└──────┬───────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ Is CI Environment?                  │
+│ (Check process.env.CI)              │
+└──────┬────────────────┬─────────────┘
+       │                │
+    YES│                │NO
+       │                │
+       ▼                ▼
+┌──────────────┐  ┌────────────────────────┐
+│ Use Env Vars │  │ Prompt for Credentials │
+│              │  │                        │
+│ $TEST_USER   │  │ Email: ___________     │
+│ $TEST_PASS   │  │ Password: ________     │
+└──────┬───────┘  └────────┬───────────────┘
+       │                   │
+       │                   │(Press Enter for defaults)
+       │                   │
+       └─────────┬─────────┘
+                 │
+                 ▼
+        ┌────────────────┐
+        │ Authenticate   │
+        │ POST /login    │
+        └────────┬───────┘
+                 │
+                 ▼
+        ┌────────────────────────┐
+        │ Save Session ONLY      │
+        │ tests/.auth/user.json  │
+        │ ❌ NO PASSWORDS        │
+        └────────┬───────────────┘
+                 │
+                 ▼
+        ┌────────────────┐
+        │ Run All Tests  │
+        │ 110+ tests     │
+        └────────┬───────┘
+                 │
+                 ▼
+        ┌────────────────┐
+        │ Cleanup Session│
+        │ Delete .auth/  │
+        └────────────────┘
+```
+
+### Security Features
+
+- ❌ No passwords in `.env` files
+- ❌ No passwords in config files
+- ❌ No passwords in codebase
+- ❌ No risk of accidental commits
+- ✅ Only authentication sessions cached
+- ✅ Automatic cleanup after tests
+- ✅ Git-ignored session files
+
+---
+
 This consolidated directive represents the complete state of the NextDocs platform implementation.
