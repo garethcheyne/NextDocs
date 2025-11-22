@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/db/prisma'
 import { notifyFeatureStatusChange } from '@/lib/email/notification-service'
+import { createWorkItemOnApproval } from '@/lib/sync/devops-sync'
 
 // POST /api/admin/features/[id]/status - Update feature request status
 export async function POST(
@@ -74,6 +75,22 @@ export async function POST(
             },
         })
 
+        // Auto-create work item if status changed to approved
+        let workItemResult = null;
+        if (status === 'approved' && feature.status !== 'approved') {
+            try {
+                workItemResult = await createWorkItemOnApproval(id);
+                if (workItemResult.success) {
+                    console.log(`Work item created: ${workItemResult.externalId} - ${workItemResult.externalUrl}`);
+                } else {
+                    console.error(`Failed to create work item: ${workItemResult.error}`);
+                }
+            } catch (error) {
+                console.error('Error creating work item:', error);
+                // Don't fail the status update if work item creation fails
+            }
+        }
+
         // Send email notifications to followers
         notifyFeatureStatusChange(
             id,
@@ -89,6 +106,7 @@ export async function POST(
         return NextResponse.json({
             feature: updatedFeature,
             message: 'Status updated successfully',
+            workItem: workItemResult,
         })
     } catch (error) {
         console.error('Error updating feature status:', error)

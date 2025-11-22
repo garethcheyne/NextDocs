@@ -41,6 +41,10 @@ model User {
   featureFollowers      FeatureFollower[] @relation("FeatureFollowers")
   statusChanges         FeatureStatusHistory[] @relation("StatusChanges")
   
+  // Content Engagement Relations
+  contentVotes          ContentVote[] @relation("ContentVotes")
+  contentFollows        ContentFollow[] @relation("ContentFollows")
+  
   // Analytics Relations
   analyticsEvents       AnalyticsEvent[] @relation("AnalyticsEvents")
   analyticsSessions     AnalyticsSession[] @relation("AnalyticsSessions")
@@ -387,6 +391,40 @@ model BlogPost {
   @@index([isDraft])
 }
 
+// Content Engagement Models
+
+model ContentVote {
+  id              String    @id @default(uuid())
+  userId          String
+  contentType     String    // 'document' or 'blogpost'
+  contentId       String    // ID of Document or BlogPost
+  voteType        String    // 'up' or 'down'
+  createdAt       DateTime  @default(now())
+  
+  // Relations
+  user            User      @relation("ContentVotes", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, contentType, contentId])
+  @@index([contentType, contentId])
+  @@index([userId])
+}
+
+model ContentFollow {
+  id              String    @id @default(uuid())
+  userId          String
+  contentType     String    // 'document' or 'blogpost'
+  contentId       String    // ID of Document or BlogPost
+  createdAt       DateTime  @default(now())
+  lastNotifiedAt  DateTime?
+  
+  // Relations
+  user            User      @relation("ContentFollows", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, contentType, contentId])
+  @@index([contentType, contentId])
+  @@index([userId])
+}
+
 // Feature Request System Models
 
 model FeatureCategory {
@@ -405,13 +443,20 @@ model FeatureCategory {
   // GitHub specific
   githubOwner     String?
   githubRepo      String?
+  githubPat       String?   @db.Text // GitHub PAT (encrypted)
   
   // Azure DevOps specific
   devopsOrg       String?
   devopsProject   String?
   devopsAreaPath  String?   // Area path for work items
+  devopsPat       String?   @db.Text // Azure DevOps PAT (encrypted)
   
-  // Encrypted credentials
+  // Sync settings
+  autoCreateOnApproval Boolean @default(false) // Auto-create work item when approved
+  syncComments         Boolean @default(true)  // Bi-directional comment sync
+  syncStatus           Boolean @default(true)  // Sync status changes
+  
+  // Encrypted credentials (legacy - kept for backwards compatibility)
   patEncrypted    String?   @db.Text
   
   enabled         Boolean   @default(true)
@@ -420,6 +465,8 @@ model FeatureCategory {
   
   // Relations
   featureRequests FeatureRequest[]
+  epics           Epic[]
+  tags            Tag[]
   
   @@index([enabled])
   @@index([slug])
@@ -444,7 +491,13 @@ model FeatureRequest {
   
   // Categorization
   categoryId      String?   // Nullable to allow orphaned requests
-  tags            String[]  @default([])
+  epicId          String?   // Link to epic
+  tagIds          String[]  @default([]) // Array of tag IDs
+  
+  // DevOps metadata
+  storyPoints     Int?      // Effort estimation
+  sprint          String?   // Sprint/iteration name
+  assignedTo      String?   // Assigned developer/team
   
   // Search
   searchVector    Unsupported("tsvector")? // For full-text search
@@ -455,9 +508,11 @@ model FeatureRequest {
   // Integration tracking
   externalId      String?   // GitHub Issue # or DevOps Work Item ID
   externalUrl     String?   // Direct link to external item
+  externalType    String?   // 'github' or 'azure-devops'
   syncEnabled     Boolean   @default(false)
   lastSyncAt      DateTime?
-  syncStatus      String?   // 'synced', 'pending', 'error'
+  syncStatus      String?   // 'not_synced', 'syncing', 'synced', 'error'
+  syncError       String?   @db.Text // Last sync error message
   
   // Engagement metrics (denormalized for performance)
   voteCount       Int       @default(0)
@@ -472,6 +527,7 @@ model FeatureRequest {
   // Relations
   creator         User      @relation("FeatureRequestCreator", fields: [createdBy], references: [id])
   category        FeatureCategory? @relation(fields: [categoryId], references: [id])
+  epic            Epic?     @relation(fields: [epicId], references: [id])
   votes           FeatureVote[]
   comments        FeatureComment[]
   followers       FeatureFollower[]
@@ -519,16 +575,22 @@ model FeatureComment {
   deletedAt       DateTime?
   deletedBy       String?   // Admin who deleted it
   
+  // External sync tracking
+  externalCommentId String? // DevOps or GitHub comment ID
+  externalSource    String? // 'azure-devops', 'github', 'nextdocs'
+  
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   
   feature         FeatureRequest @relation(fields: [featureId], references: [id], onDelete: Cascade)
   user            User      @relation("FeatureComments", fields: [userId], references: [id])
   deletedByUser   User?     @relation("DeletedComments", fields: [deletedBy], references: [id])
+  commentSync     CommentSync?
   
   @@index([featureId])
   @@index([userId])
   @@index([createdAt])
+  @@index([externalCommentId])
 }
 
 model FeatureFollower {
@@ -564,6 +626,66 @@ model FeatureStatusHistory {
   
   @@index([featureId])
   @@index([createdAt])
+}
+
+model Epic {
+  id              String    @id @default(uuid())
+  title           String
+  description     String?   @db.Text
+  categoryId      String
+  
+  // Timeline
+  startDate       DateTime?
+  endDate         DateTime?
+  
+  // Status
+  status          String    @default("planned") // planned, in-progress, completed, cancelled
+  
+  // External tracking
+  externalId      String?   // DevOps Epic ID or GitHub Milestone ID
+  externalUrl     String?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  category        FeatureCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  features        FeatureRequest[]
+  
+  @@index([categoryId])
+  @@index([status])
+}
+
+model Tag {
+  id          String   @id @default(uuid())
+  name        String
+  color       String   @default("#3b82f6") // Tailwind blue-500
+  categoryId  String
+  
+  // External mapping
+  githubLabel     String?  // GitHub label name
+  devopsTag       String?  // Azure DevOps tag name
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  category    FeatureCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  
+  @@unique([name, categoryId])
+  @@index([categoryId])
+}
+
+model CommentSync {
+  id                String   @id @default(uuid())
+  commentId         String   @unique
+  externalCommentId String   // DevOps comment ID or GitHub comment ID
+  externalType      String   // 'azure-devops' or 'github'
+  lastSyncedAt      DateTime @default(now())
+  syncDirection     String   // 'to-external', 'from-external', 'bidirectional'
+  
+  comment           FeatureComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  
+  @@index([externalCommentId])
+  @@index([lastSyncedAt])
 }
 
 model EmailQueue {

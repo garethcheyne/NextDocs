@@ -487,7 +487,7 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                             <SidebarGroupContent>
                                 <SidebarMenu>
                                     <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={currentPath === '/admin'}>
+                                        <SidebarMenuButton asChild isActive={currentPath === '/admin' || (currentPath.startsWith('/admin') && !currentPath.match(/\/admin\/(users|repositories|features|analytics)/))}>
                                             <Link href="/admin">
                                                 <Activity className="w-4 h-4" />
                                                 <span>Dashboard</span>
@@ -495,15 +495,7 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
                                     <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={currentPath.startsWith('/admin/repositories')}>
-                                            <Link href="/admin/repositories">
-                                                <GitBranch className="w-4 h-4" />
-                                                <span>Repositories</span>
-                                            </Link>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
-                                    <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={currentPath.startsWith('/admin/users')}>
+                                        <SidebarMenuButton asChild isActive={currentPath === '/admin/users' || currentPath.startsWith('/admin/users/')}>
                                             <Link href="/admin/users">
                                                 <Users className="w-4 h-4" />
                                                 <span>Users</span>
@@ -511,15 +503,23 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
                                     <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={currentPath.startsWith('/admin/features')}>
+                                        <SidebarMenuButton asChild isActive={currentPath === '/admin/features' || currentPath.startsWith('/admin/features/')}>
                                             <Link href="/admin/features">
                                                 <Lightbulb className="w-4 h-4" />
-                                                <span>Features</span>
+                                                <span>Feature Requests</span>
                                             </Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
                                     <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={currentPath.startsWith('/admin/analytics')}>
+                                        <SidebarMenuButton asChild isActive={currentPath === '/admin/repositories' || currentPath.startsWith('/admin/repositories/')}>
+                                            <Link href="/admin/repositories">
+                                                <GitBranch className="w-4 h-4" />
+                                                <span>Repositories</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                    <SidebarMenuItem>
+                                        <SidebarMenuButton asChild isActive={currentPath === '/admin/analytics' || currentPath.startsWith('/admin/analytics/')}>
                                             <Link href="/admin/analytics">
                                                 <BarChart3 className="w-4 h-4" />
                                                 <span>Analytics</span>

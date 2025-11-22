@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { GitBranch, Plus, Search, RefreshCw, CheckCircle2, XCircle } from 'lucide-react'
+import { GitBranch, Plus, Search, RefreshCw, CheckCircle2, XCircle, FileText, BookOpen, Users, FolderTree } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -13,12 +13,18 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 function formatTimeAgo(date: string | null): string {
   if (!date) return 'Never'
-  
+
   const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000)
-  
+
   if (seconds < 60) return 'Just now'
   if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`
   if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`
@@ -54,7 +60,12 @@ interface Repository {
   }>
   _count: {
     syncLogs: number
+    documents: number
+    blogPosts: number
+    categoryMetadata: number
   }
+  authorCount: number
+  parentCategoryCount: number
 }
 
 export default function RepositoriesClient({ initialRepositories }: { initialRepositories: Repository[] }) {
@@ -62,6 +73,8 @@ export default function RepositoriesClient({ initialRepositories }: { initialRep
   const [repositories, setRepositories] = useState<Repository[]>(initialRepositories)
   const [syncing, setSyncing] = useState<Record<string, boolean>>({})
   const [testing, setTesting] = useState<Record<string, boolean>>({})
+  const [tooltipData, setTooltipData] = useState<Record<string, any>>({})
+  const [loadingTooltip, setLoadingTooltip] = useState<string | null>(null)
 
   const handleSync = async (id: string) => {
     setSyncing({ ...syncing, [id]: true })
@@ -69,7 +82,7 @@ export default function RepositoriesClient({ initialRepositories }: { initialRep
       const response = await fetch(`/api/repositories/${id}/sync`, {
         method: 'POST',
       })
-      
+
       if (response.ok) {
         // Refresh the page data after a short delay
         setTimeout(() => {
@@ -103,6 +116,40 @@ export default function RepositoriesClient({ initialRepositories }: { initialRep
       alert(`✗ Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setTesting({ ...testing, [id]: false })
+    }
+  }
+
+  const fetchTooltipData = async (repoId: string, type: 'documents' | 'blogPosts' | 'authors' | 'categories') => {
+    const key = `${repoId}-${type}`
+    if (tooltipData[key] || loadingTooltip === key) return
+
+    setLoadingTooltip(key)
+    try {
+      let endpoint = ''
+      switch (type) {
+        case 'documents':
+          endpoint = `/api/repositories/${repoId}/documents/list`
+          break
+        case 'blogPosts':
+          endpoint = `/api/repositories/${repoId}/blog-posts/list`
+          break
+        case 'authors':
+          endpoint = `/api/repositories/${repoId}/authors/list`
+          break
+        case 'categories':
+          endpoint = `/api/repositories/${repoId}/categories/list`
+          break
+      }
+
+      const response = await fetch(endpoint)
+      if (response.ok) {
+        const data = await response.json()
+        setTooltipData(prev => ({ ...prev, [key]: data.items }))
+      }
+    } catch (error) {
+      console.error('Failed to fetch tooltip data:', error)
+    } finally {
+      setLoadingTooltip(null)
     }
   }
 
@@ -183,7 +230,7 @@ export default function RepositoriesClient({ initialRepositories }: { initialRep
               failed: 'ERROR',
               in_progress: 'SYNCING',
             } as const
-            
+
             const displayStatus = repo.enabled
               ? repo.lastSyncStatus
                 ? statusMap[repo.lastSyncStatus as keyof typeof statusMap] || 'PENDING'
@@ -218,41 +265,162 @@ export default function RepositoriesClient({ initialRepositories }: { initialRep
                       </div>
                     </div>
                     <span
-                      className={`text-xs px-3 py-1 rounded-full flex-shrink-0 ${
-                        displayStatus === 'ACTIVE'
+                      className={`text-xs px-3 py-1 rounded-full flex-shrink-0 ${displayStatus === 'ACTIVE'
                           ? 'bg-green-500/10 text-green-400 border border-green-500/20'
                           : displayStatus === 'SYNCING'
-                          ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                          : displayStatus === 'ERROR'
-                          ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-                          : displayStatus === 'DISABLED'
-                          ? 'bg-gray-500/10 text-gray-400 border border-gray-500/20'
-                          : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
-                      }`}
+                            ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                            : displayStatus === 'ERROR'
+                              ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                              : displayStatus === 'DISABLED'
+                                ? 'bg-gray-500/10 text-gray-400 border border-gray-500/20'
+                                : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
+                        }`}
                     >
                       {displayStatus}
                     </span>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid md:grid-cols-3 gap-4 mb-4">
-                    <div>
-                      <p className="text-xs text-gray-500">Last Sync</p>
-                      <p className="text-sm text-white">
-                        {formatTimeAgo(repo.lastSyncAt)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Documents</p>
-                      <p className="text-sm text-white">
-                        {syncDocCount > 0 ? `${syncDocCount} files` : '-'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Sync Schedule</p>
-                      <p className="text-sm text-white">
-                        {formatSyncSchedule(repo.syncFrequency)}
-                      </p>
+                  <div className="space-y-4 mb-4">
+                    {/* Content Stats */}
+                    <TooltipProvider>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div 
+                              className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 rounded-xl p-4 border border-blue-500/20 hover:border-blue-500/40 transition-colors cursor-pointer"
+                              onMouseEnter={() => fetchTooltipData(repo.id, 'documents')}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <FileText className="w-4 h-4 text-blue-400" />
+                                <p className="text-xs font-medium text-blue-400">Documents</p>
+                              </div>
+                              <p className="text-3xl font-bold text-white">
+                                {repo._count.documents}
+                              </p>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="max-w-xs max-h-60 overflow-auto">
+                            {loadingTooltip === `${repo.id}-documents` ? (
+                              <p className="text-xs">Loading...</p>
+                            ) : tooltipData[`${repo.id}-documents`]?.length > 0 ? (
+                              <div className="space-y-1">
+                                <p className="font-semibold text-xs mb-1">Documents:</p>
+                                {tooltipData[`${repo.id}-documents`].slice(0, 10).map((doc: any, i: number) => (
+                                  <p key={i} className="text-xs truncate">{doc.title}</p>
+                                ))}
+                                {tooltipData[`${repo.id}-documents`].length > 10 && (
+                                  <p className="text-xs opacity-70">+{tooltipData[`${repo.id}-documents`].length - 10} more</p>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="text-xs">No documents</p>
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div 
+                              className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 rounded-xl p-4 border border-purple-500/20 hover:border-purple-500/40 transition-colors cursor-pointer"
+                              onMouseEnter={() => fetchTooltipData(repo.id, 'blogPosts')}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <BookOpen className="w-4 h-4 text-purple-400" />
+                                <p className="text-xs font-medium text-purple-400">Blog Posts</p>
+                              </div>
+                              <p className="text-3xl font-bold text-white">
+                                {repo._count.blogPosts}
+                              </p>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="max-w-xs max-h-60 overflow-auto">
+                            {loadingTooltip === `${repo.id}-blogPosts` ? (
+                              <p className="text-xs">Loading...</p>
+                            ) : tooltipData[`${repo.id}-blogPosts`]?.length > 0 ? (
+                              <div className="space-y-1">
+                                <p className="font-semibold text-xs mb-1">Blog Posts:</p>
+                                {tooltipData[`${repo.id}-blogPosts`].slice(0, 10).map((post: any, i: number) => (
+                                  <p key={i} className="text-xs truncate">{post.title}</p>
+                                ))}
+                                {tooltipData[`${repo.id}-blogPosts`].length > 10 && (
+                                  <p className="text-xs opacity-70">+{tooltipData[`${repo.id}-blogPosts`].length - 10} more</p>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="text-xs">No blog posts</p>
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div 
+                              className="bg-gradient-to-br from-green-500/10 to-green-600/5 rounded-xl p-4 border border-green-500/20 hover:border-green-500/40 transition-colors cursor-pointer"
+                              onMouseEnter={() => fetchTooltipData(repo.id, 'authors')}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <Users className="w-4 h-4 text-green-400" />
+                                <p className="text-xs font-medium text-green-400">Authors</p>
+                              </div>
+                              <p className="text-3xl font-bold text-white">
+                                {repo.authorCount}
+                              </p>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="max-w-xs max-h-60 overflow-auto">
+                            {loadingTooltip === `${repo.id}-authors` ? (
+                              <p className="text-xs">Loading...</p>
+                            ) : tooltipData[`${repo.id}-authors`]?.length > 0 ? (
+                              <div className="space-y-1">
+                                <p className="font-semibold text-xs mb-1">Authors:</p>
+                                {tooltipData[`${repo.id}-authors`].map((author: string, i: number) => (
+                                  <p key={i} className="text-xs truncate">{author}</p>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-xs">No authors</p>
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div 
+                              className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 rounded-xl p-4 border border-orange-500/20 hover:border-orange-500/40 transition-colors cursor-pointer"
+                              onMouseEnter={() => fetchTooltipData(repo.id, 'categories')}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <FolderTree className="w-4 h-4 text-orange-400" />
+                                <p className="text-xs font-medium text-orange-400">Categories</p>
+                              </div>
+                              <p className="text-3xl font-bold text-white">
+                                {repo.parentCategoryCount}
+                              </p>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="max-w-xs max-h-60 overflow-auto">
+                            {loadingTooltip === `${repo.id}-categories` ? (
+                              <p className="text-xs">Loading...</p>
+                            ) : tooltipData[`${repo.id}-categories`]?.length > 0 ? (
+                              <div className="space-y-1">
+                                <p className="font-semibold text-xs mb-1">Categories:</p>
+                                {tooltipData[`${repo.id}-categories`].map((cat: any, i: number) => (
+                                  <p key={i} className="text-xs truncate">{cat.title}</p>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-xs">No categories</p>
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </TooltipProvider>
+
+                    {/* Sync Info */}
+                    <div className="flex items-center justify-between text-xs text-gray-400 pt-2 border-t border-gray-700/50">
+                      <span>Last sync: {formatTimeAgo(repo.lastSyncAt)}</span>
+                      <span>{formatSyncSchedule(repo.syncFrequency)}</span>
                     </div>
                   </div>
                   <div className="flex gap-2">

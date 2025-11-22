@@ -17,6 +17,18 @@ export async function POST(req: NextRequest) {
       duration,
     } = body
     
+    // Validate userId exists in database if provided
+    let validUserId: string | undefined = undefined
+    if (userId) {
+      const userExists = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true }
+      })
+      if (userExists) {
+        validUserId = userId
+      }
+    }
+    
     // Extract request metadata
     const ipAddress = headersList.get('x-forwarded-for') || headersList.get('x-real-ip')
     const userAgent = headersList.get('user-agent')
@@ -48,7 +60,7 @@ export async function POST(req: NextRequest) {
     await prisma.analyticsEvent.create({
       data: {
         sessionId,
-        userId,
+        ...(validUserId && { userId: validUserId }),
         eventType,
         eventData,
         path,
@@ -75,7 +87,7 @@ export async function POST(req: NextRequest) {
       },
       create: {
         sessionId,
-        userId,
+        ...(validUserId && { userId: validUserId }),
         ipAddress,
         userAgent,
         pageViews: eventType === 'page_view' ? 1 : 0,

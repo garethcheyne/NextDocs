@@ -16,7 +16,10 @@ import { VoteButton } from '@/components/features/vote-button'
 import { CommentForm } from '@/components/features/comment-form'
 import { CommentItem } from '@/components/features/comment-item'
 import { StatusUpdateDialog } from '@/components/admin/status-update-dialog'
+import { EditFeatureDialog } from '@/components/admin/edit-feature-dialog'
 import { FeatureBanner } from '@/components/features/feature-banner'
+import { SyncCommentsButton } from '@/components/features/sync-comments-button'
+import ReactMarkdown from 'react-markdown'
 
 export default async function FeatureRequestPage({
     params,
@@ -127,10 +130,26 @@ export default async function FeatureRequestPage({
                                 <div className="grid gap-8 lg:grid-cols-3">
                                     {/* Feature Details - Main Column */}
                                     <div className="lg:col-span-2 space-y-6">
-                                        {/* Admin Actions */}
-                                        {session?.user?.role === 'admin' && (
-                                            <div className="flex justify-end">
-                                                <StatusUpdateDialog featureId={feature.id} currentStatus={feature.status} />
+                                        {/* Admin/Creator Actions */}
+                                        {(session?.user?.role === 'admin' || session?.user?.id === feature.createdBy) && (
+                                            <div className="flex justify-end gap-2">
+                                                <EditFeatureDialog
+                                                    featureId={feature.id}
+                                                    currentTitle={feature.title}
+                                                    currentDescription={feature.description}
+                                                    hasExternalWorkItem={!!feature.externalId}
+                                                />
+                                                {session?.user?.role === 'admin' && (
+                                                    <StatusUpdateDialog 
+                                                        featureId={feature.id} 
+                                                        currentStatus={feature.status}
+                                                        featureTitle={feature.title}
+                                                        featureDescription={feature.description}
+                                                        integrationType={(feature.category?.integrationType as 'github' | 'azure-devops') || null}
+                                                        autoCreateOnApproval={feature.category?.autoCreateOnApproval || false}
+                                                        hasExistingWorkItem={!!feature.externalId}
+                                                    />
+                                                )}
                                             </div>
                                         )}
 
@@ -140,18 +159,16 @@ export default async function FeatureRequestPage({
                                                 <h2 className="text-xl font-semibold">Description</h2>
                                             </CardHeader>
                                             <CardContent>
-                                                <div className="text-foreground">
-                                                    {feature.description.split('\n').map((paragraph, i) => (
-                                                        <p key={i} className="mb-3 last:mb-0">{paragraph}</p>
-                                                    ))}
+                                                <div className="prose prose-sm max-w-none dark:prose-invert">
+                                                    <ReactMarkdown>{feature.description}</ReactMarkdown>
                                                 </div>
                                             </CardContent>
                                         </Card>
 
                                         {/* Tags */}
-                                        {feature.tags && feature.tags.length > 0 && (
+                                        {feature.tagIds && feature.tagIds.length > 0 && (
                                             <div className="flex flex-wrap gap-2">
-                                                {feature.tags.map((tag) => (
+                                                {feature.tagIds.map((tag) => (
                                                     <Badge key={tag} variant="secondary">
                                                         {tag}
                                                     </Badge>
@@ -171,7 +188,7 @@ export default async function FeatureRequestPage({
                                             </CardHeader>
                                             <CardContent>
                                                 {feature.comments.length === 0 ? (
-                                                    <p className="text-center py-8 text-muted-foreground">
+                                                    <p className="text-center py-8 text-foreground/70">
                                                         No comments yet. Be the first to comment!
                                                     </p>
                                                 ) : (
@@ -190,7 +207,57 @@ export default async function FeatureRequestPage({
 
                                     {/* Sidebar */}
                                     <div className="space-y-6">
-
+                                        {/* Work Item Link */}
+                                        {feature.externalId && feature.externalUrl && (
+                                            <Card className="border-brand-orange/50">
+                                                <CardHeader>
+                                                    <h3 className="font-semibold flex items-center gap-2">
+                                                        {feature.externalType === 'github' ? (
+                                                            <>
+                                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                                                                </svg>
+                                                                GitHub Issue
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                                    <path d="M0 12L5.656 17.657 24 0z"/>
+                                                                </svg>
+                                                                Azure DevOps Work Item
+                                                            </>
+                                                        )}
+                                                    </h3>
+                                                </CardHeader>
+                                                <CardContent>
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-sm text-muted-foreground">ID:</span>
+                                                            <span className="font-mono text-sm font-semibold">
+                                                                #{feature.externalId}
+                                                            </span>
+                                                        </div>
+                                                        <a
+                                                            href={feature.externalUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-flex items-center gap-2 text-sm text-brand-orange hover:underline"
+                                                        >
+                                                            View in {feature.externalType === 'github' ? 'GitHub' : 'Azure DevOps'}
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                            </svg>
+                                                        </a>
+                                                        {feature.category?.syncComments && (
+                                                            <>
+                                                                <Separator />
+                                                                <SyncCommentsButton featureId={feature.id} />
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        )}
 
                                         {/* Voter List */}
                                         {(upvotes > 0 || downvotes > 0) && (
@@ -210,12 +277,12 @@ export default async function FeatureRequestPage({
                                                                     </h4>
                                                                 </div>
                                                                 <div className="space-y-1">
-                                                                    {feature.votes
+                                                                        {feature.votes
                                                                         .filter((vote) => vote.voteType === 1)
                                                                         .map((vote) => (
                                                                             <div
                                                                                 key={vote.userId}
-                                                                                className="text-sm text-muted-foreground pl-6"
+                                                                                className="text-sm text-foreground/70 pl-6"
                                                                             >
                                                                                 {vote.user?.name || 'Anonymous'}
                                                                             </div>
@@ -237,12 +304,12 @@ export default async function FeatureRequestPage({
                                                                     </h4>
                                                                 </div>
                                                                 <div className="space-y-1">
-                                                                    {feature.votes
+                                                                        {feature.votes
                                                                         .filter((vote) => vote.voteType === -1)
                                                                         .map((vote) => (
                                                                             <div
                                                                                 key={vote.userId}
-                                                                                className="text-sm text-muted-foreground pl-6"
+                                                                                className="text-sm text-foreground/70 pl-6"
                                                                             >
                                                                                 {vote.user?.name || 'Anonymous'}
                                                                             </div>
@@ -274,7 +341,7 @@ export default async function FeatureRequestPage({
                                                                                 {history.newStatus.replace('_', ' ')}
                                                                             </Badge>
                                                                         </div>
-                                                                        <div className="text-xs text-muted-foreground mt-1">
+                                                                        <div className="text-xs text-foreground/60 mt-1">
                                                                             {new Date(history.createdAt).toLocaleDateString()}
                                                                         </div>
                                                                         {history.reason && (
@@ -301,7 +368,7 @@ export default async function FeatureRequestPage({
                                                 <CardContent>
                                                     <p className="text-2xl font-bold">{feature.targetVersion}</p>
                                                     {feature.expectedDate && (
-                                                        <p className="text-sm text-muted-foreground mt-1">
+                                                        <p className="text-sm text-foreground/70 mt-1">
                                                             Expected: {new Date(feature.expectedDate).toLocaleDateString()}
                                                         </p>
                                                     )}

@@ -171,7 +171,7 @@ export default function NewCategoryPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <input
+              <Input
                 id="enabled"
                 type="checkbox"
                 checked={formData.enabled}

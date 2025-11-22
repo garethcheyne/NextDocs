@@ -19,6 +19,8 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
 import { SectionHeader } from '@/components/layout/section-header'
 import { BlogFilters } from '@/components/blog/blog-filters'
+import { getAuthorBySlug } from '@/lib/authors'
+import { AuthorHoverCard } from '@/components/author-hover-card'
 
 export default async function BlogPage({
     searchParams,
@@ -102,6 +104,17 @@ export default async function BlogPage({
             publishedAt: 'desc',
         },
     })
+
+    // Fetch author data for all posts
+    const authorDataMap = new Map()
+    for (const post of blogPosts) {
+        if (post.author && !authorDataMap.has(post.author)) {
+            const authorData = await getAuthorBySlug(post.author)
+            if (authorData) {
+                authorDataMap.set(post.author, authorData)
+            }
+        }
+    }
 
     // Get all blog posts (unfiltered) for sidebar data
     const allBlogPosts = await prisma.blogPost.findMany({
@@ -311,7 +324,18 @@ export default async function BlogPage({
                                                                     {post.author && (
                                                                         <div className="flex items-center gap-1">
                                                                             <User className="w-3 h-3" />
-                                                                            <span>{post.author}</span>
+                                                                            {authorDataMap.get(post.author) ? (
+                                                                                <AuthorHoverCard 
+                                                                                    author={authorDataMap.get(post.author)!} 
+                                                                                    content={{ documents: [], blogPosts: [] }}
+                                                                                >
+                                                                                    <span className="cursor-pointer hover:text-brand-orange transition-colors">
+                                                                                        {authorDataMap.get(post.author)!.name}
+                                                                                    </span>
+                                                                                </AuthorHoverCard>
+                                                                            ) : (
+                                                                                <span>{post.author}</span>
+                                                                            )}
                                                                         </div>
                                                                     )}
                                                                 </div>

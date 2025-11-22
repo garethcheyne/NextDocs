@@ -5,7 +5,6 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { AuthProvider } from '@/components/auth/auth-provider'
 import { AnalyticsProvider } from '@/lib/analytics/client'
 import ParticlesBackground from '@/components/particles-background'
-import { SearchDialog } from '@/components/search/search-dialog'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -47,9 +46,6 @@ export default function RootLayout({
         >
           <AuthProvider>
             <AnalyticsProvider>
-              {/* Global Search Dialog (⌘K) */}
-              <SearchDialog />
-              
               {/* Particles Background - Site-wide */}
               <ParticlesBackground />
 

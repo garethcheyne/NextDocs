@@ -95,83 +95,83 @@ export default async function AdminPage() {
 
       {/* Page Content */}
       <div className="flex-1 p-6 space-y-6 overflow-auto">
-              {/* Welcome Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-2xl">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">
                     Admin Dashboard
-                  </CardTitle>
-                  <CardDescription>
+                  </h1>
+                  <p className="text-gray-400 mt-2">
                     Manage repositories, monitor sync status, and view system activity
-                  </CardDescription>
-                </CardHeader>
-              </Card>
+                  </p>
+                </div>
+              </div>
 
               {/* Stats Overview */}
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="hover:border-primary/50 transition-all">
+                <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 hover:border-blue-500/40 transition-colors">
                   <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <GitBranch className="w-4 h-4 text-blue-400" />
+                      <CardTitle className="text-xs font-medium text-blue-400">
                         Total Repositories
                       </CardTitle>
-                      <GitBranch className="w-4 h-4 text-muted-foreground" />
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">{totalRepos}</div>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <div className="text-3xl font-bold text-white">{totalRepos}</div>
+                    <p className="text-xs text-gray-400 mt-1">
                       {activeRepos} active, {pendingRepos} pending
                     </p>
                   </CardContent>
                 </Card>
 
-                <Card className="hover:border-primary/50 transition-all">
+                <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20 hover:border-purple-500/40 transition-colors">
                   <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-purple-400" />
+                      <CardTitle className="text-xs font-medium text-purple-400">
                         Documents
                       </CardTitle>
-                      <BookOpen className="w-4 h-4 text-muted-foreground" />
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">{totalDocs}</div>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <div className="text-3xl font-bold text-white">{totalDocs}</div>
+                    <p className="text-xs text-gray-400 mt-1">
                       {totalRepos > 0 ? `Across ${totalRepos} repositories` : 'No repositories'}
                     </p>
                   </CardContent>
                 </Card>
 
-                <Card className="hover:border-primary/50 transition-all">
+                <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20 hover:border-green-500/40 transition-colors">
                   <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-green-400" />
+                      <CardTitle className="text-xs font-medium text-green-400">
                         Active Users
                       </CardTitle>
-                      <Users className="w-4 h-4 text-muted-foreground" />
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">{users.length}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Last 7 days</p>
+                    <div className="text-3xl font-bold text-white">{users.length}</div>
+                    <p className="text-xs text-gray-400 mt-1">Last 7 days</p>
                   </CardContent>
                 </Card>
 
-                <Card className="hover:border-primary/50 transition-all">
+                <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-orange-500/20 hover:border-orange-500/40 transition-colors">
                   <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-orange-400" />
+                      <CardTitle className="text-xs font-medium text-orange-400">
                         Sync Status
                       </CardTitle>
-                      <Activity className="w-4 h-4 text-muted-foreground" />
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+                    <div className="text-3xl font-bold text-green-400">
                       {activeRepos > 0 ? 'OK' : 'N/A'}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs text-gray-400 mt-1">
                       Last sync: {formatTimeAgo(lastSync)}
                     </p>
                   </CardContent>

@@ -59,7 +59,7 @@ export function FeatureBanner({
                                         </Badge>
                                     )}
                                 </div>
-                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-4 text-sm text-foreground/70 dark:text-foreground/80">
                                     {creator && (
                                         <div className="flex items-center gap-1">
                                             <User className="w-4 h-4" />
@@ -78,17 +78,17 @@ export function FeatureBanner({
                             {/* Vote Stats */}
                             <div className="flex flex-col gap-4 text-right">
                                 <div>
-                                    <div className="text-4xl font-bold text-brand-orange">{voteCount}</div>
-                                    <div className="text-sm text-muted-foreground">Total Votes</div>
+                                    <div className="text-4xl font-bold text-brand-orange">{upvotes + downvotes}</div>
+                                    <div className="text-sm text-foreground/70 dark:text-foreground/80">Total Votes</div>
                                 </div>
                                 <div className="flex gap-4">
                                     <div>
-                                        <div className="text-2xl font-bold text-green-600">{upvotes}</div>
-                                        <div className="text-xs text-muted-foreground">Upvotes</div>
+                                        <div className="text-2xl font-bold text-green-600 dark:text-green-400">{upvotes}</div>
+                                        <div className="text-xs text-foreground/70 dark:text-foreground/80">Upvotes</div>
                                     </div>
                                     <div>
-                                        <div className="text-2xl font-bold text-red-600">{downvotes}</div>
-                                        <div className="text-xs text-muted-foreground">Downvotes</div>
+                                        <div className="text-2xl font-bold text-red-600 dark:text-red-400">{downvotes}</div>
+                                        <div className="text-xs text-foreground/70 dark:text-foreground/80">Downvotes</div>
                                     </div>
                                 </div>
                             </div>
@@ -111,7 +111,7 @@ export function FeatureBanner({
                             </div>
                             <h1 className="text-4xl font-bold tracking-tight">Request Features</h1>
                         </div>
-                        <p className="text-lg text-muted-foreground">
+                        <p className="text-lg text-foreground/80 dark:text-foreground/90">
                             Share your ideas and help shape the future of our applications. Vote on features you'd like to see implemented.
                         </p>
 
@@ -128,13 +128,13 @@ export function FeatureBanner({
                     <div className="hidden md:flex flex-col gap-4 text-right">
                         <div>
                             <div className="text-3xl font-bold text-brand-orange">{totalRequests}</div>
-                            <div className="text-sm text-muted-foreground">Total Requests</div>
+                            <div className="text-sm text-foreground/70 dark:text-foreground/80">Total Requests</div>
                         </div>
                         <div>
-                            <div className="text-3xl font-bold text-green-500">
+                            <div className="text-3xl font-bold text-green-500 dark:text-green-400">
                                 {completedRequests}
                             </div>
-                            <div className="text-sm text-muted-foreground">Completed</div>
+                            <div className="text-sm text-foreground/70 dark:text-foreground/80">Completed</div>
                         </div>
                     </div>
                 </div>

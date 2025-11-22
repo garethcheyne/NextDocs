@@ -52,7 +52,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
     try {
       const response = await fetch(`/api/admin/features/categories/${resolvedParams.id}`)
       if (!response.ok) throw new Error('Failed to fetch category')
-      
+
       const data = await response.json()
       setCategory(data.category)
       setFormData({
@@ -103,7 +103,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
       const message = action
         ? `This will permanently delete ${category._count.featureRequests} feature request(s) along with all their votes and comments. This cannot be undone.`
         : `This will orphan ${category._count.featureRequests} feature request(s). They will remain in the system but won't be associated with any category.`
-      
+
       if (!confirm(message)) {
         return
       }
@@ -180,7 +180,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
                   )}
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              
+
               {category._count.featureRequests > 0 && (
                 <div className="space-y-3 py-4">
                   <p className="text-sm font-medium">What would you like to do with the feature requests?</p>
@@ -220,7 +220,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
                   </div>
                 </div>
               )}
-              
+
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
@@ -235,6 +235,21 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
           </AlertDialog>
         </div>
       </div>
+
+      {/* Integration Settings Link */}
+      <Card>
+        <CardHeader>
+          <CardTitle>DevOps Integration</CardTitle>
+          <CardDescription>Configure GitHub or Azure DevOps integration for this category</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link href={`/admin/features/categories/${resolvedParams.id}/integrations`}>
+            <Button variant="outline">
+              Configure Integration Settings
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
@@ -316,7 +331,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
             </div>
 
             <div className="flex items-center gap-2">
-              <input
+              <Input
                 id="enabled"
                 type="checkbox"
                 checked={formData.enabled}

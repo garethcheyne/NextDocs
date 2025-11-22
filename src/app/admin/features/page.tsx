@@ -53,16 +53,15 @@ export default async function AdminFeaturesPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-                        <Lightbulb className="w-8 h-8 text-brand-orange" />
-                        Feature Requests Admin
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">
+                        Feature Request Management
                     </h1>
-                    <p className="text-muted-foreground mt-1">
+                    <p className="text-gray-400 mt-2">
                         Manage feature requests and application categories
                     </p>
                 </div>
                 <Link href="/admin/features/categories/new">
-                    <Button>
+                    <Button className="bg-gradient-to-r from-brand-orange to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white">
                         <Plus className="w-4 h-4 mr-2" />
                         New Category
                     </Button>
@@ -71,39 +70,51 @@ export default async function AdminFeaturesPage() {
 
             {/* Statistics Cards */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card>
+                <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 hover:border-blue-500/40 transition-colors">
                     <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Total Requests</CardTitle>
+                        <div className="flex items-center gap-2">
+                            <Lightbulb className="w-4 h-4 text-blue-400" />
+                            <CardTitle className="text-xs font-medium text-blue-400">Total Requests</CardTitle>
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{stats.total}</div>
+                        <div className="text-3xl font-bold text-white">{stats.total}</div>
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="bg-gradient-to-br from-yellow-500/10 to-yellow-600/5 border-yellow-500/20 hover:border-yellow-500/40 transition-colors">
                     <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Pending Approval</CardTitle>
+                        <div className="flex items-center gap-2">
+                            <Lightbulb className="w-4 h-4 text-yellow-400" />
+                            <CardTitle className="text-xs font-medium text-yellow-400">Pending Approval</CardTitle>
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-gray-500">{stats.proposal}</div>
+                        <div className="text-3xl font-bold text-white">{stats.proposal}</div>
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20 hover:border-purple-500/40 transition-colors">
                     <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">In Progress</CardTitle>
+                        <div className="flex items-center gap-2">
+                            <Lightbulb className="w-4 h-4 text-purple-400" />
+                            <CardTitle className="text-xs font-medium text-purple-400">In Progress</CardTitle>
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-blue-500">{stats.inProgress}</div>
+                        <div className="text-3xl font-bold text-white">{stats.inProgress}</div>
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20 hover:border-green-500/40 transition-colors">
                     <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
+                        <div className="flex items-center gap-2">
+                            <Lightbulb className="w-4 h-4 text-green-400" />
+                            <CardTitle className="text-xs font-medium text-green-400">Completed</CardTitle>
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-green-500">{stats.completed}</div>
+                        <div className="text-3xl font-bold text-white">{stats.completed}</div>
                     </CardContent>
                 </Card>
             </div>

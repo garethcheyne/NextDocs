@@ -35,10 +35,14 @@ export async function syncGitHub(repository: Repository) {
   
   // Filter for markdown files and metadata in the base path, excluding api-specs directory
   // Exception: Allow index.md or readme.md files in api-specs for intro/overview pages (if they exist)
+  // Also include JSON files from /authors/ directory
   const files: GitHubFile[] = data.tree.filter((item: any) => {
     const isBlob = item.type === 'blob'
     const inBasePath = item.path.startsWith(basePath === '/' ? '' : basePath.replace(/^\//, ''))
     const isMarkdownOrMeta = item.path.endsWith('.md') || item.path.endsWith('.mdx') || item.path.endsWith('_meta.json')
+    
+    // Check if file is a JSON file in the authors directory
+    const isAuthorJson = (item.path.includes('/authors/') || item.path.startsWith('authors/')) && item.path.endsWith('.json')
     
     // Check if file is in api-specs directory
     const inApiSpecs = item.path.includes('/api-specs/') || item.path.startsWith('api-specs/')
@@ -49,7 +53,7 @@ export async function syncGitHub(repository: Repository) {
       return isBlob && (fileName === 'index.md' || fileName === 'readme.md')
     }
     
-    return isBlob && inBasePath && isMarkdownOrMeta
+    return isBlob && inBasePath && (isMarkdownOrMeta || isAuthorJson)
   })
 
   // Also fetch API spec files (YAML/YML) from api-specs/[category]/ directories

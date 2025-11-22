@@ -4,6 +4,7 @@ import { syncGitHub } from './github'
 import { storeDocuments } from './document-storage'
 import { parseAndStoreMeta } from './metadata-parser'
 import { storeApiSpecs } from './api-spec-storage'
+import { storeAuthors } from './author-storage'
 import { syncRepositoryImages, syncRepositoryImagesUnified } from './image-sync'
 
 export async function syncRepository(repositoryId: string, ipAddress?: string) {
@@ -52,11 +53,11 @@ export async function syncRepository(repositoryId: string, ipAddress?: string) {
 
   try {
     console.log('⏳ Fetching documents from source...')
-    
+
     // Fetch documents and API specs from source
     let documents: Array<{ path: string; content: string }> = []
     let apiSpecs: Array<{ path: string; content: string }> = []
-    
+
     if (repository.source === 'azure') {
       const result = await syncAzureDevOps(repository)
       documents = result.documents
@@ -67,32 +68,46 @@ export async function syncRepository(repositoryId: string, ipAddress?: string) {
       apiSpecs = result.apiSpecs
     }
 
-    console.log(`✅ Found ${documents.length} markdown files`)
-    if (apiSpecs.length > 0) {
-      console.log(`✅ Found ${apiSpecs.length} API specification files`)
-    }
-    
-    // Separate metadata files from content files
+    // Separate metadata files, author files, and content files
     const metaFiles = documents.filter(d => d.path.endsWith('_meta.json'))
-    const contentFiles = documents.filter(d => !d.path.endsWith('_meta.json'))
-    
+    const authorFiles = documents.filter(d => d.path.includes('/authors/') && d.path.endsWith('.json') && !d.path.endsWith('_meta.json'))
+    const contentFiles = documents.filter(d => !d.path.endsWith('_meta.json') && !authorFiles.includes(d))
+
+    console.log('\n📦 FETCHED FILES BREAKDOWN:')
+    console.log(`   📄 Content files: ${contentFiles.length}`)
+    console.log(`   👤 Author files: ${authorFiles.length}`)
+    console.log(`   ⚙️  Metadata files: ${metaFiles.length}`)
+    if (apiSpecs.length > 0) {
+      console.log(`   📋 API specs: ${apiSpecs.length}`)
+    }
+    console.log(`   📊 Total: ${documents.length} markdown + ${apiSpecs.length} API specs\n`)
+
+    // Log all content files
+    if (contentFiles.length > 0) {
+      console.log('📄 CONTENT FILES:')
+      contentFiles.forEach((doc, idx) => {
+        console.log(`   ${String(idx + 1).padStart(3)}. ${doc.path}`)
+      })
+      console.log('')
+    }
+
     // Process metadata files first
     if (metaFiles.length > 0) {
+      console.log('⚙️  Processing metadata files...')
       await parseAndStoreMeta(repository.id, metaFiles)
+      console.log(`✅ Metadata processed\n`)
     }
-    
-    // Log first few files
-    if (contentFiles.length > 0) {
-      console.log('📄 Sample files:')
-      contentFiles.slice(0, 5).forEach((doc, idx) => {
-        console.log(`   ${idx + 1}. ${doc.path}`)
-      })
-      if (contentFiles.length > 5) {
-        console.log(`   ... and ${contentFiles.length - 5} more`)
-      }
+
+    // Process author files
+    let authorResult = { authorsAdded: 0, authorsUpdated: 0, totalProcessed: 0 }
+    if (authorFiles.length > 0) {
+      console.log('👤 Processing author files...')
+      authorResult = await storeAuthors(authorFiles)
+      console.log(`✅ Authors: ${authorResult.authorsAdded} added, ${authorResult.authorsUpdated} updated\n`)
     }
 
     // Store documents in database
+    console.log('💾 Storing documents...')
     const storageResult = await storeDocuments(repository.id, syncLog.id, contentFiles)
 
     // Store API specs in database
@@ -155,14 +170,20 @@ export async function syncRepository(repositoryId: string, ipAddress?: string) {
       },
     })
 
+    console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     console.log(`✨ SYNC COMPLETE: ${repository.name}`)
-    console.log(`⏱️  Duration: ${(duration / 1000).toFixed(2)}s`)
-    console.log(`📊 Documents: ${storageResult.totalAdded} added, ${storageResult.totalUpdated} changed, ${storageResult.totalDeleted} deleted`)
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log(`⏱️  Duration: ${(duration / 1000).toFixed(2)}s\n`)
+    console.log('📊 RESULTS SUMMARY:')
+    console.log(`   📄 Documents: ${storageResult.totalAdded} added, ${storageResult.totalUpdated} updated, ${storageResult.totalDeleted} deleted`)
+    if (authorResult.totalProcessed > 0) {
+      console.log(`   👤 Authors: ${authorResult.authorsAdded} added, ${authorResult.authorsUpdated} updated`)
+    }
     if (apiSpecs.length > 0) {
-      console.log(`📊 API Specs: ${apiSpecResult.totalAdded} added, ${apiSpecResult.totalUpdated} updated`)
+      console.log(`   📋 API Specs: ${apiSpecResult.totalAdded} added, ${apiSpecResult.totalUpdated} updated`)
     }
     if (imageResult.synced > 0 || imageResult.updated > 0 || imageResult.deleted > 0) {
-      console.log(`📊 Images: ${imageResult.synced} added, ${imageResult.updated} updated, ${imageResult.deleted} deleted, ${imageResult.skipped} unchanged`)
+      console.log(`   🖼️  Images: ${imageResult.synced} added, ${imageResult.updated} updated, ${imageResult.deleted} deleted, ${imageResult.skipped} unchanged`)
     }
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
 
@@ -171,7 +192,9 @@ export async function syncRepository(repositoryId: string, ipAddress?: string) {
     const duration = Date.now() - startTime
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 
+    console.error('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     console.error(`❌ SYNC FAILED: ${repository.name}`)
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     console.error(`⚠️  Error: ${errorMessage}`)
     console.error(`⏱️  Duration: ${(duration / 1000).toFixed(2)}s`)
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
@@ -238,10 +261,10 @@ export async function processScheduledSyncs() {
   if (syncPromises.length > 0) {
     console.log(`\n🚀 Processing ${syncPromises.length} scheduled sync(s)...\n`)
     const results = await Promise.allSettled(syncPromises)
-    
+
     const succeeded = results.filter(r => r.status === 'fulfilled').length
     const failed = results.filter(r => r.status === 'rejected').length
-    
+
     console.log(`\n📈 Scheduled sync batch complete: ${succeeded} succeeded, ${failed} failed\n`)
   } else {
     console.log('   ✓ No syncs due at this time\n')

@@ -6,6 +6,8 @@ import { useSession } from 'next-auth/react'
 import { Pencil, Trash2, X, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { MarkdownToolbar } from '@/components/ui/markdown-toolbar'
+import { useMarkdownEditor } from '@/hooks/use-markdown-editor'
 import ReactMarkdown from 'react-markdown'
 
 interface CommentItemProps {
@@ -31,6 +33,8 @@ export function CommentItem({ comment }: CommentItemProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [showPreview, setShowPreview] = useState(false)
     const [error, setError] = useState<string | null>(null)
+
+    const { textareaRef, handleInsert } = useMarkdownEditor(editContent, setEditContent)
 
     const isOwner = session?.user?.id === comment.userId
     const isAdmin = session?.user?.role === 'admin'
@@ -108,7 +112,7 @@ export function CommentItem({ comment }: CommentItemProps) {
                     <div className="font-medium">
                         {comment.user?.name || 'Anonymous'}
                     </div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs text-foreground/60 dark:text-foreground/70">
                         {new Date(comment.createdAt).toLocaleDateString()} at{' '}
                         {new Date(comment.createdAt).toLocaleTimeString()}
                         {isEdited && <span className="ml-2 italic">(edited)</span>}
@@ -153,10 +157,11 @@ export function CommentItem({ comment }: CommentItemProps) {
                         >
                             Preview
                         </button>
-                        <span className="ml-auto text-muted-foreground">
-                            Markdown supported
-                        </span>
                     </div>
+
+                    {!showPreview && (
+                        <MarkdownToolbar onInsert={handleInsert} />
+                    )}
 
                     {showPreview ? (
                         <div className="prose prose-sm max-w-none dark:prose-invert p-3 border rounded-md min-h-[100px]">
@@ -164,20 +169,21 @@ export function CommentItem({ comment }: CommentItemProps) {
                         </div>
                     ) : (
                         <Textarea
+                            ref={textareaRef}
                             value={editContent}
                             onChange={(e) => setEditContent(e.target.value)}
                             disabled={isSubmitting}
                             rows={4}
-                            className="resize-none"
-                            placeholder="Use markdown formatting..."
+                            className="resize-none font-mono"
+                            placeholder="Edit your comment..."
                         />
                     )}
 
                     <div className="flex justify-between items-center">
-                        <span className={`text-xs ${editContent.length > 5000 ? 'text-red-600' : 'text-muted-foreground'}`}>
+                        <span className={`text-xs ${editContent.length > 5000 ? 'text-red-600 dark:text-red-400' : 'text-foreground/60 dark:text-foreground/70'}`}>
                             {editContent.length} / 5000
                         </span>
-                        {error && <span className="text-sm text-red-600">{error}</span>}
+                        {error && <span className="text-sm text-red-600 dark:text-red-400">{error}</span>}
                     </div>
 
                     <div className="flex gap-2">

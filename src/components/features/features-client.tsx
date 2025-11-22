@@ -33,7 +33,7 @@ interface Feature {
         icon: string | null
         color: string | null
     } | null
-    tags: string[]
+        tagIds: string[]
     votes: Array<{
         id: string
         voteType: number
@@ -151,7 +151,7 @@ export function FeaturesClient({ features, categories, params }: FeaturesClientP
                     {/* Active Filters Display */}
                     {(params.category || params.status) && (
                         <div className="flex items-center gap-2 ml-auto">
-                            <span className="text-sm text-muted-foreground">Filters:</span>
+                            <span className="text-sm text-foreground/70">Filters:</span>
                             {params.category && (
                                 <Badge variant="secondary">
                                     {categories.find(c => c.id === params.category)?.name}
@@ -195,14 +195,12 @@ export function FeaturesClient({ features, categories, params }: FeaturesClientP
                                         {/* Content */}
                                         <Link href={`/features/${feature.slug}`} className="flex-1 min-w-0">
                                             <div>
-                                                <h3 className="text-base font-semibold mb-1 hover:text-brand-orange cursor-pointer transition-colors">
-                                                    {feature.title}
-                                                </h3>
-                                                <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
-                                                    {feature.description}
-                                                </p>
-
-                                                {/* Meta */}
+                                <h3 className="text-base font-semibold mb-1 hover:text-brand-orange cursor-pointer transition-colors">
+                                    {feature.title}
+                                </h3>
+                                <p className="text-sm text-foreground/80 dark:text-foreground/70 line-clamp-2 mb-2">
+                                    {feature.description}
+                                </p>                                                {/* Meta */}
                                                 <div className="flex flex-wrap items-center gap-2 text-xs">
                                                     <span className={`px-2 py-0.5 rounded border ${getStatusColor(feature.status)}`}>
                                                         {feature.status}
@@ -215,28 +213,28 @@ export function FeaturesClient({ features, categories, params }: FeaturesClientP
                                                     )}
 
                                                     {feature.category && (
-                                                        <span className="text-muted-foreground">
+                                                        <span className="text-foreground/70 dark:text-foreground/80">
                                                             {feature.category.name}
                                                         </span>
                                                     )}
 
-                                                    <span className="text-muted-foreground flex items-center gap-1">
+                                                    <span className="text-foreground/70 dark:text-foreground/80 flex items-center gap-1">
                                                         <User className="w-3 h-3" />
                                                         {feature.createdByName}
                                                     </span>
 
-                                                    <span className="text-muted-foreground flex items-center gap-1">
+                                                    <span className="text-foreground/70 dark:text-foreground/80 flex items-center gap-1">
                                                         <Calendar className="w-3 h-3" />
                                                         {new Date(feature.createdAt).toLocaleDateString()}
                                                     </span>
 
-                                                    <span className="text-muted-foreground flex items-center gap-1">
+                                                    <span className="flex items-center gap-1 text-xs">
                                                         <MessageSquare className="w-3 h-3" />
                                                         {feature.commentCount}
                                                     </span>
 
-                                                    {feature.tags.slice(0, 2).map((tag) => (
-                                                        <span key={tag} className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                                                    {feature.tagIds?.slice(0, 2).map((tag) => (
+                                                        <span key={tag} className="px-1.5 py-0.5 rounded bg-secondary/50 text-foreground/80">
                                                             {tag}
                                                         </span>
                                                     ))}
@@ -247,14 +245,14 @@ export function FeaturesClient({ features, categories, params }: FeaturesClientP
                                 </CardContent>
                             </Card>
                         )
-                    })})
+                    })}
 
                     {features.length === 0 && (
                         <Card>
                             <CardContent className="py-12">
                                 <div className="flex flex-col items-center justify-center text-center">
                                     <Lightbulb className="w-12 h-12 text-muted-foreground/50 mb-4" />
-                                    <p className="text-muted-foreground">
+                                    <p className="text-foreground/70">
                                         No feature requests found. Try adjusting your filters.
                                     </p>
                                 </div>

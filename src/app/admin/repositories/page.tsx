@@ -18,7 +18,7 @@ export default async function RepositoriesPage() {
     redirect('/docs')
   }
 
-  // Fetch repositories from database with sync log counts
+  // Fetch repositories from database with sync log counts and content counts
   const repositories = await prisma.repository.findMany({
     include: {
       syncLogs: {
@@ -26,19 +26,59 @@ export default async function RepositoriesPage() {
         orderBy: { startedAt: 'desc' },
       },
       _count: {
-        select: { syncLogs: true },
+        select: { 
+          syncLogs: true,
+          documents: true,
+          blogPosts: true,
+          categoryMetadata: true,
+        },
       },
     },
     orderBy: { createdAt: 'desc' },
   })
 
+  // Get author counts per repository
+  const authorCounts = await Promise.all(
+    repositories.map(async (repo) => {
+      const count = await prisma.document.findMany({
+        where: {
+          repositoryId: repo.id,
+          author: { not: null },
+        },
+        select: { author: true },
+        distinct: ['author'],
+      })
+      return { repositoryId: repo.id, authorCount: count.length }
+    })
+  )
+
+  // Get parent category counts per repository
+  const parentCategoryCounts = await Promise.all(
+    repositories.map(async (repo) => {
+      const count = await prisma.categoryMetadata.findMany({
+        where: {
+          repositoryId: repo.id,
+          parentSlug: null, // Only count parent categories
+        },
+        select: { id: true },
+      })
+      return { repositoryId: repo.id, parentCategoryCount: count.length }
+    })
+  )
+
   // Serialize dates to strings for client component
-  const serializedRepositories = repositories.map((repo) => ({
-    ...repo,
-    lastSyncAt: repo.lastSyncAt?.toISOString() || null,
-    createdAt: repo.createdAt.toISOString(),
-    updatedAt: repo.updatedAt.toISOString(),
-  }))
+  const serializedRepositories = repositories.map((repo) => {
+    const authorCount = authorCounts.find(a => a.repositoryId === repo.id)?.authorCount || 0
+    const parentCategoryCount = parentCategoryCounts.find(c => c.repositoryId === repo.id)?.parentCategoryCount || 0
+    return {
+      ...repo,
+      lastSyncAt: repo.lastSyncAt?.toISOString() || null,
+      createdAt: repo.createdAt.toISOString(),
+      updatedAt: repo.updatedAt.toISOString(),
+      authorCount,
+      parentCategoryCount,
+    }
+  })
 
   return (
     <>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/db/prisma'
 import { notifyNewComment } from '@/lib/email/notification-service'
+import { addExternalComment } from '@/lib/sync/devops-sync'
 
 export async function GET(
   request: NextRequest,
@@ -70,13 +71,35 @@ export async function POST(
     })
 
     // Update feature request comment count and last activity
-    await prisma.featureRequest.update({
+    const featureRequest = await prisma.featureRequest.update({
       where: { id },
       data: {
         commentCount: { increment: 1 },
         lastActivityAt: new Date(),
       },
+      include: {
+        category: true,
+      },
     })
+
+    // Sync comment to external work item if configured
+    if (
+      featureRequest.externalId && 
+      featureRequest.category?.syncComments &&
+      featureRequest.category?.integrationType
+    ) {
+      try {
+        await addExternalComment(
+          featureRequest.externalId,
+          featureRequest.category,
+          content.trim(),
+          session.user.name || session.user.email || 'Unknown'
+        );
+      } catch (error) {
+        console.error('Failed to sync comment to external system:', error);
+        // Don't fail the request if external sync fails
+      }
+    }
 
     // Send email notifications to followers
     notifyNewComment(id, comment.id).catch((error) => {

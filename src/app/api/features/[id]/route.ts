@@ -122,7 +122,7 @@ export async function PUT(
         }
 
         const body = await request.json()
-        const { title, description, categoryId, tags, priority, targetVersion, attachments } = body
+        const { title, description, categoryId, tagIds, priority, targetVersion, attachments } = body
 
         const updated = await prisma.featureRequest.update({
             where: { id },
@@ -130,7 +130,7 @@ export async function PUT(
                 title,
                 description,
                 categoryId,
-                tags,
+                tagIds,
                 priority,
                 targetVersion,
                 attachments,

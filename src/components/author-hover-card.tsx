@@ -51,20 +51,50 @@ interface AuthorHoverCardProps {
 
 export function AuthorHoverCard({ author, content, children }: AuthorHoverCardProps) {
   const [isHovering, setIsHovering] = useState(false)
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null)
+
+  // Generate initials from name
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  const handleMouseEnter = () => {
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+      setTimeoutId(null)
+    }
+    setIsHovering(true)
+  }
+
+  const handleMouseLeave = () => {
+    const id = setTimeout(() => {
+      setIsHovering(false)
+    }, 200)
+    setTimeoutId(id)
+  }
 
   return (
     <div 
       className="relative inline-block"
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       {children}
       
       {isHovering && (
-        <Card className="absolute z-50 w-96 shadow-lg border-2 top-full left-0 mt-2">
+        <Card 
+          className="absolute z-50 w-96 shadow-lg border-2 top-full left-0 mt-1"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
           <CardHeader className="pb-3">
             <div className="flex items-start gap-4">
-              <div className="relative w-16 h-16 rounded-full overflow-hidden bg-muted">
+              <div className="relative w-16 h-16 rounded-full overflow-hidden bg-muted flex-shrink-0">
                 {author.avatar ? (
                   <Image
                     src={author.avatar}
@@ -73,8 +103,10 @@ export function AuthorHoverCard({ author, content, children }: AuthorHoverCardPr
                     className="object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <User className="w-8 h-8 text-muted-foreground" />
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-brand-orange to-brand-orange/80">
+                    <span className="text-xl font-semibold text-white">
+                      {getInitials(author.name)}
+                    </span>
                   </div>
                 )}
               </div>

@@ -80,7 +80,15 @@ export async function searchContent(
             'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight,
           r.id as "repositoryId",
           r.name as "repositoryName",
-          r.slug as "repositorySlug"
+          r.slug as "repositorySlug",
+          COALESCE(
+            (SELECT cm.title 
+             FROM "CategoryMetadata" cm 
+             WHERE cm."categorySlug" = SPLIT_PART(d.category, '/', 1) 
+             AND cm."repositoryId" = d."repositoryId" 
+             LIMIT 1),
+            SPLIT_PART(d.category, '/', 1)
+          ) as "categoryTitle"
         FROM "Document" d
         JOIN "Repository" r ON d."repositoryId" = r.id
         WHERE d."searchVector" @@ to_tsquery('english', ${tsQuery})
@@ -104,7 +112,15 @@ export async function searchContent(
             'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight,
           r.id as "repositoryId",
           r.name as "repositoryName",
-          r.slug as "repositorySlug"
+          r.slug as "repositorySlug",
+          COALESCE(
+            (SELECT cm.title 
+             FROM "CategoryMetadata" cm 
+             WHERE cm."categorySlug" = SPLIT_PART(d.category, '/', 1) 
+             AND cm."repositoryId" = d."repositoryId" 
+             LIMIT 1),
+            SPLIT_PART(d.category, '/', 1)
+          ) as "categoryTitle"
         FROM "Document" d
         JOIN "Repository" r ON d."repositoryId" = r.id
         WHERE d."searchVector" @@ to_tsquery('english', ${tsQuery})
@@ -127,7 +143,15 @@ export async function searchContent(
             'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight,
           r.id as "repositoryId",
           r.name as "repositoryName",
-          r.slug as "repositorySlug"
+          r.slug as "repositorySlug",
+          COALESCE(
+            (SELECT cm.title 
+             FROM "CategoryMetadata" cm 
+             WHERE cm."categorySlug" = SPLIT_PART(d.category, '/', 1) 
+             AND cm."repositoryId" = d."repositoryId" 
+             LIMIT 1),
+            SPLIT_PART(d.category, '/', 1)
+          ) as "categoryTitle"
         FROM "Document" d
         JOIN "Repository" r ON d."repositoryId" = r.id
         WHERE d."searchVector" @@ to_tsquery('english', ${tsQuery})
@@ -150,7 +174,15 @@ export async function searchContent(
             'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight,
           r.id as "repositoryId",
           r.name as "repositoryName",
-          r.slug as "repositorySlug"
+          r.slug as "repositorySlug",
+          COALESCE(
+            (SELECT cm.title 
+             FROM "CategoryMetadata" cm 
+             WHERE cm."categorySlug" = SPLIT_PART(d.category, '/', 1) 
+             AND cm."repositoryId" = d."repositoryId" 
+             LIMIT 1),
+            SPLIT_PART(d.category, '/', 1)
+          ) as "categoryTitle"
         FROM "Document" d
         JOIN "Repository" r ON d."repositoryId" = r.id
         WHERE d."searchVector" @@ to_tsquery('english', ${tsQuery})
@@ -167,7 +199,7 @@ export async function searchContent(
         title: doc.title,
         excerpt: doc.excerpt || '',
         url: `/${doc.slug}`,
-        category: doc.category,
+        category: doc.categoryTitle,
         tags: doc.tags || [],
         rank: parseFloat(doc.rank),
         highlight: doc.highlight,
@@ -198,7 +230,15 @@ export async function searchContent(
             'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight,
           r.id as "repositoryId",
           r.name as "repositoryName",
-          r.slug as "repositorySlug"
+          r.slug as "repositorySlug",
+          COALESCE(
+            (SELECT cm.title 
+             FROM "CategoryMetadata" cm 
+             WHERE cm."categorySlug" = SPLIT_PART(b.category, '/', 1) 
+             AND cm."repositoryId" = b."repositoryId" 
+             LIMIT 1),
+            SPLIT_PART(b.category, '/', 1)
+          ) as "categoryTitle"
         FROM "BlogPost" b
         JOIN "Repository" r ON b."repositoryId" = r.id
         WHERE b."searchVector" @@ to_tsquery('english', ${tsQuery})
@@ -223,7 +263,15 @@ export async function searchContent(
             'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight,
           r.id as "repositoryId",
           r.name as "repositoryName",
-          r.slug as "repositorySlug"
+          r.slug as "repositorySlug",
+          COALESCE(
+            (SELECT cm.title 
+             FROM "CategoryMetadata" cm 
+             WHERE cm."categorySlug" = SPLIT_PART(b.category, '/', 1) 
+             AND cm."repositoryId" = b."repositoryId" 
+             LIMIT 1),
+            SPLIT_PART(b.category, '/', 1)
+          ) as "categoryTitle"
         FROM "BlogPost" b
         JOIN "Repository" r ON b."repositoryId" = r.id
         WHERE b."searchVector" @@ to_tsquery('english', ${tsQuery})
@@ -247,7 +295,15 @@ export async function searchContent(
             'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight,
           r.id as "repositoryId",
           r.name as "repositoryName",
-          r.slug as "repositorySlug"
+          r.slug as "repositorySlug",
+          COALESCE(
+            (SELECT cm.title 
+             FROM "CategoryMetadata" cm 
+             WHERE cm."categorySlug" = SPLIT_PART(b.category, '/', 1) 
+             AND cm."repositoryId" = b."repositoryId" 
+             LIMIT 1),
+            SPLIT_PART(b.category, '/', 1)
+          ) as "categoryTitle"
         FROM "BlogPost" b
         JOIN "Repository" r ON b."repositoryId" = r.id
         WHERE b."searchVector" @@ to_tsquery('english', ${tsQuery})
@@ -271,7 +327,15 @@ export async function searchContent(
             'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight,
           r.id as "repositoryId",
           r.name as "repositoryName",
-          r.slug as "repositorySlug"
+          r.slug as "repositorySlug",
+          COALESCE(
+            (SELECT cm.title 
+             FROM "CategoryMetadata" cm 
+             WHERE cm."categorySlug" = SPLIT_PART(b.category, '/', 1) 
+             AND cm."repositoryId" = b."repositoryId" 
+             LIMIT 1),
+            SPLIT_PART(b.category, '/', 1)
+          ) as "categoryTitle"
         FROM "BlogPost" b
         JOIN "Repository" r ON b."repositoryId" = r.id
         WHERE b."searchVector" @@ to_tsquery('english', ${tsQuery})
@@ -289,7 +353,7 @@ export async function searchContent(
         title: post.title,
         excerpt: post.excerpt || '',
         url: `/${post.slug}`,
-        category: post.category,
+        category: post.categoryTitle,
         tags: post.tags || [],
         rank: parseFloat(post.rank),
         highlight: post.highlight,
@@ -455,7 +519,7 @@ export async function getSearchSuggestions(
     where: {
       OR: [
         { title: { contains: searchQuery, mode: 'insensitive' } },
-        { tags: { has: searchQuery } },
+        { tagIds: { has: searchQuery } },
       ],
     },
     select: { title: true },

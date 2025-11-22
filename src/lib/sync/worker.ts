@@ -1,4 +1,5 @@
 import { processScheduledSyncs } from './sync-service'
+import { startCommentSyncWorker, stopCommentSyncWorker } from './comment-sync-worker'
 
 let isRunning = false
 let intervalId: NodeJS.Timeout | null = null
@@ -14,9 +15,13 @@ export function startSyncWorker() {
   console.log('╚════════════════════════════════════════════════════╝')
   console.log('⏰ Check interval: Every 60 seconds')
   console.log('🔄 Auto-sync: Enabled for repositories with schedules')
+  console.log('💬 Comment sync: Enabled (background polling)')
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
   
   isRunning = true
+
+  // Start the comment sync worker
+  startCommentSyncWorker()
 
   // Run every minute
   intervalId = setInterval(async () => {
@@ -39,6 +44,10 @@ export function stopSyncWorker() {
     clearInterval(intervalId)
     intervalId = null
   }
+  
+  // Stop the comment sync worker
+  stopCommentSyncWorker()
+  
   isRunning = false
   console.log('Sync worker stopped')
 }

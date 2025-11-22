@@ -37,6 +37,9 @@ export async function syncAzureDevOps(repository: Repository) {
     const isFile = !item.isFolder
     const isMarkdownOrMeta = item.path.endsWith('.md') || item.path.endsWith('.mdx') || item.path.endsWith('_meta.json')
     
+    // Check if file is a JSON file in the authors directory
+    const isAuthorJson = (item.path.includes('/authors/') || item.path.startsWith('/authors/')) && item.path.endsWith('.json')
+    
     // Check if file is in api-specs directory
     const inApiSpecs = item.path.includes('/api-specs/') || item.path.startsWith('/api-specs/')
     
@@ -46,7 +49,7 @@ export async function syncAzureDevOps(repository: Repository) {
       return isFile && (fileName === 'index.md' || fileName === 'readme.md')
     }
     
-    return isFile && isMarkdownOrMeta
+    return isFile && (isMarkdownOrMeta || isAuthorJson)
   })
 
   // Also fetch API spec files (YAML/YML) from api-specs/[category]/ directories

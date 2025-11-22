@@ -42,8 +42,8 @@ export default async function AnalyticsPage() {
       <div className="flex-1 p-6 space-y-6 overflow-auto">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Analytics Dashboard</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">Analytics Dashboard</h1>
+            <p className="text-gray-400 mt-2">
               Track user activity, content performance, and site engagement
             </p>
           </div>

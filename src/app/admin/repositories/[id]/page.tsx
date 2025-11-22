@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, GitBranch, Calendar, Activity, Settings, Trash2, RefreshCw, GripVertical, FolderTree } from 'lucide-react'
+import { ArrowLeft, GitBranch, Calendar, Activity, Settings, Trash2, RefreshCw, GripVertical, FolderTree, FileText, BookOpen, Users, ChevronDown, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -16,6 +16,12 @@ import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
 import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
 import { ThemeToggle } from '@/components/theme-toggle'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 function formatTimeAgo(date: string | null): string {
   if (!date) return 'Never'
@@ -39,6 +45,10 @@ export default function RepositoryDetailPage({
   const [repoId, setRepoId] = useState<string | null>(null)
   const [categories, setCategories] = useState<any[]>([])
   const [isSavingOrder, setIsSavingOrder] = useState(false)
+  const [stats, setStats] = useState({ documents: 0, blogPosts: 0, authors: 0, parentCategories: 0 })
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
+  const [tooltipData, setTooltipData] = useState<Record<string, any>>({})
+  const [loadingTooltip, setLoadingTooltip] = useState<string | null>(null)
 
   useEffect(() => {
     params.then((p) => setRepoId(p.id))
@@ -65,6 +75,21 @@ export default function RepositoryDetailPage({
         const catData = await catResponse.json()
         setCategories(catData.categories)
       }
+
+      // Fetch statistics
+      const [docsRes, blogsRes, authorsRes, categoriesRes] = await Promise.all([
+        fetch(`/api/repositories/${repoId}/documents/count`),
+        fetch(`/api/repositories/${repoId}/blog-posts/count`),
+        fetch(`/api/repositories/${repoId}/authors/count`),
+        fetch(`/api/repositories/${repoId}/categories/count`),
+      ])
+
+      const documents = docsRes.ok ? (await docsRes.json()).count : 0
+      const blogPosts = blogsRes.ok ? (await blogsRes.json()).count : 0
+      const authors = authorsRes.ok ? (await authorsRes.json()).count : 0
+      const parentCategories = categoriesRes.ok ? (await categoriesRes.json()).count : 0
+
+      setStats({ documents, blogPosts, authors, parentCategories })
     } catch (error) {
       console.error('Failed to fetch repository:', error)
     } finally {
@@ -125,6 +150,41 @@ export default function RepositoryDetailPage({
       console.error('Failed to save category order:', error)
     } finally {
       setIsSavingOrder(false)
+    }
+  }
+
+  const fetchTooltipData = async (type: 'documents' | 'blogPosts' | 'authors' | 'categories') => {
+    if (!repoId) return
+    const key = `${repoId}-${type}`
+    if (tooltipData[key] || loadingTooltip === key) return
+
+    setLoadingTooltip(key)
+    try {
+      let endpoint = ''
+      switch (type) {
+        case 'documents':
+          endpoint = `/api/repositories/${repoId}/documents/list`
+          break
+        case 'blogPosts':
+          endpoint = `/api/repositories/${repoId}/blog-posts/list`
+          break
+        case 'authors':
+          endpoint = `/api/repositories/${repoId}/authors/list`
+          break
+        case 'categories':
+          endpoint = `/api/repositories/${repoId}/categories/list`
+          break
+      }
+
+      const response = await fetch(endpoint)
+      if (response.ok) {
+        const data = await response.json()
+        setTooltipData(prev => ({ ...prev, [key]: data.items }))
+      }
+    } catch (error) {
+      console.error('Failed to fetch tooltip data:', error)
+    } finally {
+      setLoadingTooltip(null)
     }
   }
 
@@ -354,66 +414,124 @@ export default function RepositoryDetailPage({
               </Card>
 
               {/* Category Management */}
-              {categories.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="flex items-center gap-2">
-                          <FolderTree className="w-5 h-5" />
-                          Category Display Order
-                        </CardTitle>
-                        <CardDescription>
-                          Manage the order categories appear in the docs sidebar
-                        </CardDescription>
-                      </div>
-                      <Button
-                        onClick={saveCategoryOrder}
-                        disabled={isSavingOrder}
-                        size="sm"
-                      >
-                        {isSavingOrder ? 'Saving...' : 'Save Order'}
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {categories.map((category, index) => (
-                        <div
-                          key={category.id}
-                          className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border"
-                        >
-                          <GripVertical className="w-4 h-4 text-muted-foreground" />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">{category.title}</p>
-                            <p className="text-xs text-muted-foreground">{category.categorySlug}</p>
-                          </div>
-                          <div className="flex gap-1">
-                            <Button
-                              onClick={() => moveCategory(index, 'up')}
-                              disabled={index === 0}
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                            >
-                              ↑
-                            </Button>
-                            <Button
-                              onClick={() => moveCategory(index, 'down')}
-                              disabled={index === categories.length - 1}
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                            >
-                              ↓
-                            </Button>
-                          </div>
+              {categories.length > 0 && (() => {
+                // Group categories by parent
+                const parentCategories = categories.filter(c => !c.parentSlug)
+                const childCategoriesMap = categories.reduce((acc, c) => {
+                  if (c.parentSlug) {
+                    if (!acc[c.parentSlug]) acc[c.parentSlug] = []
+                    acc[c.parentSlug].push(c)
+                  }
+                  return acc
+                }, {} as Record<string, any[]>)
+
+                const toggleCategory = (slug: string) => {
+                  setExpandedCategories(prev => {
+                    const newSet = new Set(prev)
+                    if (newSet.has(slug)) {
+                      newSet.delete(slug)
+                    } else {
+                      newSet.add(slug)
+                    }
+                    return newSet
+                  })
+                }
+
+                return (
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="flex items-center gap-2">
+                            <FolderTree className="w-5 h-5" />
+                            Category Display Order
+                          </CardTitle>
+                          <CardDescription className="mt-1">
+                            Manage the order categories appear in the docs sidebar. Children are collapsed by default.
+                          </CardDescription>
                         </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+                        <Button
+                          onClick={saveCategoryOrder}
+                          disabled={isSavingOrder}
+                          size="sm"
+                        >
+                          {isSavingOrder ? 'Saving...' : 'Save Order'}
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {parentCategories.map((category, index) => {
+                          const children = childCategoriesMap[category.categorySlug] || []
+                          const isExpanded = expandedCategories.has(category.categorySlug)
+                          
+                          return (
+                            <div key={category.id}>
+                              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
+                                <GripVertical className="w-4 h-4 text-muted-foreground" />
+                                {children.length > 0 && (
+                                  <button
+                                    onClick={() => toggleCategory(category.categorySlug)}
+                                    className="hover:bg-muted rounded p-1"
+                                  >
+                                    {isExpanded ? (
+                                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                                    ) : (
+                                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                                    )}
+                                  </button>
+                                )}
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium">{category.title}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {category.categorySlug}
+                                    {children.length > 0 && ` • ${children.length} ${children.length === 1 ? 'child' : 'children'}`}
+                                  </p>
+                                </div>
+                                <div className="flex gap-1">
+                                  <Button
+                                    onClick={() => moveCategory(index, 'up')}
+                                    disabled={index === 0}
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    ↑
+                                  </Button>
+                                  <Button
+                                    onClick={() => moveCategory(index, 'down')}
+                                    disabled={index === parentCategories.length - 1}
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    ↓
+                                  </Button>
+                                </div>
+                              </div>
+                              {isExpanded && children.length > 0 && (
+                                <div className="ml-12 mt-2 space-y-2">
+                                  {children.map((child: any) => (
+                                    <div
+                                      key={child.id}
+                                      className="flex items-center gap-3 p-2 rounded-lg bg-muted/30 border border-dashed"
+                                    >
+                                      <div className="flex-1">
+                                        <p className="text-sm">{child.title}</p>
+                                        <p className="text-xs text-muted-foreground">{child.categorySlug}</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })()}
 
               {/* Sync History */}
               <Card>
@@ -486,31 +604,148 @@ export default function RepositoryDetailPage({
                 <CardHeader>
                   <CardTitle>Statistics</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div 
+                          className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 rounded-lg p-3 border border-blue-500/20 hover:border-blue-500/40 transition-colors cursor-pointer"
+                          onMouseEnter={() => fetchTooltipData('documents')}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <FileText className="w-3 h-3 text-blue-400" />
+                            <p className="text-xs font-medium text-blue-400">Documents</p>
+                          </div>
+                          <p className="text-2xl font-bold">{stats.documents}</p>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="left" className="max-w-xs max-h-60 overflow-auto">
+                        {loadingTooltip === `${repoId}-documents` ? (
+                          <p className="text-xs">Loading...</p>
+                        ) : tooltipData[`${repoId}-documents`]?.length > 0 ? (
+                          <div className="space-y-1">
+                            <p className="font-semibold text-xs mb-1">Documents:</p>
+                            {tooltipData[`${repoId}-documents`].slice(0, 10).map((doc: any, i: number) => (
+                              <p key={i} className="text-xs truncate">{doc.title}</p>
+                            ))}
+                            {tooltipData[`${repoId}-documents`].length > 10 && (
+                              <p className="text-xs opacity-70">+{tooltipData[`${repoId}-documents`].length - 10} more</p>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-xs">No documents</p>
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div 
+                          className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 rounded-lg p-3 border border-purple-500/20 hover:border-purple-500/40 transition-colors cursor-pointer"
+                          onMouseEnter={() => fetchTooltipData('blogPosts')}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <BookOpen className="w-3 h-3 text-purple-400" />
+                            <p className="text-xs font-medium text-purple-400">Blog Posts</p>
+                          </div>
+                          <p className="text-2xl font-bold">{stats.blogPosts}</p>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="left" className="max-w-xs max-h-60 overflow-auto">
+                        {loadingTooltip === `${repoId}-blogPosts` ? (
+                          <p className="text-xs">Loading...</p>
+                        ) : tooltipData[`${repoId}-blogPosts`]?.length > 0 ? (
+                          <div className="space-y-1">
+                            <p className="font-semibold text-xs mb-1">Blog Posts:</p>
+                            {tooltipData[`${repoId}-blogPosts`].slice(0, 10).map((post: any, i: number) => (
+                              <p key={i} className="text-xs truncate">{post.title}</p>
+                            ))}
+                            {tooltipData[`${repoId}-blogPosts`].length > 10 && (
+                              <p className="text-xs opacity-70">+{tooltipData[`${repoId}-blogPosts`].length - 10} more</p>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-xs">No blog posts</p>
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div 
+                          className="bg-gradient-to-br from-green-500/10 to-green-600/5 rounded-lg p-3 border border-green-500/20 hover:border-green-500/40 transition-colors cursor-pointer"
+                          onMouseEnter={() => fetchTooltipData('authors')}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <Users className="w-3 h-3 text-green-400" />
+                            <p className="text-xs font-medium text-green-400">Authors</p>
+                          </div>
+                          <p className="text-2xl font-bold">{stats.authors}</p>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="left" className="max-w-xs max-h-60 overflow-auto">
+                        {loadingTooltip === `${repoId}-authors` ? (
+                          <p className="text-xs">Loading...</p>
+                        ) : tooltipData[`${repoId}-authors`]?.length > 0 ? (
+                          <div className="space-y-1">
+                            <p className="font-semibold text-xs mb-1">Authors:</p>
+                            {tooltipData[`${repoId}-authors`].map((author: string, i: number) => (
+                              <p key={i} className="text-xs truncate">{author}</p>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs">No authors</p>
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div 
+                          className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 rounded-lg p-3 border border-orange-500/20 hover:border-orange-500/40 transition-colors cursor-pointer"
+                          onMouseEnter={() => fetchTooltipData('categories')}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <FolderTree className="w-3 h-3 text-orange-400" />
+                            <p className="text-xs font-medium text-orange-400">Categories</p>
+                          </div>
+                          <p className="text-2xl font-bold">{stats.parentCategories}</p>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="left" className="max-w-xs max-h-60 overflow-auto">
+                        {loadingTooltip === `${repoId}-categories` ? (
+                          <p className="text-xs">Loading...</p>
+                        ) : tooltipData[`${repoId}-categories`]?.length > 0 ? (
+                          <div className="space-y-1">
+                            <p className="font-semibold text-xs mb-1">Categories:</p>
+                            {tooltipData[`${repoId}-categories`].map((cat: any, i: number) => (
+                              <p key={i} className="text-xs truncate">{cat.title}</p>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs">No categories</p>
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <Separator className="my-2" />
                   <div>
                     <p className="text-xs text-muted-foreground">Total Syncs</p>
-                    <p className="text-2xl font-bold">{repository.syncLogs.length}</p>
+                    <p className="text-xl font-bold">{repository.syncLogs.length}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Successful Syncs</p>
-                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    <p className="text-xs text-muted-foreground">Successful</p>
+                    <p className="text-xl font-bold text-green-600 dark:text-green-400">
                       {repository.syncLogs.filter((l: any) => l.status === 'success').length}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Failed Syncs</p>
-                    <p className="text-2xl font-bold text-destructive">
+                    <p className="text-xs text-muted-foreground">Failed</p>
+                    <p className="text-xl font-bold text-destructive">
                       {repository.syncLogs.filter((l: any) => l.status === 'failed').length}
                     </p>
                   </div>
-                  {lastSync && lastSync.status === 'success' && (
-                    <div>
-                      <p className="text-xs text-muted-foreground">Documents</p>
-                      <p className="text-2xl font-bold">
-                        {lastSync.filesAdded + lastSync.filesChanged}
-                      </p>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
 

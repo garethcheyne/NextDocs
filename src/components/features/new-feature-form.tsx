@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Lightbulb, Loader2, Plus, X } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -11,6 +12,8 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
+import { MarkdownToolbar } from '@/components/ui/markdown-toolbar'
+import { useMarkdownEditor } from '@/hooks/use-markdown-editor'
 
 interface Category {
     id: string
@@ -27,6 +30,7 @@ export function NewFeatureForm({ categories: initialCategories }: NewFeatureForm
     const router = useRouter()
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [showPreview, setShowPreview] = useState(false)
 
     const [formData, setFormData] = useState({
         title: '',
@@ -34,6 +38,11 @@ export function NewFeatureForm({ categories: initialCategories }: NewFeatureForm
         categoryId: '',
         tags: [] as string[],
     })
+
+    const { textareaRef, handleInsert } = useMarkdownEditor(
+        formData.description,
+        (description) => setFormData(prev => ({ ...prev, description }))
+    )
 
     const [currentTag, setCurrentTag] = useState('')
 
@@ -169,19 +178,63 @@ export function NewFeatureForm({ categories: initialCategories }: NewFeatureForm
 
                         {/* Description */}
                         <div className="space-y-2">
-                            <Label htmlFor="description">
-                                Description <span className="text-red-500">*</span>
-                            </Label>
-                            <Textarea
-                                id="description"
-                                placeholder="Describe your feature request in detail. What problem does it solve? How would it work?"
-                                value={formData.description}
-                                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                                disabled={isLoading}
-                                rows={8}
-                                maxLength={5000}
-                                className="resize-none"
-                            />
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="description">
+                                    Description <span className="text-red-500">*</span>
+                                </Label>
+                                <div className="flex gap-2 text-xs">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPreview(false)}
+                                        className={`px-3 py-1 rounded transition-colors ${
+                                            !showPreview
+                                                ? 'bg-muted text-foreground'
+                                                : 'text-muted-foreground hover:text-foreground'
+                                        }`}
+                                        disabled={isLoading}
+                                    >
+                                        Write
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPreview(true)}
+                                        className={`px-3 py-1 rounded transition-colors ${
+                                            showPreview
+                                                ? 'bg-muted text-foreground'
+                                                : 'text-muted-foreground hover:text-foreground'
+                                        }`}
+                                        disabled={isLoading}
+                                    >
+                                        Preview
+                                    </button>
+                                </div>
+                            </div>
+                            {!showPreview && (
+                                <MarkdownToolbar onInsert={handleInsert} />
+                            )}
+                            {showPreview ? (
+                                <div className="min-h-[200px] p-3 border rounded-md bg-muted/50">
+                                    {formData.description ? (
+                                        <div className="prose prose-sm max-w-none dark:prose-invert">
+                                            <ReactMarkdown>{formData.description}</ReactMarkdown>
+                                        </div>
+                                    ) : (
+                                        <p className="text-muted-foreground italic">Nothing to preview</p>
+                                    )}
+                                </div>
+                            ) : (
+                                <Textarea
+                                    ref={textareaRef}
+                                    id="description"
+                                    placeholder="Describe your feature request in detail. What problem does it solve? How would it work?"
+                                    value={formData.description}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                                    disabled={isLoading}
+                                    rows={8}
+                                    maxLength={5000}
+                                    className="resize-none font-mono"
+                                />
+                            )}
                             <p className="text-xs text-muted-foreground">
                                 {formData.description.length} / 5000 characters
                             </p>

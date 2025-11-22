@@ -1,0 +1,16 @@
+# Test Results and Artifacts
+test-results/
+playwright-report/
+coverage/
+
+# Screenshots and videos
+screenshots/
+videos/
+
+# Test artifacts
+*.log
+.auth/
+
+# OS files
+.DS_Store
+Thumbs.db

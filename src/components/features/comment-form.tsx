@@ -7,6 +7,8 @@ import { MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
+import { MarkdownToolbar } from '@/components/ui/markdown-toolbar'
+import { useMarkdownEditor } from '@/hooks/use-markdown-editor'
 import ReactMarkdown from 'react-markdown'
 
 interface CommentFormProps {
@@ -22,6 +24,8 @@ export function CommentForm({ featureId }: CommentFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [showPreview, setShowPreview] = useState(false)
+
+    const { textareaRef, handleInsert } = useMarkdownEditor(content, setContent)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -111,6 +115,10 @@ export function CommentForm({ featureId }: CommentFormProps) {
                             </div>
                         </div>
 
+                        {!showPreview && (
+                            <MarkdownToolbar onInsert={handleInsert} />
+                        )}
+
                         {showPreview ? (
                             <div className="prose prose-sm max-w-none dark:prose-invert p-3 border rounded-md min-h-[100px]">
                                 {content ? (
@@ -121,13 +129,14 @@ export function CommentForm({ featureId }: CommentFormProps) {
                             </div>
                         ) : (
                             <Textarea
+                                ref={textareaRef}
                                 id="comment"
-                                placeholder="Share your thoughts, ask questions, or provide feedback... (Markdown supported)"
+                                placeholder="Share your thoughts, ask questions, or provide feedback..."
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
                                 disabled={isSubmitting || isPending}
                                 rows={4}
-                                className="resize-none"
+                                className="resize-none font-mono"
                             />
                         )}
 

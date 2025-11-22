@@ -116,13 +116,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Use provided slug or generate one
-        const finalSlug = slug || (
-            title
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/(^-|-$)/g, '')
-                + '-' + Date.now()
-        )
+        const finalSlug = slug || `${Date.now()}`
 
         // Create feature request
         const feature = await prisma.featureRequest.create({
@@ -131,7 +125,7 @@ export async function POST(request: NextRequest) {
                 slug: finalSlug,
                 description,
                 categoryId: categoryId || null,
-                tags: tags || [],
+                tagIds: tags || [],
                 createdBy: session.user.id,
                 createdByName: session.user.name || session.user.email || 'Unknown',
                 createdByEmail: session.user.email || '',

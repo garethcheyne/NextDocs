@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import Image from 'next/image'
 import { getAuthorBySlug, getAuthorDocuments, getAuthorBlogPosts } from '@/lib/authors'
 import { AuthorHoverCard } from '@/components/author-hover-card'
+import { ContentEngagement } from '@/components/content-engagement'
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string[] }> }) {
     const session = await auth()
@@ -180,6 +181,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Engagement Actions */}
+                                <ContentEngagement 
+                                    contentType="blogpost" 
+                                    contentId={blogPost.id}
+                                    contentTitle={blogPost.title}
+                                />
 
                                 {/* Blog Post Content */}
                                 <div className="prose prose-slate dark:prose-invert max-w-none 

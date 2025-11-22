@@ -6,6 +6,7 @@ let EmailMessage: any
 let MessageBody: any
 let BodyType: any
 let Importance: any
+let Uri: any
 
 try {
   const ews = require('ews-javascript-api')
@@ -16,6 +17,7 @@ try {
   MessageBody = ews.MessageBody
   BodyType = ews.BodyType
   Importance = ews.Importance
+  Uri = ews.Uri
 } catch (error) {
   console.warn('EWS library not available - email notifications disabled')
 }
@@ -39,6 +41,18 @@ export class EWSClient {
 
   private initialize() {
     try {
+      // Check if EWS is enabled
+      if (process.env.EWS_ENABLED === 'false') {
+        console.log('ℹ️  EWS email notifications are disabled (EWS_ENABLED=false)')
+        return
+      }
+
+      // Check if EWS library is available
+      if (!ExchangeService || !ExchangeVersion || !WebCredentials || !Uri) {
+        console.warn('⚠️  EWS library not available. Email notifications will be disabled.')
+        return
+      }
+
       // Validate required environment variables
       const ewsUrl = process.env.EWS_URL
       const ewsUsername = process.env.EWS_USERNAME
@@ -163,10 +177,3 @@ export function getEWSClient(): EWSClient {
   return ewsClientInstance
 }
 
-// Helper class for URI parsing (required by ews-javascript-api)
-class Uri {
-  constructor(public url: string) {}
-  toString(): string {
-    return this.url
-  }
-}

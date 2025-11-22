@@ -9,6 +9,7 @@ import { MarkdownWithMermaid } from '@/components/markdown-with-mermaid'
 import { Badge } from '@/components/ui/badge'
 import { getAuthorBySlug, getAuthorDocuments, getAuthorBlogPosts } from '@/lib/authors'
 import { AuthorHoverCard } from '@/components/author-hover-card'
+import { ContentEngagement } from '@/components/content-engagement'
 
 export default async function DocPage({ params }: { params: Promise<{ slug: string[] }> }) {
     const session = await auth()
@@ -59,7 +60,7 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
         documents: Awaited<ReturnType<typeof getAuthorDocuments>>
         blogPosts: Awaited<ReturnType<typeof getAuthorBlogPosts>>
     } = { documents: [], blogPosts: [] }
-    
+
     if (document.author) {
         authorData = await getAuthorBySlug(document.author)
         if (authorData) {
@@ -90,7 +91,7 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
             slug: true,
         },
     })
-    
+
     const indexDocumentSlugs = new Set(indexDocuments.map(doc => doc.slug.replace(/^docs\//, '')))
 
     // Build hierarchical category structure
@@ -151,7 +152,7 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
         >
             {/* Document Read Tracking */}
             <DocumentTracker slug={fullSlug} title={document.title} />
-            
+
             {/* Document Header */}
             <div className="mb-8">
                 <h1 className="text-4xl font-bold mb-4">{document.title}</h1>
@@ -166,6 +167,8 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
                             {document.category.replace(/-/g, ' ')}
                         </Badge>
                     )}
+
+
                     {document.author && (
                         <div className="flex items-center gap-1">
                             <User className="w-4 h-4" />
@@ -180,6 +183,8 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
                             )}
                         </div>
                     )}
+
+
                     {document.updatedAt && (
                         <div className="flex items-center gap-1">
                             <Clock className="w-4 h-4" />
@@ -199,6 +204,13 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
                     </div>
                 )}
             </div>
+
+            {/* Engagement Actions */}
+            <ContentEngagement 
+                contentType="document" 
+                contentId={document.id}
+                contentTitle={document.title}
+            />
 
             {/* Document Content */}
             <div className="prose prose-slate dark:prose-invert max-w-none 
@@ -225,7 +237,7 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
                                     dark:prose-li:text-slate-300
                     dark:prose-strong:text-slate-100
                     dark:prose-code:bg-slate-800 dark:prose-code:text-slate-100">
-                <MarkdownWithMermaid 
+                <MarkdownWithMermaid
                     repositorySlug={document.repository.slug}
                     documentPath={`docs/${fullSlug}`}
                 >

@@ -167,7 +167,7 @@ export async function updateFeatureRequestSearchVector(featureId: string) {
     select: {
       title: true,
       description: true,
-      tags: true,
+      tagIds: true,
       category: {
         select: {
           name: true,
@@ -185,7 +185,7 @@ export async function updateFeatureRequestSearchVector(featureId: string) {
     feature.title,
     feature.description,
     undefined,
-    [...feature.tags, categoryName]
+    [...feature.tagIds, categoryName]
   )
 
   await prisma.$executeRaw`
@@ -249,7 +249,7 @@ export async function rebuildAllSearchVectors() {
       concat_ws(' ',
         "title", "title", "title",  -- Weight title 3x
         "description",
-        array_to_string("tags", ' ')
+        array_to_string("tagIds", ' ')
       )
     )
   `

@@ -67,3 +67,27 @@ public/img/**
 
 
 prisma/seed-standalone.js
+
+
+# Test Results and Artifacts
+test-results/
+playwright-report/
+coverage/
+
+# Screenshots and videos
+screenshots/
+videos/
+
+# Test artifacts
+*.log
+.auth/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Playwright
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

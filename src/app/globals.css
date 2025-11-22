@@ -43,18 +43,18 @@
 
   .dark {
     /* Dark mode - navy/dark with orange accents */
-    --background: 214 100% 2%; /* Deep dark blue #02060f */
+    --background: 222 84% 3%; /* Deep dark navy #02060f */
     --foreground: 210 40% 98%;
-    --card: 215 60% 8%; /* Darker card background #0d1420 */
+    --card: 217 60% 8%; /* Darker card background #0d1420 */
     --card-foreground: 210 40% 98%;
-    --popover: 222 47% 11%;
+    --popover: 222 84% 3%;
     --popover-foreground: 210 40% 98%;
     --primary: 16 100% 60%; /* Orange */
     --primary-foreground: 0 0% 100%;
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted-foreground: 215 20% 75%; /* Improved contrast */
     --accent: 16 100% 60%; /* Orange */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 63% 31%;
@@ -68,7 +68,7 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --sidebar-background: 222 84% 3%; /* Matches gradient start #02060f */
+    --sidebar-background: 222 84% 3%; /* Matches background */
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 16 100% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -84,8 +84,29 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
   }
+  
+  /* Smooth transitions for theme switching */
+  html {
+    @apply scroll-smooth;
+  }
+  
+  /* Better text rendering */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+  
+  /* Focus visible improvements */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+/* Selection color */
+::selection {
+  background-color: hsl(var(--brand-orange) / 0.3);
+  color: hsl(var(--foreground));
 }
 
 /* Custom Scrollbar Styles */
@@ -122,6 +143,97 @@
     hsl(var(--brand-orange) / 0.5)
   );
   background-clip: content-box;
+}
+
+/* Global scrollbar for all elements */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted) / 0.3);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--brand-orange) / 0.4),
+    hsl(var(--brand-orange) / 0.2)
+  );
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--brand-orange) / 0.6),
+    hsl(var(--brand-orange) / 0.4)
+  );
+  background-clip: content-box;
+}
+
+/* Smooth animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Glass morphism effect */
+.glass {
+  background: hsl(var(--background) / 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid hsl(var(--border) / 0.5);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--brand-orange)),
+    hsl(var(--brand-orange) / 0.7)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Shadow utilities */
+.shadow-glow {
+  box-shadow: 0 0 20px hsl(var(--brand-orange) / 0.3);
+}
+
+.shadow-glow-lg {
+  box-shadow: 0 0 40px hsl(var(--brand-orange) / 0.4);
 }
 
 /* API Spec Viewer Styling */

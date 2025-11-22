@@ -138,53 +138,110 @@ export function AnalyticsDashboard() {
     <div className="space-y-6">
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 hover:border-blue-500/40 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Events</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs font-medium text-blue-400">Total Events</CardTitle>
+            <Activity className="h-4 w-4 text-blue-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics.summary.totalEvents.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Last 30 days</p>
+            <div className="text-3xl font-bold text-white">{metrics.summary.totalEvents.toLocaleString()}</div>
+            <p className="text-xs text-gray-400 mt-1">Last 30 days</p>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20 hover:border-green-500/40 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Unique Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs font-medium text-green-400">Unique Users</CardTitle>
+            <Users className="h-4 w-4 text-green-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics.summary.uniqueUsers.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Authenticated users</p>
+            <div className="text-3xl font-bold text-white">{metrics.summary.uniqueUsers.toLocaleString()}</div>
+            <p className="text-xs text-gray-400 mt-1">Authenticated users</p>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20 hover:border-purple-500/40 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sessions</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs font-medium text-purple-400">Sessions</CardTitle>
+            <TrendingUp className="h-4 w-4 text-purple-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics.summary.totalSessions.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Total sessions</p>
+            <div className="text-3xl font-bold text-white">{metrics.summary.totalSessions.toLocaleString()}</div>
+            <p className="text-xs text-gray-400 mt-1">Total sessions</p>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-orange-500/20 hover:border-orange-500/40 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Document Reads</CardTitle>
-            <Eye className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs font-medium text-orange-400">Document Reads</CardTitle>
+            <Eye className="h-4 w-4 text-orange-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics.summary.documentReads.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">{metrics.summary.searches} searches</p>
+            <div className="text-3xl font-bold text-white">{metrics.summary.documentReads.toLocaleString()}</div>
+            <p className="text-xs text-gray-400 mt-1">{metrics.summary.searches} searches</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Content Grid */}
       <div className="grid gap-6 md:grid-cols-2">
+        {/* Activity Timeline */}
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Activity Timeline</CardTitle>
+            <CardDescription>Daily page views, sessions, and users over the last 30 days</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {metrics.timeline && metrics.timeline.length > 0 ? (
+              <div className="space-y-4">
+                <div className="h-64 flex items-end justify-between gap-1">
+                  {metrics.timeline.map((day, index) => {
+                    const maxValue = Math.max(...metrics.timeline.map(d => d.pageViews))
+                    const heightPercent = maxValue > 0 ? Math.round((day.pageViews / maxValue) * 100) : 0
+                    return (
+                      <div key={index} className="flex-1 flex flex-col items-center gap-1">
+                        <div className="w-full relative group h-full flex items-end">
+                          <div
+                            className={`w-full bg-gradient-to-t from-brand-orange to-orange-500 rounded-t transition-all hover:from-orange-600 hover:to-orange-400`}
+                            style={{ height: heightPercent > 0 ? `${heightPercent}%` : '0' }}
+                          />
+                          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 border border-gray-700">
+                            <div className="font-semibold">{new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                            <div className="text-orange-400">{day.pageViews} views</div>
+                            <div className="text-purple-400">{day.sessions} sessions</div>
+                            <div className="text-green-400">{day.users} users</div>
+                          </div>
+                        </div>
+                        {index % 5 === 0 && (
+                          <span className="text-xs text-gray-500 mt-1">
+                            {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+                <div className="flex items-center justify-center gap-6 text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-gradient-to-r from-brand-orange to-orange-500 rounded" />
+                    <span className="text-gray-400">Page Views</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-purple-500 rounded" />
+                    <span className="text-gray-400">Sessions</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-green-500 rounded" />
+                    <span className="text-gray-400">Users</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-8">No timeline data available</p>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Top Pages */}
         <Card>
           <CardHeader>
