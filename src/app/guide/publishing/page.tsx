@@ -6,28 +6,26 @@ import { MarkdownWithMermaid } from '@/components/markdown-with-mermaid'
 import { ContentDetailLayout } from '@/components/layout/content-detail-layout'
 
 export default async function PublishingPage() {
-  const session = await auth()
+    const session = await auth()
 
-  if (!session) {
-    redirect('/')
-  }
+    if (!session) {
+        redirect('/')
+    }
 
-  const guidePath = path.join(process.cwd(), 'docs', 'guide', 'publishing.md')
-  const content = fs.readFileSync(guidePath, 'utf-8')
+    const guidePath = path.join(process.cwd(), 'docs', 'guide', 'publishing.md')
+    const content = fs.readFileSync(guidePath, 'utf-8')
 
-  return (
-    <ContentDetailLayout
-      user={session.user}
-      currentPath="/guide/publishing"
-      breadcrumbs={[
-        { label: 'Content Creator Guide', href: '/guide' },
-        { label: 'Publishing Your Docs', href: '/guide/publishing' },
-      ]}
-      content={content}
-    >
-      <MarkdownWithMermaid>{content}</MarkdownWithMermaid>
-    </ContentDetailLayout>
-  )
-}
-  )
+    return (
+        <ContentDetailLayout
+            user={session.user}
+            currentPath="/guide/publishing"
+            breadcrumbs={[
+                { label: 'Content Creator Guide', href: '/guide' },
+                { label: 'Publishing Your Docs', href: '/guide/publishing' },
+            ]}
+            content={content}
+        >
+            <MarkdownWithMermaid>{content}</MarkdownWithMermaid>
+        </ContentDetailLayout>
+    )
 }

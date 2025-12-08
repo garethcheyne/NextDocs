@@ -6,28 +6,27 @@ import { MarkdownWithMermaid } from '@/components/markdown-with-mermaid'
 import { ContentDetailLayout } from '@/components/layout/content-detail-layout'
 
 export default async function MetadataPage() {
-  const session = await auth()
+    const session = await auth()
 
-  if (!session) {
-    redirect('/')
-  }
+    if (!session) {
+        redirect('/')
+    }
 
-  const guidePath = path.join(process.cwd(), 'docs', 'guide', 'metadata.md')
-  const content = fs.readFileSync(guidePath, 'utf-8')
+    const guidePath = path.join(process.cwd(), 'docs', 'guide', 'metadata.md')
+    const content = fs.readFileSync(guidePath, 'utf-8')
 
-  return (
-    <ContentDetailLayout
-      user={session.user}
-      currentPath="/guide/metadata"
-      breadcrumbs={[
-        { label: 'Content Creator Guide', href: '/guide' },
-        { label: 'Navigation & Metadata', href: '/guide/metadata' },
-      ]}
-      content={content}
-    >
-      <MarkdownWithMermaid>{content}</MarkdownWithMermaid>
-    </ContentDetailLayout>
-  )
+    return (
+        <ContentDetailLayout
+            user={session.user}
+            currentPath="/guide/metadata"
+            breadcrumbs={[
+                { label: 'Content Creator Guide', href: '/guide' },
+                { label: 'Navigation & Metadata', href: '/guide/metadata' },
+            ]}
+            content={content}
+        >
+            <MarkdownWithMermaid>{content}</MarkdownWithMermaid>
+        </ContentDetailLayout>
+    )
 }
-  )
-}
+
