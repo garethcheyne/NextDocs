@@ -51,3 +51,11 @@ export function stopSyncWorker() {
   isRunning = false
   console.log('Sync worker stopped')
 }
+
+export function getWorkerStatus() {
+  return {
+    isRunning,
+    intervalActive: intervalId !== null,
+    checkInterval: '60 seconds',
+  }
+}

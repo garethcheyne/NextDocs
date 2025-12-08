@@ -17,6 +17,7 @@ export async function parseAndStoreMeta(
   console.log(`📋 Processing ${metaFiles.length} _meta.json file(s)...`)
 
   const processedSlugs: string[] = []
+  const metaFilePaths = new Set(metaFiles.map(f => f.path))
 
   for (const metaFile of metaFiles) {
     try {
@@ -101,14 +102,45 @@ export async function parseAndStoreMeta(
   }
 
   // Delete category metadata that no longer exists
-  const deletedCategories = await prisma.categoryMetadata.findMany({
-    where: {
-      repositoryId,
-      categorySlug: { notIn: processedSlugs.length > 0 ? processedSlugs : ['__none__'] },
+  // This handles two cases:
+  // 1. Categories removed from _meta.json files that were processed
+  // 2. Entire folders removed (their _meta.json files won't be in the sync)
+  
+  const allExistingCategories = await prisma.categoryMetadata.findMany({
+    where: { repositoryId },
+    select: {
+      categorySlug: true,
+      title: true,
     },
   })
 
-  for (const category of deletedCategories) {
+  const categoriesToDelete = allExistingCategories.filter(cat => {
+    // If this category was processed in this sync, keep it
+    if (processedSlugs.includes(cat.categorySlug)) {
+      return false
+    }
+    
+    // Check if the category's _meta.json file should exist but doesn't
+    // For category "eway/api-integration", the _meta.json would be at "docs/eway/_meta.json"
+    const pathParts = cat.categorySlug.split('/')
+    
+    if (pathParts.length === 1) {
+      // Root level category (e.g., "eway")
+      // Should have _meta.json at "docs/_meta.json"
+      const expectedMetaPath = 'docs/_meta.json'
+      // If the root _meta.json exists but this category wasn't in it, delete it
+      return metaFilePaths.has(expectedMetaPath)
+    } else {
+      // Nested category (e.g., "eway/api-integration")
+      // Should be defined in the parent's _meta.json
+      const parentPath = pathParts.slice(0, -1).join('/')
+      const expectedMetaPath = `docs/${parentPath}/_meta.json`
+      // If the parent _meta.json exists but this category wasn't in it, delete it
+      return metaFilePaths.has(expectedMetaPath)
+    }
+  })
+
+  for (const category of categoriesToDelete) {
     await prisma.categoryMetadata.delete({ 
       where: { 
         repositoryId_categorySlug: {
@@ -117,10 +149,10 @@ export async function parseAndStoreMeta(
         }
       } 
     })
-    console.log(`   🗑️  Deleted category: ${category.title} (${category.categorySlug})`)
+    console.log(`   🗑️  Deleted orphaned category: ${category.title} (${category.categorySlug})`)
   }
 
-  if (deletedCategories.length > 0) {
-    console.log(`   ✅ Cleaned up ${deletedCategories.length} orphaned categories`)
+  if (categoriesToDelete.length > 0) {
+    console.log(`   ✅ Cleaned up ${categoriesToDelete.length} orphaned categories`)
   }
 }

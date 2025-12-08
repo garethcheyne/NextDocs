@@ -82,7 +82,7 @@ npm run test:e2e:ui          # Interactive UI mode
 
 3. Set environment variables (optional):
    ```bash
-   export TEST_BASE_URL=http://localhost:9980
+   export TEST_BASE_URL=http://localhost:8100
    export TEST_USER_EMAIL=admin@nextdocs.local
    export TEST_USER_PASSWORD=admin
    ```
@@ -304,7 +304,7 @@ npx jest --watch
 
 **Playwright browser errors:**
 - Run `npx playwright install` to install browsers
-- Check if port 9980 is accessible
+- Check if port 8100 is accessible
 
 **Type errors in tests:**
 - Run `npm install` to ensure all dependencies are installed

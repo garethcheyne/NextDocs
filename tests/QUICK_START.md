@@ -76,10 +76,10 @@ Report will be saved to `test-results/TEST_REPORT.md`
 Create `.env.test`:
 
 ```bash
-TEST_BASE_URL=http://localhost:9980
+TEST_BASE_URL=http://localhost:8100
 TEST_USER_EMAIL=admin@nextdocs.local
 TEST_USER_PASSWORD=admin
-DATABASE_URL=postgresql://postgres:postgres@localhost:5433/nextdocs
+DATABASE_URL=postgresql://postgres:postgres@localhost:5500/nextdocs
 ```
 
 ### Playwright Config
@@ -239,7 +239,7 @@ await db.createTestUser('test@example.com', 'password');
 - Check if Docker containers are running
 - Verify DATABASE_URL is correct
 - Run `npm install` again
-- Check port 9980 is available
+- Check port 8100 is available
 
 ### Playwright Errors
 

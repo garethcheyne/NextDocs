@@ -1,0 +1,14 @@
+{
+  "index": {
+    "title": "Overview",
+    "icon": "BookOpen"
+  },
+  "features": {
+    "title": "Features",
+    "icon": "Star"
+  },
+  "advanced": {
+    "title": "Advanced Topics",
+    "icon": "Cpu"
+  }
+}

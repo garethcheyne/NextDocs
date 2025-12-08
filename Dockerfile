@@ -51,9 +51,9 @@ RUN chown -R nextjs:nodejs /app
 
 USER nextjs
 
-EXPOSE 9980
+EXPOSE 8100
 
-ENV PORT=9980
+ENV PORT=8100
 ENV HOSTNAME="0.0.0.0"
 
 CMD ["/app/docker-entrypoint.sh"]

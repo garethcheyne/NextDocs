@@ -396,7 +396,7 @@ export async function searchContent(
         excerpt: spec.description || '',
         url: `/api-specs/${spec.slug}/${spec.version}`,
         category: spec.category || undefined,
-        tags: [],
+        tags: [], // APISpec doesn't have tags in the schema
         rank: parseFloat(spec.rank),
       }))
     )
@@ -413,13 +413,13 @@ export async function searchContent(
           title,
           slug,
           description,
-          tags,
+          "tagIds",
           ts_rank("searchVector", to_tsquery('english', ${tsQuery})) as rank,
           ts_headline('english', description, to_tsquery('english', ${tsQuery}),
             'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight
         FROM "FeatureRequest"
         WHERE "searchVector" @@ to_tsquery('english', ${tsQuery})
-          AND tags && ARRAY[${Prisma.join(tags)}]::text[]
+          AND "tagIds" && ARRAY[${Prisma.join(tags)}]::text[]
         ORDER BY rank DESC
         LIMIT ${limit}
         OFFSET ${offset}
@@ -431,7 +431,7 @@ export async function searchContent(
           title,
           slug,
           description,
-          tags,
+          "tagIds",
           ts_rank("searchVector", to_tsquery('english', ${tsQuery})) as rank,
           ts_headline('english', description, to_tsquery('english', ${tsQuery}),
             'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight
@@ -450,7 +450,7 @@ export async function searchContent(
         title: feature.title,
         excerpt: feature.description?.substring(0, 200) || '',
         url: `/features/${feature.slug}`,
-        tags: feature.tags || [],
+        tags: feature.tagIds || [],
         rank: parseFloat(feature.rank),
         highlight: feature.highlight,
       }))

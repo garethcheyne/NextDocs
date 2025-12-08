@@ -232,6 +232,10 @@ export async function storeDocuments(
     })
   }
 
+  // Clean up orphaned categories that have no documents
+  // This catches cases where entire folders are removed from the repository
+  await cleanupOrphanedCategories(repositoryId)
+
   console.log(`   📚 Documents: ${docsAdded} added, ${docsUpdated} updated, ${deletedDocs.length} deleted`)
   console.log(`   📝 Blog Posts: ${blogsAdded} added, ${blogsUpdated} updated, ${deletedBlogs.length} deleted`)
 
@@ -246,5 +250,59 @@ export async function storeDocuments(
     totalUpdated: docsUpdated + blogsUpdated,
     totalDeleted: deletedDocs.length + deletedBlogs.length,
     changes,
+  }
+}
+
+async function cleanupOrphanedCategories(repositoryId: string) {
+  // Get all categories for this repository
+  const categories = await prisma.categoryMetadata.findMany({
+    where: { repositoryId },
+    select: {
+      categorySlug: true,
+      title: true,
+    },
+  })
+
+  if (categories.length === 0) return
+
+  // Get all document slugs for this repository
+  const documents = await prisma.document.findMany({
+    where: { repositoryId },
+    select: { slug: true },
+  })
+
+  // Extract category paths from document slugs
+  // e.g., "docs/eway/api-integration/overview" -> ["eway", "eway/api-integration"]
+  const documentCategories = new Set<string>()
+  for (const doc of documents) {
+    const slug = doc.slug.replace(/^docs\//, '') // Remove "docs/" prefix
+    const parts = slug.split('/')
+    
+    // Add all parent paths
+    for (let i = 1; i <= parts.length; i++) {
+      const categoryPath = parts.slice(0, i).join('/')
+      documentCategories.add(categoryPath)
+    }
+  }
+
+  // Find categories that don't have any documents under them
+  const orphanedCategories = categories.filter(cat => 
+    !documentCategories.has(cat.categorySlug)
+  )
+
+  if (orphanedCategories.length > 0) {
+    console.log(`   🧹 Cleaning up ${orphanedCategories.length} orphaned categories...`)
+    
+    for (const cat of orphanedCategories) {
+      await prisma.categoryMetadata.delete({
+        where: {
+          repositoryId_categorySlug: {
+            repositoryId,
+            categorySlug: cat.categorySlug,
+          },
+        },
+      })
+      console.log(`   🗑️  Removed orphaned category: ${cat.title} (${cat.categorySlug})`)
+    }
   }
 }

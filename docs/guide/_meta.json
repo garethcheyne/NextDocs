@@ -1,0 +1,42 @@
+{
+  "index": {
+    "title": "Introduction",
+    "icon": "BookOpen"
+  },
+  "quick-start": {
+    "title": "Quick Start",
+    "icon": "Zap"
+  },
+  "structure": {
+    "title": "Repository Structure",
+    "icon": "FolderTree"
+  },
+  "metadata": {
+    "title": "Navigation & Metadata",
+    "icon": "Settings"
+  },
+  "markdown": {
+    "title": "Markdown Syntax",
+    "icon": "FileText"
+  },
+  "icons": {
+    "title": "Icon Libraries",
+    "icon": "Smile"
+  },
+  "blogs": {
+    "title": "Writing Blog Posts",
+    "icon": "Newspaper"
+  },
+  "authors": {
+    "title": "Author Profiles",
+    "icon": "User"
+  },
+  "api-docs": {
+    "title": "API Documentation",
+    "icon": "Code"
+  },
+  "publishing": {
+    "title": "Publishing Your Docs",
+    "icon": "Upload"
+  }
+}

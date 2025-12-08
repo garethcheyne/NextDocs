@@ -1,14 +1,19 @@
+# Production Docker Compose Configuration
+# Usage: docker-compose -f docker-compose.prod.yml up -d
+
 services:
-  # Production Next.js app
+  # Production Next.js application
   app:
     env_file:
       - .env
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: nextdocs-prod
+      target: runner
+    image: nextdocs-app:latest
+    container_name: nextdocs-app-prod
     ports:
-      - "9981:9980"
+      - "8101:8100"
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/nextdocs
@@ -26,82 +31,125 @@ services:
         condition: service_healthy
     networks:
       - nextdocs-network
-    restart: always
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:9980/api/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8100/api/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
 
-  # PostgreSQL database
+  # PostgreSQL database with backup volume
   postgres:
     env_file:
       - .env
     image: postgres:16-alpine
     container_name: nextdocs-postgres-prod
     ports:
-      - "5434:5432"
+      - "5501:5432"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=nextdocs
+      - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./backups:/backups
+      - ./scripts/postgres-init.sh:/docker-entrypoint-initdb.d/init.sh:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d nextdocs"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
     networks:
       - nextdocs-network
-    restart: always
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
 
-  # Redis for caching search results and sessions
+  # Redis for caching and sessions
   redis:
     env_file:
       - .env
     image: redis:7-alpine
     container_name: nextdocs-redis-prod
     ports:
-      - "6381:6379"
+      - "6401:6379"
     volumes:
       - redis-data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
       interval: 10s
       timeout: 3s
       retries: 5
+      start_period: 5s
     networks:
       - nextdocs-network
-    restart: always
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD}
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
 
-  # Nginx reverse proxy (optional)
-  # nginx:
-  #   image: nginx:alpine
-  #   container_name: nextdocs-nginx
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #   volumes:
-  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-  #     - ./nginx/ssl:/etc/nginx/ssl:ro
-  #   depends_on:
-  #     - app
-  #   networks:
-  #     - nextdocs-network
-  #   restart: always
-  #   profiles:
-  #     - with-nginx
+  # Automated database backup service
+  db-backup:
+    image: postgres:16-alpine
+    container_name: nextdocs-backup-service
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=nextdocs
+      - BACKUP_RETENTION_DAYS=7
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup-cron.sh:/backup-cron.sh:ro
+    networks:
+      - nextdocs-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    # Run backup daily at 2 AM
+    entrypoint: >
+      sh -c "
+      echo '0 2 * * * /backup-cron.sh >> /var/log/backup.log 2>&1' > /etc/crontabs/root &&
+      echo 'Backup service started. Daily backups at 2 AM.' &&
+      crond -f -l 2
+      "
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
 volumes:
   postgres-data:
     driver: local
+    name: nextdocs-postgres-data
   redis-data:
     driver: local
+    name: nextdocs-redis-data
 
 networks:
   nextdocs-network:
     driver: bridge
+    name: nextdocs-network

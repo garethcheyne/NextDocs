@@ -139,7 +139,7 @@ npm run test:e2e        # Run E2E tests
 
 2. **Environment Variables**
    ```bash
-   export TEST_BASE_URL=http://localhost:9980
+   export TEST_BASE_URL=http://localhost:8100
    export TEST_USER_EMAIL=admin@nextdocs.local
    export TEST_USER_PASSWORD=admin
    ```

@@ -33,12 +33,17 @@ dist
 *.tsbuildinfo
 next-env.d.ts
 
-# Environment
+# Environment Variables (Local - contains secrets!)
 .env
 .env.local
 .env*.local
 .env.production
-!.env.production.example
+.env.development
+
+# Environment Templates (Keep these - safe to commit)
+!.env.example
+!.env.docker.example
+!tests/.env.example
 
 # IDE
 .vscode/*
@@ -91,3 +96,12 @@ Thumbs.db
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Docker - Local Files (DO NOT COMMIT)
+backups/*.sql
+backups/*.sql.gz
+backups/pre-restore-*.sql
+
+# Documentation - Generated/Temporary
+DOCKER-CHANGES.md
+DOCKER-QUICKREF.md

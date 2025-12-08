@@ -6,6 +6,10 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { prisma } from '@/lib/db/prisma'
+import { SidebarTrigger } from '@/components/ui/sidebar'
+import { Separator } from '@/components/ui/separator'
+import { ThemeToggle } from '@/components/theme-toggle'
+import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
 
 export default async function AdminFeaturesPage() {
     const session = await auth()
@@ -49,24 +53,40 @@ export default async function AdminFeaturesPage() {
     }
 
     return (
-        <div className="space-y-6">
+        <>
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">
-                        Feature Request Management
-                    </h1>
-                    <p className="text-gray-400 mt-2">
-                        Manage feature requests and application categories
-                    </p>
+            <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
+                <SidebarTrigger className="-ml-1" />
+                <Separator orientation="vertical" className="mr-2 h-4" />
+                <BreadcrumbNavigation
+                    items={[
+                        { label: 'Admin', href: '/admin' },
+                        { label: 'Features', href: '/admin/features' },
+                    ]}
+                />
+                <div className="ml-auto flex items-center gap-2">
+                    <ThemeToggle />
                 </div>
-                <Link href="/admin/features/categories/new">
-                    <Button className="bg-gradient-to-r from-brand-orange to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white">
-                        <Plus className="w-4 h-4 mr-2" />
-                        New Category
-                    </Button>
-                </Link>
-            </div>
+            </header>
+
+            {/* Page Content */}
+            <div className="flex-1 p-6 space-y-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">
+                            Feature Request Management
+                        </h1>
+                        <p className="text-muted-foreground mt-2">
+                            Manage feature requests and application categories
+                        </p>
+                    </div>
+                    <Link href="/admin/features/categories/new">
+                        <Button className="bg-gradient-to-r from-brand-orange to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white">
+                            <Plus className="w-4 h-4 mr-2" />
+                            New Category
+                        </Button>
+                    </Link>
+                </div>
 
             {/* Statistics Cards */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -172,6 +192,7 @@ export default async function AdminFeaturesPage() {
                     </div>
                 </CardContent>
             </Card>
-        </div>
+            </div>
+        </>
     )
 }

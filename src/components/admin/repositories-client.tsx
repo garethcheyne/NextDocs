@@ -75,6 +75,63 @@ export default function RepositoriesClient({ initialRepositories }: { initialRep
   const [testing, setTesting] = useState<Record<string, boolean>>({})
   const [tooltipData, setTooltipData] = useState<Record<string, any>>({})
   const [loadingTooltip, setLoadingTooltip] = useState<string | null>(null)
+  const [workerStatus, setWorkerStatus] = useState<{ isRunning: boolean; checkInterval: string } | null>(null)
+  const [workerLoading, setWorkerLoading] = useState(false)
+
+  // Fetch worker status on mount
+  useEffect(() => {
+    fetchWorkerStatus()
+  }, [])
+
+  const fetchWorkerStatus = async () => {
+    try {
+      const response = await fetch('/api/sync/worker/status')
+      if (response.ok) {
+        const data = await response.json()
+        setWorkerStatus(data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch worker status:', error)
+    }
+  }
+
+  const handleStartWorker = async () => {
+    setWorkerLoading(true)
+    try {
+      const response = await fetch('/api/sync/worker/start', {
+        method: 'POST',
+      })
+      if (response.ok) {
+        await fetchWorkerStatus()
+      } else {
+        alert('Failed to start worker')
+      }
+    } catch (error) {
+      console.error('Failed to start worker:', error)
+      alert('Failed to start worker')
+    } finally {
+      setWorkerLoading(false)
+    }
+  }
+
+  const handleStopWorker = async () => {
+    setWorkerLoading(true)
+    try {
+      const response = await fetch('/api/sync/worker/stop', {
+        method: 'POST',
+      })
+      if (response.ok) {
+        await fetchWorkerStatus()
+      } else {
+        alert('Failed to stop worker')
+      }
+    } catch (error) {
+      console.error('Failed to stop worker:', error)
+      alert('Failed to stop worker')
+    } finally {
+      setWorkerLoading(false)
+    }
+  }
 
   const handleSync = async (id: string) => {
     setSyncing({ ...syncing, [id]: true })
@@ -155,13 +212,71 @@ export default function RepositoriesClient({ initialRepositories }: { initialRep
 
   return (
     <div className="space-y-6">
+      {/* Auto-sync Worker Status */}
+      {workerStatus && (
+        <Card className={workerStatus.isRunning ? 'border-green-500/50 bg-green-500/5' : 'border-yellow-500/50 bg-yellow-500/5'}>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {workerStatus.isRunning ? (
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                ) : (
+                  <XCircle className="w-4 h-4 text-yellow-500" />
+                )}
+                <CardTitle className="text-sm font-medium">
+                  Auto-sync Worker: {workerStatus.isRunning ? 'Running' : 'Stopped'}
+                </CardTitle>
+              </div>
+              <div className="flex gap-2">
+                {!workerStatus.isRunning ? (
+                  <Button
+                    size="sm"
+                    onClick={handleStartWorker}
+                    disabled={workerLoading}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    {workerLoading ? (
+                      <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="w-3 h-3 mr-1" />
+                    )}
+                    Start Worker
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={handleStopWorker}
+                    disabled={workerLoading}
+                  >
+                    {workerLoading ? (
+                      <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+                    ) : (
+                      <XCircle className="w-3 h-3 mr-1" />
+                    )}
+                    Stop Worker
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground">
+              {workerStatus.isRunning 
+                ? `Checking for scheduled syncs every ${workerStatus.checkInterval}` 
+                : 'Worker is not running. Scheduled syncs will not execute automatically.'}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">
             Repository Management
           </h1>
-          <p className="text-gray-400 mt-2">
+          <p className="text-muted-foreground mt-2">
             Connect and manage documentation repositories from Azure DevOps and GitHub
           </p>
         </div>

@@ -1,0 +1,14 @@
+{
+  "index": {
+    "title": "Introduction",
+    "icon": "Home"
+  },
+  "installation": {
+    "title": "Installation",
+    "icon": "Download"
+  },
+  "quick-start": {
+    "title": "Quick Start",
+    "icon": "Zap"
+  }
+}

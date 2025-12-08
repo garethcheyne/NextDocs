@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Home, BookOpen, FileText, Settings, LogOut, User, GitBranch, Activity, Users, ChevronsUpDown, ChevronRight, Code2, Lightbulb, BarChart3, Calendar, Tag } from 'lucide-react'
+import { Home, BookOpen, FileText, Settings, LogOut, User, GitBranch, Activity, Users, ChevronsUpDown, ChevronRight, Code2, Lightbulb, BarChart3, Calendar, Tag, LucideIcon, PenTool } from 'lucide-react'
+import * as LucideIcons from 'lucide-react'
 import { SignOutButton } from '@/components/auth/signout-button'
 import {
     Sidebar,
@@ -93,11 +94,23 @@ interface AppSidebarProps {
     featureCategories?: FeatureCategory[]
 }
 
+// Helper function to get Lucide icon component from string name
+function getDynamicIcon(iconName?: string | null): LucideIcon {
+    if (!iconName) return BookOpen
+    
+    // Get the icon from lucide-react dynamically
+    const Icon = (LucideIcons as any)[iconName]
+    return Icon || BookOpen // Fallback to BookOpen if icon not found
+}
+
 // Recursive function to render category tree with infinite nesting
 function renderCategoryTree(category: Category, currentPath: string): JSX.Element {
     const hasChildren = category.children && category.children.length > 0
     const isActive = currentPath === `/docs/${category.slug}` ||
         currentPath.startsWith(`/docs/${category.slug}/`)
+    
+    // Get the icon component for this category
+    const CategoryIcon = getDynamicIcon(category.icon)
 
     if (hasChildren) {
         // Categories with children: if they have index.md, make them clickable AND expandable
@@ -111,7 +124,7 @@ function renderCategoryTree(category: Category, currentPath: string): JSX.Elemen
                                 <TooltipTrigger asChild>
                                     <SidebarMenuButton asChild isActive={isActive} className="flex-1">
                                         <Link href={`/docs/${category.slug}`}>
-                                            <BookOpen className="w-4 h-4" />
+                                            <CategoryIcon className="w-4 h-4" />
                                             <span className="truncate">{category.title}</span>
                                         </Link>
                                     </SidebarMenuButton>
@@ -147,7 +160,7 @@ function renderCategoryTree(category: Category, currentPath: string): JSX.Elemen
                             <CollapsibleTrigger asChild>
                                 <TooltipTrigger asChild>
                                     <SidebarMenuButton>
-                                        <BookOpen className="w-4 h-4" />
+                                        <CategoryIcon className="w-4 h-4" />
                                         <span className="truncate">{category.title}</span>
                                         <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                                     </SidebarMenuButton>
@@ -179,7 +192,7 @@ function renderCategoryTree(category: Category, currentPath: string): JSX.Elemen
                 <TooltipTrigger asChild>
                     <SidebarMenuButton asChild isActive={isActive}>
                         <Link href={`/docs/${category.slug}`}>
-                            <BookOpen className="w-4 h-4" />
+                            <CategoryIcon className="w-4 h-4" />
                             <span className="truncate">{category.title}</span>
                         </Link>
                     </SidebarMenuButton>
@@ -277,6 +290,11 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                                                         <SidebarMenuSubButton
                                                             asChild
                                                             isActive={currentPath === '/features' || (currentPath.startsWith('/features') && !currentPath.includes('category='))}
+                                                            className={
+                                                              (currentPath === '/features' || (currentPath.startsWith('/features') && !currentPath.includes('category=')))
+                                                                ? 'bg-orange-500/80 text-white'
+                                                                : ''
+                                                            }
                                                         >
                                                             <Link href="/features">
                                                                 <span>All Requests</span>
@@ -288,6 +306,11 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                                                             <SidebarMenuSubButton
                                                                 asChild
                                                                 isActive={currentPath.includes(`category=${cat.id}`)}
+                                                                className={
+                                                                  currentPath.includes(`category=${cat.id}`)
+                                                                    ? 'bg-orange-500/80 text-white'
+                                                                    : ''
+                                                                }
                                                             >
                                                                 <Link href={`/features?category=${cat.id}`}>
                                                                     <span>{cat.name}</span>
@@ -323,6 +346,25 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                             </SidebarMenu>
                         </SidebarGroupContent>
                     </SidebarGroup>
+
+                    {/* Content Creator Section - Only for content creators and admins */}
+                    {(user?.role === 'editor' || user?.role === 'admin') && (
+                        <SidebarGroup>
+                            <SidebarGroupLabel>Content Creator</SidebarGroupLabel>
+                            <SidebarGroupContent>
+                                <SidebarMenu>
+                                    <SidebarMenuItem>
+                                        <SidebarMenuButton asChild isActive={currentPath.startsWith('/guide')}>
+                                            <Link href="/guide">
+                                                <PenTool className="w-4 h-4" />
+                                                <span>Creator Guide</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                </SidebarMenu>
+                            </SidebarGroupContent>
+                        </SidebarGroup>
+                    )}
 
                     {blogDateGroups && blogDateGroups.length > 0 && currentPath.startsWith('/blog') && (
                         <SidebarGroup>
