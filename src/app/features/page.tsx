@@ -1,12 +1,8 @@
 import { auth } from '@/lib/auth/auth'
 import { redirect } from 'next/navigation'
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
-import { Separator } from '@/components/ui/separator'
 import { prisma } from '@/lib/db/prisma'
-import { AppSidebar } from '@/components/layout/app-sidebar'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
 import { FeaturesClient } from '@/components/features/features-client'
+import { ContentDetailLayout } from '@/components/layout/content-detail-layout'
 
 export default async function FeaturesPage({
     searchParams,
@@ -55,6 +51,7 @@ export default async function FeaturesPage({
                 select: {
                     name: true,
                     email: true,
+                    image: true,
                 },
             },
             votes: session?.user?.id ? {
@@ -77,42 +74,22 @@ export default async function FeaturesPage({
     })
 
     return (
-        <SidebarProvider>
-            <div className="flex min-h-screen w-full">
-                <AppSidebar 
-                    user={session.user} 
-                    currentPath="/features"
-                    featureCategories={categories}
-                />
-
-                {/* Main Content */}
-                <div className="flex-1 flex flex-col">
-                    {/* Header */}
-                    <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
-                        <SidebarTrigger className="-ml-1" />
-                        <Separator orientation="vertical" className="mr-2 h-4" />
-                        <BreadcrumbNavigation
-                            items={[
-                                { label: 'Home', href: '/' },
-                                { label: 'Feature Requests', href: '/features' },
-                            ]}
-                        />
-                        <div className="ml-auto flex items-center gap-2">
-                            <ThemeToggle />
-                        </div>
-                    </header>
-
-                    {/* Page Content */}
-                    <main className="flex-1 overflow-auto">
-                        <FeaturesClient 
-                            features={features}
-                            categories={categories}
-                            params={params}
-                        />
-                    </main>
-                </div>
-            </div>
-        </SidebarProvider>
+        <ContentDetailLayout
+            user={session.user}
+            currentPath="/features"
+            breadcrumbs={[
+                { label: 'Home', href: '/' },
+                { label: 'Feature Requests', href: '/features' },
+            ]}
+            showTOC={false}
+            noPadding={true}
+        >
+            <FeaturesClient
+                features={features}
+                categories={categories}
+                params={params}
+            />
+        </ContentDetailLayout>
     )
 }
 

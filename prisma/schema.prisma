@@ -11,12 +11,15 @@ datasource db {
 model User {
   id            String    @id @default(uuid())
   name          String?
+  firstName     String?
+  lastName      String?
   email         String    @unique
   emailVerified DateTime?
   password      String?   // Only for local accounts
   image         String?
   role          String    @default("user") // user, admin, editor
   provider      String?   // azuread, credentials
+  active        Boolean   @default(true)  // Account active status
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   

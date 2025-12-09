@@ -1,7 +1,10 @@
+'use client'
+
 import Link from 'next/link'
 import { Lightbulb, Plus, Calendar, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { VoteButton } from '@/components/features/vote-button'
 
 interface FeatureBannerProps {
     totalRequests?: number
@@ -11,10 +14,13 @@ interface FeatureBannerProps {
     status?: string
     category?: { name: string; color?: string | null } | null
     creator?: string
+    creatorImage?: string | null
     createdAt?: Date
     voteCount?: number
     upvotes?: number
     downvotes?: number
+    featureId?: string
+    userVoteType?: 'upvote' | 'downvote' | null
 }
 
 const statusColors: Record<string, string> = {
@@ -33,15 +39,18 @@ export function FeatureBanner({
     status,
     category,
     creator,
+    creatorImage,
     createdAt,
     voteCount = 0,
     upvotes = 0,
-    downvotes = 0
+    downvotes = 0,
+    featureId,
+    userVoteType = null
 }: FeatureBannerProps) {
     // Detail page view
     if (title) {
         return (
-            <div className="bg-gradient-to-r from-brand-orange/10 to-orange-500/10 border-b">
+            <div className="bg-gradient-to-r from-brand-orange/10 to-orange-500/10 border-b mb-8">
                 <div className="px-12 py-8">
                     <div className="max-w-7xl mx-auto">
                         <div className="flex items-start justify-between gap-8">
@@ -62,7 +71,15 @@ export function FeatureBanner({
                                 <div className="flex items-center gap-4 text-sm text-foreground/70 dark:text-foreground/80">
                                     {creator && (
                                         <div className="flex items-center gap-1">
-                                            <User className="w-4 h-4" />
+                                            {creatorImage ? (
+                                                <img 
+                                                    src={creatorImage} 
+                                                    alt={creator}
+                                                    className="w-5 h-5 rounded-full object-cover"
+                                                />
+                                            ) : (
+                                                <User className="w-4 h-4" />
+                                            )}
                                             {creator}
                                         </div>
                                     )}
@@ -75,23 +92,17 @@ export function FeatureBanner({
                                 </div>
                             </div>
 
-                            {/* Vote Stats */}
-                            <div className="flex flex-col gap-4 text-right">
-                                <div>
-                                    <div className="text-4xl font-bold text-brand-orange">{upvotes + downvotes}</div>
-                                    <div className="text-sm text-foreground/70 dark:text-foreground/80">Total Votes</div>
+                            {/* Vote Button */}
+                            {featureId && (
+                                <div className="flex flex-col items-center">
+                                    <VoteButton
+                                        featureId={featureId}
+                                        initialVote={userVoteType}
+                                        initialUpvotes={upvotes}
+                                        initialDownvotes={downvotes}
+                                    />
                                 </div>
-                                <div className="flex gap-4">
-                                    <div>
-                                        <div className="text-2xl font-bold text-green-600 dark:text-green-400">{upvotes}</div>
-                                        <div className="text-xs text-foreground/70 dark:text-foreground/80">Upvotes</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-2xl font-bold text-red-600 dark:text-red-400">{downvotes}</div>
-                                        <div className="text-xs text-foreground/70 dark:text-foreground/80">Downvotes</div>
-                                    </div>
-                                </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -101,7 +112,7 @@ export function FeatureBanner({
 
     // List page view
     return (
-        <div className="bg-gradient-to-r from-brand-orange/10 to-orange-500/10 border-b">
+        <div className="bg-gradient-to-r from-brand-orange/10 to-orange-500/10 border-b mb-6">
             <div className="max-w-7xl mx-auto px-12 py-12">
                 <div className="flex items-start justify-between">
                     <div className="space-y-4 max-w-2xl">

@@ -194,6 +194,10 @@ export function AnalyticsDashboard() {
           <CardContent>
             {metrics.timeline && metrics.timeline.length > 0 ? (
               <div className="space-y-4">
+                {/* Debug info */}
+                <div className="text-xs text-muted-foreground mb-2">
+                  Total days: {metrics.timeline.length} | Max views: {Math.max(...metrics.timeline.map(d => d.pageViews))} | Total views: {metrics.timeline.reduce((sum, d) => sum + d.pageViews, 0)}
+                </div>
                 <div className="h-64 flex items-end justify-between gap-1">
                   {metrics.timeline.map((day, index) => {
                     const maxValue = Math.max(...metrics.timeline.map(d => d.pageViews))
@@ -202,8 +206,8 @@ export function AnalyticsDashboard() {
                       <div key={index} className="flex-1 flex flex-col items-center gap-1">
                         <div className="w-full relative group h-full flex items-end">
                           <div
-                            className={`w-full bg-gradient-to-t from-brand-orange to-orange-500 rounded-t transition-all hover:from-orange-600 hover:to-orange-400`}
-                            style={{ height: heightPercent > 0 ? `${heightPercent}%` : '0' }}
+                            className={`w-full bg-gradient-to-t from-brand-orange to-orange-500 rounded-t transition-all hover:from-orange-600 hover:to-orange-400 ${heightPercent === 0 && day.pageViews > 0 ? 'min-h-[2px]' : ''}`}
+                            style={{ height: heightPercent > 0 ? `${heightPercent}%` : (day.pageViews > 0 ? '2px' : '0') }}
                           />
                           <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 border border-gray-700">
                             <div className="font-semibold">{new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>

@@ -38,11 +38,14 @@ interface ContentDetailLayoutProps {
     }
     currentPath: string
     breadcrumbs: BreadcrumbItemType[]
-    content: string
+    content?: string  // Optional - for markdown pages with TOC
     children: ReactNode
     categories?: Category[]
     blogCategories?: BlogCategory[]
     apiSpecs?: ApiSpec[]
+    showTOC?: boolean  // Optional - explicitly control TOC visibility
+    className?: string  // Optional - custom className for main content
+    noPadding?: boolean  // Optional - remove padding for full-width content like banners
 }
 
 export function ContentDetailLayout({
@@ -54,7 +57,13 @@ export function ContentDetailLayout({
     categories,
     blogCategories,
     apiSpecs,
+    showTOC = true,  // Default to true for backward compatibility
+    className,
+    noPadding = false,  // Default to false for backward compatibility
 }: ContentDetailLayoutProps) {
+    // Determine if TOC should be shown: content must exist and showTOC must be true
+    const shouldShowTOC = showTOC && content && content.trim().length > 0
+
     return (
         <SidebarProvider>
             <div className="flex min-h-screen max-h-screen w-full overflow-hidden">
@@ -88,16 +97,22 @@ export function ContentDetailLayout({
                     <div className="flex flex-1 overflow-hidden">
 
                         {/* Content */}
-                        <main className="flex-1 overflow-y-auto px-12 py-6">
-                            <article className="w-full">
+                        <main className={`flex-1 overflow-y-auto ${noPadding ? '' : 'px-12 py-6'} ${className || ''}`}>
+                            <article className={shouldShowTOC 
+                                ? "prose prose-slate dark:prose-invert max-w-none prose-headings:text-foreground prose-p:text-foreground prose-li:text-foreground prose-strong:text-foreground prose-code:text-foreground"
+                                : ""
+                            }>
+                                
                                 {children}
                             </article>
                         </main>
 
-                        {/* Table of Contents */}
-                        <aside className="hidden xl:flex w-64 border-l flex-shrink-0">
-                            <TableOfContents content={content} />
-                        </aside>
+                        {/* Table of Contents - Only show if content exists */}
+                        {shouldShowTOC && (
+                            <aside className="hidden xl:flex w-64 border-l flex-shrink-0">
+                                <TableOfContents content={content} />
+                            </aside>
+                        )}
                     </div>
 
                 </div>

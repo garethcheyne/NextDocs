@@ -1,5 +1,4 @@
 import NextAuth from 'next-auth'
-import { PrismaAdapter } from '@auth/prisma-adapter'
 import Credentials from 'next-auth/providers/credentials'
 import { prisma } from '../db/prisma'
 import { authConfig } from './auth.config'
@@ -7,12 +6,21 @@ import { verifyPassword } from './password'
 import { getUserByEmail } from '../db/user'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  ...authConfig,
+  pages: authConfig.pages,
+  callbacks: authConfig.callbacks,
+  events: {
+    async signIn({ user, account, profile, isNewUser }) {
+      console.log('✨ SignIn event:', { userId: user.id, provider: account?.provider, isNewUser })
+    },
+    async session({ session, token }) {
+      console.log('🎫 Session event:', { userId: session.user?.id })
+    },
+  },
+  debug: true, // Enable debug logging
   providers: [
     ...authConfig.providers,
     Credentials({
@@ -23,10 +31,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         console.log('🔐 Credentials login attempt:', credentials?.email)
-        
+
         if (!credentials?.email || !credentials?.password) {
           console.log('❌ Missing credentials')
-          
+
           // Track failed login - missing credentials
           try {
             await prisma.analyticsEvent.create({
@@ -43,15 +51,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           } catch (error) {
             console.error('Analytics tracking error:', error)
           }
-          
+
           return null
         }
 
         const user = await getUserByEmail(credentials.email as string)
-        
+
         if (!user) {
           console.log('❌ User not found:', credentials.email)
-          
+
           // Track failed login - user not found
           try {
             await prisma.analyticsEvent.create({
@@ -69,13 +77,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           } catch (error) {
             console.error('Analytics tracking error:', error)
           }
-          
+
           return null
         }
-        
+
         if (!user.password) {
           console.log('❌ User has no password (OAuth only):', credentials.email)
-          
+
           // Track failed login - OAuth user
           try {
             await prisma.analyticsEvent.create({
@@ -94,7 +102,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           } catch (error) {
             console.error('Analytics tracking error:', error)
           }
-          
+
           return null
         }
 
@@ -106,7 +114,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!isValid) {
           console.log('❌ Invalid password for:', credentials.email)
-          
+
           // Track failed login - invalid password
           try {
             await prisma.analyticsEvent.create({
@@ -125,12 +133,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           } catch (error) {
             console.error('Analytics tracking error:', error)
           }
-          
+
           return null
         }
 
         console.log('✅ Login successful:', credentials.email, 'Role:', user.role)
-        
+
         // Track successful login
         try {
           await prisma.analyticsEvent.create({
@@ -148,7 +156,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         } catch (error) {
           console.error('Analytics tracking error:', error)
         }
-        
+
         return {
           id: user.id,
           email: user.email,

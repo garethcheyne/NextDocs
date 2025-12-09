@@ -112,7 +112,7 @@ export default function EditUserForm({ user }: { user: User }) {
                             <div>
                                 <Label className="text-muted-foreground">Provider</Label>
                                 <Badge variant="outline" className="mt-1 capitalize">
-                                    {user.provider || 'credentials'}
+                                    {user.provider || ''}
                                 </Badge>
                             </div>
                             <div>

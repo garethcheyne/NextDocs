@@ -21,6 +21,7 @@ interface CommentItemProps {
             id: string
             name: string | null
             email: string | null
+            image: string | null
         } | null
     }
 }
@@ -108,14 +109,29 @@ export function CommentItem({ comment }: CommentItemProps) {
     return (
         <div className="border-l-2 border-muted pl-4">
             <div className="flex items-start justify-between mb-2">
-                <div>
-                    <div className="font-medium">
-                        {comment.user?.name || 'Anonymous'}
-                    </div>
-                    <div className="text-xs text-foreground/60 dark:text-foreground/70">
-                        {new Date(comment.createdAt).toLocaleDateString()} at{' '}
-                        {new Date(comment.createdAt).toLocaleTimeString()}
-                        {isEdited && <span className="ml-2 italic">(edited)</span>}
+                <div className="flex items-start gap-2">
+                    {comment.user?.image ? (
+                        <img 
+                            src={comment.user.image} 
+                            alt={comment.user.name || 'User'}
+                            className="w-8 h-8 rounded-full object-cover mt-0.5"
+                        />
+                    ) : (
+                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center mt-0.5">
+                            <span className="text-xs font-semibold">
+                                {(comment.user?.name || 'A').charAt(0).toUpperCase()}
+                            </span>
+                        </div>
+                    )}
+                    <div>
+                        <div className="font-medium">
+                            {comment.user?.name || 'Anonymous'}
+                        </div>
+                        <div className="text-xs text-foreground/60 dark:text-foreground/70">
+                            {new Date(comment.createdAt).toLocaleDateString()} at{' '}
+                            {new Date(comment.createdAt).toLocaleTimeString()}
+                            {isEdited && <span className="ml-2 italic">(edited)</span>}
+                        </div>
                     </div>
                 </div>
                 {canEdit && !isEditing && (

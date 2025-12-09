@@ -46,15 +46,15 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
             {/* Page Content */}
             <div className="flex-1 p-6 overflow-auto">
                 <div className="max-w-2xl">
-                <EditUserForm user={{
-                    id: user.id,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                    image: user.image,
-                    provider: user.provider,
-                    createdAt: user.createdAt.toISOString(),
-                }} />
+                    <EditUserForm user={{
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        role: user.role,
+                        image: user.image,
+                        provider: user.provider,
+                        createdAt: user.createdAt.toISOString(),
+                    }} />
                 </div>
             </div>
         </>

@@ -35,7 +35,7 @@ function LoginForm() {
     setIsLoading(true)
     setLocalError('')
     try {
-      await signIn('azure-ad', { callbackUrl })
+      await signIn('microsoft-entra-id', { callbackUrl })
     } catch (error) {
       setLocalError('Failed to sign in with Microsoft')
       setIsLoading(false)

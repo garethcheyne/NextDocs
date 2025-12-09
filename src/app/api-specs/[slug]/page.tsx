@@ -1,15 +1,11 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import { FileText, PanelLeft, Clock } from 'lucide-react'
+import { FileText, Clock } from 'lucide-react'
 import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/db/prisma'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
-import { Separator } from '@/components/ui/separator'
-import { AppSidebar } from '@/components/layout/app-sidebar'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
+import { ContentDetailLayout } from '@/components/layout/content-detail-layout'
 
 interface ApiSpecVersionsPageProps {
     params: Promise<{
@@ -64,54 +60,37 @@ export default async function ApiSpecVersionsPage({ params }: ApiSpecVersionsPag
     }))
 
     return (
-        <SidebarProvider>
-            <div className="flex min-h-screen w-full">
-                <AppSidebar user={session.user} currentPath="/api-specs" apiSpecs={sidebarApiSpecs} />
+        <ContentDetailLayout
+            user={session.user}
+            currentPath="/api-specs"
+            breadcrumbs={[
+                { label: 'Home', href: '/' },
+                { label: 'API Specs', href: '/api-specs' },
+                { label: `${latestSpec.name} Versions`, href: `/api-specs/${slug}` },
+            ]}
+            showTOC={false}
+        >
+            <div className="mb-8">
+                <div className="flex items-center gap-3 mb-4">
+                    <FileText className="h-10 w-10 text-primary" />
+                    <div>
+                        <h1 className="text-3xl font-bold">{latestSpec.name}</h1>
+                        {latestSpec.category && (
+                            <Badge variant="outline" className="mt-2">
+                                {latestSpec.category}
+                            </Badge>
+                        )}
+                    </div>
+                </div>
 
-                {/* Main Content */}
-                <div className="flex-1 flex flex-col">
-                    {/* Header */}
-                    <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-                        <div className="flex items-center justify-between w-full gap-2 px-4">
-                            <div className="flex items-center gap-2">
-                                <SidebarTrigger className="-ml-1">
-                                    <PanelLeft />
-                                    <span className="sr-only">Toggle Sidebar</span>
-                                </SidebarTrigger>
-                                <Separator orientation="vertical" className="mr-2 h-4" />
-                                <BreadcrumbNavigation items={[
-                                    { label: 'Home', href: '/' },
-                                    { label: 'API Specs', href: '/api-specs' },
-                                    { label: `${latestSpec.name} Versions`, href: `/api-specs/${slug}` },
-                                ]} />
-                            </div>
-                            <ThemeToggle />
-                        </div>
-                    </header>
+                {latestSpec.description && (
+                    <p className="text-muted-foreground text-lg max-w-3xl">
+                        {latestSpec.description}
+                    </p>
+                )}
+            </div>
 
-                    {/* Page Content */}
-                    <main className="flex-1 px-12 py-6 overflow-auto">
-                        <div className="mb-8">
-                            <div className="flex items-center gap-3 mb-4">
-                                <FileText className="h-10 w-10 text-primary" />
-                                <div>
-                                    <h1 className="text-3xl font-bold">{latestSpec.name}</h1>
-                                    {latestSpec.category && (
-                                        <Badge variant="outline" className="mt-2">
-                                            {latestSpec.category}
-                                        </Badge>
-                                    )}
-                                </div>
-                            </div>
-
-                            {latestSpec.description && (
-                                <p className="text-muted-foreground text-lg max-w-3xl">
-                                    {latestSpec.description}
-                                </p>
-                            )}
-                        </div>
-
-                        <div className="mb-6">
+            <div className="mb-6">
                             <h2 className="text-2xl font-semibold mb-4">Available Versions</h2>
                             <p className="text-muted-foreground mb-6">
                                 Select a version to view the API specification
@@ -171,10 +150,7 @@ export default async function ApiSpecVersionsPage({ params }: ApiSpecVersionsPag
                                     This API specification currently has only one version available.
                                 </p>
                             </div>
-                        )}
-                    </main>
-                </div>
-            </div>
-        </SidebarProvider>
+                        )})
+        </ContentDetailLayout>
     )
 }

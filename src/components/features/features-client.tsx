@@ -27,6 +27,11 @@ interface Feature {
     commentCount: number
     createdAt: Date
     createdByName: string
+    creator?: {
+        name: string | null
+        email: string | null
+        image: string | null
+    } | null
     category: {
         name: string
         slug: string
@@ -219,8 +224,16 @@ export function FeaturesClient({ features, categories, params }: FeaturesClientP
                                                     )}
 
                                                     <span className="text-foreground/70 dark:text-foreground/80 flex items-center gap-1">
-                                                        <User className="w-3 h-3" />
-                                                        {feature.createdByName}
+                                                        {feature.creator?.image ? (
+                                                            <img 
+                                                                src={feature.creator.image} 
+                                                                alt={feature.creator.name || 'User'}
+                                                                className="w-4 h-4 rounded-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <User className="w-3 h-3" />
+                                                        )}
+                                                        {feature.creator?.name || feature.createdByName}
                                                     </span>
 
                                                     <span className="text-foreground/70 dark:text-foreground/80 flex items-center gap-1">

@@ -1,13 +1,10 @@
 import { auth } from '@/lib/auth/auth'
 import { redirect } from 'next/navigation'
-import { SidebarTrigger } from '@/components/ui/sidebar'
-import { Separator } from '@/components/ui/separator'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Download, BookOpen, FolderTree, FileText, Tag, Settings } from 'lucide-react'
 import Link from 'next/link'
+import { ContentDetailLayout } from '@/components/layout/content-detail-layout'
 
 export default async function ContentCreatorGuidePage() {
     const session = await auth()
@@ -17,25 +14,17 @@ export default async function ContentCreatorGuidePage() {
     }
 
     return (
-        <>
-            {/* Header */}
-            <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
-                <SidebarTrigger className="-ml-1" />
-                <Separator orientation="vertical" className="mr-2 h-4" />
-                <BreadcrumbNavigation
-                    items={[
-                        { label: 'Content Creator Guide', href: '/guide' },
-                    ]}
-                />
-                <div className="ml-auto flex items-center gap-2">
-                    <ThemeToggle />
-                </div>
-            </header>
-
-            {/* Page Content */}
-            <div className="flex-1 p-6 space-y-6 overflow-auto">
+        <ContentDetailLayout
+            user={session.user}
+            currentPath="/guide"
+            breadcrumbs={[
+                { label: 'Content Creator Guide', href: '/guide' },
+            ]}
+            showTOC={false}
+        >
+            <div className="space-y-6">
                 {/* Introduction */}
-                <div className="space-y-4 mb-8">
+                <div className="space-y-4">
                     <h1 className="text-4xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">
                         Content Creator Guide
                     </h1>
@@ -152,7 +141,7 @@ export default async function ContentCreatorGuidePage() {
                     </Link>
                 </div>
 
-                <div className="mt-8 space-y-6">
+                <div className="space-y-6">
                     {/* Quick Overview */}
                     <Card>
                         <CardHeader>
@@ -248,6 +237,6 @@ export default async function ContentCreatorGuidePage() {
                     </Card>
                 </div>
             </div>
-        </>
+        </ContentDetailLayout>
     )
 }

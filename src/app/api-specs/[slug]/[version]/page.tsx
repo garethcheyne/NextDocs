@@ -1,19 +1,15 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import { FileText, GitBranch, PanelLeft } from 'lucide-react'
+import { FileText, GitBranch } from 'lucide-react'
 import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/db/prisma'
 import { Badge } from '@/components/ui/badge'
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
-import { Separator } from '@/components/ui/separator'
-import { AppSidebar } from '@/components/layout/app-sidebar'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
 import { readFile } from 'fs/promises'
 import path from 'path'
 // @ts-ignore - Type definitions exist but may not be resolved
 import * as yaml from 'js-yaml'
 import { ApiSpecViewer } from '@/components/api-spec-viewer'
+import { ContentDetailLayout } from '@/components/layout/content-detail-layout'
 
 interface ApiDocDetailPageProps {
   params: Promise<{
@@ -96,43 +92,17 @@ export default async function ApiDocDetailPage({ params }: ApiDocDetailPageProps
   ]
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        <AppSidebar
-          user={session.user}
-          currentPath={`/api-specs/${slug}/${version}`}
-          apiSpecs={allApiSpecs}
-        />
-
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-            <div className="flex items-center justify-between w-full gap-2 px-4">
-              <div className="flex items-center gap-2">
-                <SidebarTrigger className="-ml-1">
-                  <PanelLeft />
-                  <span className="sr-only">Toggle Sidebar</span>
-                </SidebarTrigger>
-                <Separator orientation="vertical" className="mr-2 h-4" />
-                <BreadcrumbNavigation items={breadcrumbs} />
-              </div>
-              <ThemeToggle />
-            </div>
-          </header>
-
-          {/* Page Content */}
-          <main className="flex-1 px-12 py-6 overflow-auto">
-
-            {/* API Viewer */}
-            <ApiSpecViewer
-              spec={specObject}
-              renderer={apiSpec.renderer as 'swagger-ui' | 'redoc'}
-            />
-
-          </main>
-        </div>
-      </div>
-    </SidebarProvider>
+    <ContentDetailLayout
+      user={session.user}
+      currentPath={`/api-specs/${slug}/${version}`}
+      breadcrumbs={breadcrumbs}
+      showTOC={false}
+    >
+      {/* API Viewer */}
+      <ApiSpecViewer
+        spec={specObject}
+        renderer={apiSpec.renderer as 'swagger-ui' | 'redoc'}
+      />
+    </ContentDetailLayout>
   )
 }

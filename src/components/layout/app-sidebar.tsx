@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { Home, BookOpen, FileText, Settings, LogOut, User, GitBranch, Activity, Users, ChevronsUpDown, ChevronRight, Code2, Lightbulb, BarChart3, Calendar, Tag, LucideIcon, PenTool } from 'lucide-react'
 import * as LucideIcons from 'lucide-react'
 import { SignOutButton } from '@/components/auth/signout-button'
@@ -85,6 +84,7 @@ interface AppSidebarProps {
         name?: string | null
         email?: string | null
         role?: string | null
+        image?: string | null
     }
     currentPath?: string
     categories?: Category[]
@@ -97,7 +97,7 @@ interface AppSidebarProps {
 // Helper function to get Lucide icon component from string name
 function getDynamicIcon(iconName?: string | null): LucideIcon {
     if (!iconName) return BookOpen
-    
+
     // Get the icon from lucide-react dynamically
     const Icon = (LucideIcons as any)[iconName]
     return Icon || BookOpen // Fallback to BookOpen if icon not found
@@ -108,7 +108,7 @@ function renderCategoryTree(category: Category, currentPath: string): JSX.Elemen
     const hasChildren = category.children && category.children.length > 0
     const isActive = currentPath === `/docs/${category.slug}` ||
         currentPath.startsWith(`/docs/${category.slug}/`)
-    
+
     // Get the icon component for this category
     const CategoryIcon = getDynamicIcon(category.icon)
 
@@ -208,7 +208,7 @@ function renderCategoryTree(category: Category, currentPath: string): JSX.Elemen
 
 export async function AppSidebar({ user = { name: null, email: null, role: null }, currentPath = '', categories, blogCategories, blogDateGroups, apiSpecs, featureCategories }: AppSidebarProps) {
     const isAdmin = user?.role?.toLowerCase() === 'admin'
-    
+
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
     // Group API specs by category
@@ -247,14 +247,6 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                         <SidebarGroupLabel>Navigation</SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu>
-                                <SidebarMenuItem>
-                                    <SidebarMenuButton asChild isActive={currentPath === '/'}>
-                                        <Link href="/">
-                                            <Home className="w-4 h-4" />
-                                            <span>Home</span>
-                                        </Link>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
 
                                 <SidebarMenuItem>
                                     <SidebarMenuButton asChild isActive={currentPath.startsWith('/blog')}>
@@ -291,9 +283,9 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                                                             asChild
                                                             isActive={currentPath === '/features' || (currentPath.startsWith('/features') && !currentPath.includes('category='))}
                                                             className={
-                                                              (currentPath === '/features' || (currentPath.startsWith('/features') && !currentPath.includes('category=')))
-                                                                ? 'bg-orange-500/80 text-white'
-                                                                : ''
+                                                                (currentPath === '/features' || (currentPath.startsWith('/features') && !currentPath.includes('category=')))
+                                                                    ? 'bg-orange-500/80 text-white'
+                                                                    : ''
                                                             }
                                                         >
                                                             <Link href="/features">
@@ -307,9 +299,9 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                                                                 asChild
                                                                 isActive={currentPath.includes(`category=${cat.id}`)}
                                                                 className={
-                                                                  currentPath.includes(`category=${cat.id}`)
-                                                                    ? 'bg-orange-500/80 text-white'
-                                                                    : ''
+                                                                    currentPath.includes(`category=${cat.id}`)
+                                                                        ? 'bg-orange-500/80 text-white'
+                                                                        : ''
                                                                 }
                                                             >
                                                                 <Link href={`/features?category=${cat.id}`}>
@@ -581,9 +573,17 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                                 <DropdownMenuTrigger asChild>
                                     <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
                                         <div className="flex items-center gap-2 flex-1 overflow-hidden">
-                                            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                                                <User className="size-4" />
-                                            </div>
+                                            {user?.image ? (
+                                                <img
+                                                    src={user.image}
+                                                    alt={user.name || 'User'}
+                                                    className="rounded-full size-8 object-cover"
+                                                />
+                                            ) : (
+                                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                                                    <User className="size-4" />
+                                                </div>
+                                            )}
                                             <div className="grid flex-1 text-left text-sm leading-tight overflow-hidden">
                                                 <span className="truncate font-semibold">{user?.name || 'User'}</span>
                                                 <span className="truncate text-xs text-muted-foreground">{user?.email}</span>
@@ -600,9 +600,19 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                                 >
                                     <DropdownMenuLabel className="p-0 font-normal">
                                         <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                                            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                                                <User className="size-4" />
-                                            </div>
+
+                                            {user?.image ? (
+                                                <img
+                                                    src={user.image}
+                                                    alt={user.name || 'User'}
+                                                    className="rounded-full size-8 object-cover"
+                                                />
+                                            ) : (
+                                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                                                    <User className="size-4" />
+                                                </div>
+                                            )}
+
                                             <div className="grid flex-1 text-left text-sm leading-tight">
                                                 <span className="truncate font-semibold">{user?.name || 'User'}</span>
                                                 <span className="truncate text-xs text-muted-foreground">{user?.email}</span>
@@ -619,12 +629,16 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                                                 </Link>
                                             </DropdownMenuItem>
                                         )}
-                                        <DropdownMenuItem asChild>
+
+                                        {/* Not developeed yes, will create later. */}
+                                        {/* <DropdownMenuItem asChild>
                                             <Link href="/profile" className="cursor-pointer">
                                                 <User className="mr-2 h-4 w-4" />
                                                 <span>Profile</span>
                                             </Link>
-                                        </DropdownMenuItem>
+                                        </DropdownMenuItem> */}
+
+
                                     </DropdownMenuGroup>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuGroup>
