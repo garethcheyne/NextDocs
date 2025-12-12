@@ -11,7 +11,6 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog'
 import {
     Select,
@@ -32,6 +31,8 @@ interface StatusUpdateDialogProps {
     integrationType: 'github' | 'azure-devops' | null
     autoCreateOnApproval: boolean
     hasExistingWorkItem: boolean
+    open?: boolean
+    onOpenChange?: (open: boolean) => void
 }
 
 const statusOptions = [
@@ -51,11 +52,15 @@ export function StatusUpdateDialog({
     integrationType,
     autoCreateOnApproval,
     hasExistingWorkItem,
+    open: externalOpen,
+    onOpenChange: externalOnOpenChange,
 }: StatusUpdateDialogProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     
-    const [open, setOpen] = useState(false)
+    const [internalOpen, setInternalOpen] = useState(false)
+    const open = externalOpen !== undefined ? externalOpen : internalOpen
+    const setOpen = externalOnOpenChange || setInternalOpen
     const [status, setStatus] = useState(currentStatus)
     const [reason, setReason] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -144,11 +149,6 @@ export function StatusUpdateDialog({
     return (
         <>
             <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                        Update Status
-                    </Button>
-                </DialogTrigger>
                 <DialogContent className="sm:max-w-[500px]">
                     <form onSubmit={handleSubmit}>
                         <DialogHeader>

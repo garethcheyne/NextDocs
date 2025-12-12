@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { MarkdownToolbar } from '@/components/ui/markdown-toolbar'
 import { useMarkdownEditor } from '@/hooks/use-markdown-editor'
+import { EnhancedMarkdown } from '@/components/ui/enhanced-markdown'
 import ReactMarkdown from 'react-markdown'
 
 interface CommentItemProps {
@@ -107,57 +108,10 @@ export function CommentItem({ comment }: CommentItemProps) {
     }
 
     return (
-        <div className="border-l-2 border-muted pl-4">
-            <div className="flex items-start justify-between mb-2">
-                <div className="flex items-start gap-2">
-                    {comment.user?.image ? (
-                        <img 
-                            src={comment.user.image} 
-                            alt={comment.user.name || 'User'}
-                            className="w-8 h-8 rounded-full object-cover mt-0.5"
-                        />
-                    ) : (
-                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center mt-0.5">
-                            <span className="text-xs font-semibold">
-                                {(comment.user?.name || 'A').charAt(0).toUpperCase()}
-                            </span>
-                        </div>
-                    )}
-                    <div>
-                        <div className="font-medium">
-                            {comment.user?.name || 'Anonymous'}
-                        </div>
-                        <div className="text-xs text-foreground/60 dark:text-foreground/70">
-                            {new Date(comment.createdAt).toLocaleDateString()} at{' '}
-                            {new Date(comment.createdAt).toLocaleTimeString()}
-                            {isEdited && <span className="ml-2 italic">(edited)</span>}
-                        </div>
-                    </div>
-                </div>
-                {canEdit && !isEditing && (
-                    <div className="flex gap-1">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setIsEditing(true)}
-                            disabled={isSubmitting}
-                        >
-                            <Pencil className="w-3 h-3" />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleDelete}
-                            disabled={isSubmitting}
-                        >
-                            <Trash2 className="w-3 h-3 text-red-600" />
-                        </Button>
-                    </div>
-                )}
-            </div>
-
+        <div className="py-4 border-b border-muted/50 last:border-b-0">
+            {/* Comment Content First */}
             {isEditing ? (
-                <div className="space-y-2">
+                <div className="space-y-2 mb-3">
                     <div className="flex gap-2 text-xs">
                         <button
                             type="button"
@@ -176,12 +130,14 @@ export function CommentItem({ comment }: CommentItemProps) {
                     </div>
 
                     {!showPreview && (
-                        <MarkdownToolbar onInsert={handleInsert} />
+                        <MarkdownToolbar onInsert={handleInsert} disabled={isSubmitting} />
                     )}
 
                     {showPreview ? (
-                        <div className="prose prose-sm max-w-none dark:prose-invert p-3 border rounded-md min-h-[100px]">
-                            <ReactMarkdown>{editContent}</ReactMarkdown>
+                        <div className="p-3 border rounded-md min-h-[100px]">
+                            <EnhancedMarkdown className="prose prose-sm max-w-none dark:prose-invert">
+                                {editContent}
+                            </EnhancedMarkdown>
                         </div>
                     ) : (
                         <Textarea
@@ -223,10 +179,64 @@ export function CommentItem({ comment }: CommentItemProps) {
                     </div>
                 </div>
             ) : (
-                <div className="prose prose-sm max-w-none dark:prose-invert">
-                    <ReactMarkdown>{comment.content}</ReactMarkdown>
+                <div className="mb-3">
+                    <EnhancedMarkdown className="prose prose-sm max-w-none dark:prose-invert [&>*]:text-foreground/90 dark:[&>*]:text-foreground/90">
+                        {comment.content}
+                    </EnhancedMarkdown>
                 </div>
             )}
+
+            {/* User Info and Actions on Same Line */}
+            <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                    {comment.user?.image ? (
+                        <img
+                            src={comment.user.image}
+                            alt={comment.user.name || 'User'}
+                            className="w-5 h-5 rounded-full object-cover"
+                        />
+                    ) : (
+                        <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center">
+                            <span className="text-xs font-semibold">
+                                {(comment.user?.name || 'A').charAt(0).toUpperCase()}
+                            </span>
+                        </div>
+                    )}
+                    <span className="font-medium text-foreground/80">
+                        {comment.user?.name || 'Anonymous'}
+                    </span>
+                    {isEdited && <span className="text-xs italic text-foreground/60">(edited)</span>}
+                </div>
+                
+                <div className="flex items-center gap-2">
+                    <span className="text-xs text-foreground/60">
+                        {new Date(comment.createdAt).toLocaleDateString()} at{' '}
+                        {new Date(comment.createdAt).toLocaleTimeString()}
+                    </span>
+                    {canEdit && !isEditing && (
+                        <div className="flex gap-1">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setIsEditing(true)}
+                                disabled={isSubmitting}
+                                className="h-6 w-6 p-0"
+                            >
+                                <Pencil className="w-3 h-3" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleDelete}
+                                disabled={isSubmitting}
+                                className="h-6 w-6 p-0"
+                            >
+                                <Trash2 className="w-3 h-3 text-red-600" />
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     )
 }

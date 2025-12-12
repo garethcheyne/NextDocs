@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { MarkdownToolbar } from '@/components/ui/markdown-toolbar'
 import { useMarkdownEditor } from '@/hooks/use-markdown-editor'
-import ReactMarkdown from 'react-markdown'
+import { EnhancedMarkdown } from '@/components/ui/enhanced-markdown'
 
 interface CommentFormProps {
     featureId: string
@@ -116,13 +116,15 @@ export function CommentForm({ featureId }: CommentFormProps) {
                         </div>
 
                         {!showPreview && (
-                            <MarkdownToolbar onInsert={handleInsert} />
+                            <MarkdownToolbar onInsert={handleInsert} disabled={isSubmitting} />
                         )}
 
                         {showPreview ? (
-                            <div className="prose prose-sm max-w-none dark:prose-invert p-3 border rounded-md min-h-[100px]">
+                            <div className="p-3 border rounded-md min-h-[100px]">
                                 {content ? (
-                                    <ReactMarkdown>{content}</ReactMarkdown>
+                                    <EnhancedMarkdown className="prose prose-sm max-w-none dark:prose-invert [&>*]:text-foreground/90 dark:[&>*]:text-foreground/90">
+                                        {content}
+                                    </EnhancedMarkdown>
                                 ) : (
                                     <p className="text-muted-foreground italic">Nothing to preview</p>
                                 )}
@@ -131,7 +133,9 @@ export function CommentForm({ featureId }: CommentFormProps) {
                             <Textarea
                                 ref={textareaRef}
                                 id="comment"
-                                placeholder="Share your thoughts, ask questions, or provide feedback..."
+                                placeholder="Share your thoughts, ask questions, or provide feedback... 
+
+💡 Tip: You can paste images directly from your clipboard (Ctrl+V)!"
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
                                 disabled={isSubmitting || isPending}

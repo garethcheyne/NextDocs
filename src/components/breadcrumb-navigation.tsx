@@ -9,6 +9,7 @@ import {
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { SearchTrigger } from '@/components/search/search-trigger'
+import { ViewersIndicator } from '@/components/viewers/viewers-indicator'
 
 export interface BreadcrumbItemType {
     label: string
@@ -18,9 +19,12 @@ export interface BreadcrumbItemType {
 interface BreadcrumbNavigationProps {
     items: BreadcrumbItemType[]
     showSearch?: boolean
+    showViewers?: boolean
 }
 
-export function BreadcrumbNavigation({ items, showSearch = true }: BreadcrumbNavigationProps) {
+export function BreadcrumbNavigation({ items, showSearch = true, showViewers = true }: BreadcrumbNavigationProps) {
+    const currentPageUrl = items[items.length - 1]?.href || ''
+    
     return (
         <div className="flex items-center gap-4 w-full">
             <Breadcrumb className="flex-shrink-0">
@@ -47,6 +51,14 @@ export function BreadcrumbNavigation({ items, showSearch = true }: BreadcrumbNav
                     )})}
                 </BreadcrumbList>
             </Breadcrumb>
+            
+            {showViewers && currentPageUrl && (
+                <ViewersIndicator 
+                    pageUrl={currentPageUrl}
+                    className="flex-shrink-0"
+                />
+            )}
+            
             <div className="flex-1" />
             {showSearch && (
                 <div className="w-full max-w-md flex-shrink-0">

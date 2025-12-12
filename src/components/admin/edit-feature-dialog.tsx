@@ -11,20 +11,21 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { MarkdownToolbar } from '@/components/ui/markdown-toolbar'
 import { useMarkdownEditor } from '@/hooks/use-markdown-editor'
-import ReactMarkdown from 'react-markdown'
+import { EnhancedMarkdown } from '@/components/ui/enhanced-markdown'
 
 interface EditFeatureDialogProps {
     featureId: string
     currentTitle: string
     currentDescription: string
     hasExternalWorkItem: boolean
+    open?: boolean
+    onOpenChange?: (open: boolean) => void
 }
 
 export function EditFeatureDialog({ 
@@ -32,11 +33,15 @@ export function EditFeatureDialog({
     currentTitle,
     currentDescription,
     hasExternalWorkItem,
+    open: externalOpen,
+    onOpenChange: externalOnOpenChange,
 }: EditFeatureDialogProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     
-    const [open, setOpen] = useState(false)
+    const [internalOpen, setInternalOpen] = useState(false)
+    const open = externalOpen !== undefined ? externalOpen : internalOpen
+    const setOpen = externalOnOpenChange || setInternalOpen
     const [title, setTitle] = useState(currentTitle)
     const [description, setDescription] = useState(currentDescription)
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -91,12 +96,6 @@ export function EditFeatureDialog({
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit
-                </Button>
-            </DialogTrigger>
             <DialogContent className="sm:max-w-[600px]">
                 <form onSubmit={handleSubmit}>
                     <DialogHeader>
@@ -144,12 +143,14 @@ export function EditFeatureDialog({
                                 </div>
                             </div>
                             {!showPreview && (
-                                <MarkdownToolbar onInsert={handleInsert} />
+                                <MarkdownToolbar onInsert={handleInsert} disabled={isSubmitting} />
                             )}
                             {showPreview ? (
-                                <div className="prose prose-sm max-w-none dark:prose-invert p-3 border rounded-md min-h-[200px]">
+                                <div className="p-3 border rounded-md min-h-[200px]">
                                     {description ? (
-                                        <ReactMarkdown>{description}</ReactMarkdown>
+                                        <EnhancedMarkdown className="prose prose-sm max-w-none dark:prose-invert [&>*]:text-foreground/90 dark:[&>*]:text-foreground/90">
+                                            {description}
+                                        </EnhancedMarkdown>
                                     ) : (
                                         <p className="text-muted-foreground italic">Nothing to preview</p>
                                     )}

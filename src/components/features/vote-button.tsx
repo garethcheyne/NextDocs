@@ -98,39 +98,120 @@ export function VoteButton({ featureId, initialVote, initialUpvotes, initialDown
         }
     }
 
+    const score = upvotes - downvotes
+    const scoreColor = score > 0 ? 'text-green-500' : score < 0 ? 'text-red-500' : 'text-muted-foreground'
+
     return (
-        <div className="space-y-2">
-            <div className="flex gap-2">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleVote('upvote')}
-                    disabled={isPending}
-                    className={cn(
-                        'gap-1.5',
-                        userVote === 'upvote' && 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
-                    )}
-                >
-                    <ArrowBigUp className={cn('w-4 h-4', userVote === 'upvote' && 'fill-current')} />
-                    {upvotes}
-                </Button>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleVote('downvote')}
-                    disabled={isPending}
-                    className={cn(
-                        'gap-1.5',
-                        userVote === 'downvote' && 'bg-red-100 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-400 dark:border-red-700'
-                    )}
-                >
-                    <ArrowBigDown className={cn('w-4 h-4', userVote === 'downvote' && 'fill-current')} />
-                    {downvotes}
-                </Button>
+        <div className="w-full max-w-xs lg:max-w-none">
+            {/* Mobile Layout (< lg) */}
+            <div className="lg:hidden">
+                <div className="flex items-center justify-center gap-4 p-3 rounded-lg bg-gradient-to-r from-primary/5 to-transparent">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleVote('upvote')}
+                        disabled={isPending}
+                        className={cn(
+                            'flex items-center gap-1 px-3 py-2 transition-all',
+                            userVote === 'upvote' 
+                                ? 'bg-green-500/20 text-green-600 border-green-500 shadow-sm' 
+                                : 'hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950/30'
+                        )}
+                        title="I like this feature idea"
+                    >
+                        <ArrowBigUp className={cn('w-4 h-4', userVote === 'upvote' && 'fill-current')} />
+                        <span className="font-bold">{upvotes}</span>
+                    </Button>
+                    
+                    <div className="text-center px-2">
+                        <div className={cn('text-2xl font-bold', scoreColor)}>
+                            {score > 0 ? '+' : ''}{score}
+                        </div>
+                        <p className="text-xs text-muted-foreground">Score</p>
+                    </div>
+                    
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleVote('downvote')}
+                        disabled={isPending}
+                        className={cn(
+                            'flex items-center gap-1 px-3 py-2 transition-all',
+                            userVote === 'downvote' 
+                                ? 'bg-red-500/20 text-red-600 border-red-500 shadow-sm' 
+                                : 'hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-950/30'
+                        )}
+                        title="I don't think this is needed"
+                    >
+                        <ArrowBigDown className={cn('w-4 h-4', userVote === 'downvote' && 'fill-current')} />
+                        <span className="font-bold">{downvotes}</span>
+                    </Button>
+                </div>
+                
+                {error && (
+                    <p className="text-sm text-red-600 dark:text-red-400 text-center mt-2">{error}</p>
+                )}
             </div>
-            {error && (
-                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-            )}
+
+            {/* Desktop Layout (>= lg) */}
+            <div className="hidden lg:flex flex-col items-center gap-4 p-4 rounded-lg border-2 bg-gradient-to-br from-primary/5 to-transparent">
+                {/* Score Display */}
+                <div className="text-center">
+                    <div className={cn('text-4xl font-bold mb-1', scoreColor)}>
+                        {score > 0 ? '+' : ''}{score}
+                    </div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        Community Score
+                    </p>
+                </div>
+
+                {/* Vote Buttons */}
+                <div className="flex gap-3 w-full">
+                    <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={() => handleVote('upvote')}
+                        disabled={isPending}
+                        className={cn(
+                            'flex-1 h-14 gap-2 font-semibold text-base transition-all',
+                            userVote === 'upvote' 
+                                ? 'bg-green-500/20 text-green-600 border-green-500 dark:bg-green-900/50 dark:text-green-400 dark:border-green-400 shadow-lg shadow-green-500/20' 
+                                : 'border-2 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950/30'
+                        )}
+                        title="I like this feature idea"
+                    >
+                        <ArrowBigUp className={cn('w-5 h-5', userVote === 'upvote' && 'fill-current')} />
+                        <span className="text-lg font-bold">{upvotes}</span>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={() => handleVote('downvote')}
+                        disabled={isPending}
+                        className={cn(
+                            'flex-1 h-14 gap-2 font-semibold text-base transition-all',
+                            userVote === 'downvote' 
+                                ? 'bg-red-500/20 text-red-600 border-red-500 dark:bg-red-900/50 dark:text-red-400 dark:border-red-400 shadow-lg shadow-red-500/20' 
+                                : 'border-2 hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-950/30'
+                        )}
+                        title="I don't think this is needed"
+                    >
+                        <ArrowBigDown className={cn('w-5 h-5', userVote === 'downvote' && 'fill-current')} />
+                        <span className="text-lg font-bold">{downvotes}</span>
+                    </Button>
+                </div>
+
+                {/* Vote Details */}
+                <div className="text-xs text-muted-foreground text-center">
+                    {userVote === 'upvote' && '✓ You support this'}
+                    {userVote === 'downvote' && '✓ You don\'t support this'}
+                    {!userVote && 'Cast your vote'}
+                </div>
+
+                {error && (
+                    <p className="text-sm text-red-600 dark:text-red-400 text-center">{error}</p>
+                )}
+            </div>
         </div>
     )
 }

@@ -43,10 +43,14 @@ model User {
   deletedComments       FeatureComment[] @relation("DeletedComments")
   featureFollowers      FeatureFollower[] @relation("FeatureFollowers")
   statusChanges         FeatureStatusHistory[] @relation("StatusChanges")
+  internalNotes         FeatureInternalNote[] @relation("InternalNotes")
   
   // Content Engagement Relations
   contentVotes          ContentVote[] @relation("ContentVotes")
   contentFollows        ContentFollow[] @relation("ContentFollows")
+  
+  // Page Viewer Relations
+  pageViewers           PageViewer[] @relation("PageViewers")
   
   // Analytics Relations
   analyticsEvents       AnalyticsEvent[] @relation("AnalyticsEvents")
@@ -487,6 +491,11 @@ model FeatureRequest {
   targetVersion   String?   // e.g., "v2.1.0"
   expectedDate    DateTime? // Expected completion date
   
+  // Admin Management
+  isPinned        Boolean   @default(false) // Highlight on main page
+  isArchived      Boolean   @default(false) // Hide from listings but keep history
+  commentsLocked  Boolean   @default(false) // Prevent further discussion
+  
   // User info
   createdBy       String    // User ID
   createdByName   String    // Cache for display
@@ -535,6 +544,7 @@ model FeatureRequest {
   comments        FeatureComment[]
   followers       FeatureFollower[]
   statusHistory   FeatureStatusHistory[]
+  internalNotes   FeatureInternalNote[] // Admin-only notes
   mergedInto      FeatureRequest? @relation("MergedRequests", fields: [mergedIntoId], references: [id])
   mergedIntoId    String?
   mergedRequests  FeatureRequest[] @relation("MergedRequests")
@@ -546,6 +556,8 @@ model FeatureRequest {
   @@index([lastActivityAt])
   @@index([voteCount])
   @@index([slug])
+  @@index([isPinned])
+  @@index([isArchived])
 }
 
 model FeatureVote {
@@ -843,4 +855,33 @@ model AnalyticsDailySummary {
   updatedAt       DateTime  @updatedAt
   
   @@index([date])
+}
+
+model FeatureInternalNote {
+  id              String    @id @default(uuid())
+  featureId       String
+  content         String    @db.Text
+  createdBy       String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  feature         FeatureRequest @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  creator         User           @relation("InternalNotes", fields: [createdBy], references: [id])
+  
+  @@index([featureId])
+  @@index([createdBy])
+}
+
+model PageViewer {
+  id        String    @id @default(uuid())
+  userId    String    // Always required since auth is mandatory
+  page      String    // e.g., "/features/awesome-feature"
+  lastSeen  DateTime  @default(now()) @updatedAt
+  createdAt DateTime  @default(now())
+  
+  user      User      @relation("PageViewers", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, page])
+  @@index([page])
+  @@index([lastSeen])
 }

@@ -86,8 +86,69 @@ export const authConfig = {
         const firstName = givenName || user.name?.split(' ')[0]
         const lastName = familyName || user.name?.split(' ').slice(1).join(' ')
         const fullName = firstName && lastName ? `${firstName} ${lastName}` : (user.name || user.email)
-        const avatarUrl = user.image
-        
+
+        // Check Azure AD group membership from token claims
+        const allowedGroups = process.env.ALLOWED_AD_GROUPS?.split(',').map(g => g.trim()).filter(Boolean)
+        if (allowedGroups && allowedGroups.length > 0) {
+          const userGroups = (profile as any)?.groups || []
+
+          console.log('🔍 Checking Azure AD group membership from token claims...')
+          console.log('👥 User groups:', userGroups)
+          console.log('🔑 Allowed groups:', allowedGroups)
+
+          // Helper function to check if a group matches a pattern (supports wildcards)
+          const groupMatches = (userGroup: any, pattern: any): boolean => {
+            if (pattern === userGroup) return true // Exact match
+            if (pattern.includes('*')) {
+              // Wildcard pattern support (e.g., "SGRP_CRM_Access_*")
+              const regexPattern = pattern
+                .replace(/[.+^${}()|[\]\\]/g, '\\$&') // Escape regex special chars
+                .replace(/\*/g, '.*') // Convert * to .*
+              return new RegExp(`^${regexPattern}$`).test(userGroup)
+            }
+            return false
+          }
+
+          // Check if user is in any allowed group (supports wildcards)
+          const hasAccess = allowedGroups.some((allowedGroup: any) =>
+            userGroups.some((userGroup: any) => groupMatches(userGroup, allowedGroup))
+          )
+
+          if (!hasAccess) {
+            console.log('❌ Access denied: User not in allowed groups')
+            console.log('   Required: One of', allowedGroups)
+            console.log('   User has:', userGroups)
+            return false
+          }
+
+          console.log('✅ Access granted: User in allowed group')
+        }
+
+        // Fetch user's profile photo from Microsoft Graph API
+        let avatarUrl = user.image
+        if (account.access_token) {
+          try {
+            console.log('📸 Fetching user avatar from Microsoft Graph...')
+            const photoResponse = await fetch('https://graph.microsoft.com/v1.0/me/photo/$value', {
+              headers: {
+                'Authorization': `Bearer ${account.access_token}`,
+              },
+            })
+
+            if (photoResponse.ok) {
+              const photoBlob = await photoResponse.arrayBuffer()
+              const base64Photo = Buffer.from(photoBlob).toString('base64')
+              const contentType = photoResponse.headers.get('content-type') || 'image/jpeg'
+              avatarUrl = `data:${contentType};base64,${base64Photo}`
+              console.log('✅ Successfully fetched user avatar')
+            } else {
+              console.log('ℹ️ No profile photo available:', photoResponse.status)
+            }
+          } catch (error) {
+            console.error('❌ Error fetching avatar:', error)
+          }
+        }
+
         console.log('🔐 Entra ID sign-in:', { oid, email: user.email, firstName, lastName, hasAvatar: !!avatarUrl })
 
         // Ensure user exists in database
@@ -122,7 +183,7 @@ export const authConfig = {
                 image: avatarUrl || existingUser.image,
               }
             })
-            
+
             if (existingUser.id !== user.id) {
               user.id = existingUser.id
             }

@@ -113,7 +113,8 @@ export async function syncRepositoryImagesUnified(
         // Format: img/{repo-slug}/{original-path}
         // Example: img/nextdocs/docs/_img/screenshot.png
         const localPath = path.join('img', repositorySlug, file.path)
-        const fullLocalPath = path.join(process.cwd(), 'public', localPath)
+        const publicDir = path.resolve('./public')
+        const fullLocalPath = path.join(publicDir, localPath)
 
         // Check if image needs syncing
         if (existingImage && existingImage.sha === file.sha) {

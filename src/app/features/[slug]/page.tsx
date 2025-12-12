@@ -14,9 +14,10 @@ import { CommentForm } from '@/components/features/comment-form'
 import { CommentItem } from '@/components/features/comment-item'
 import { StatusUpdateDialog } from '@/components/admin/status-update-dialog'
 import { EditFeatureDialog } from '@/components/admin/edit-feature-dialog'
+import { AdminMenubar } from '@/components/admin/admin-menubar'
 import { FeatureBanner } from '@/components/features/feature-banner'
 import { SyncCommentsButton } from '@/components/features/sync-comments-button'
-import ReactMarkdown from 'react-markdown'
+import { EnhancedMarkdown } from '@/components/ui/enhanced-markdown'
 
 export default async function FeatureRequestPage({
     params,
@@ -51,6 +52,14 @@ export default async function FeatureRequestPage({
             creator: {
                 select: { id: true, name: true, email: true, image: true },
             },
+            internalNotes: {
+                include: {
+                    creator: {
+                        select: { id: true, name: true, email: true },
+                    },
+                },
+                orderBy: { createdAt: 'desc' },
+            },
         },
     })
 
@@ -67,11 +76,13 @@ export default async function FeatureRequestPage({
     const userVoteType = userVote ? (userVote.voteType === 1 ? 'upvote' : 'downvote') : null
 
     const statusColors: Record<string, string> = {
-        PROPOSAL: 'bg-gray-500',
-        IN_PROGRESS: 'bg-blue-500',
+        PENDING: 'bg-yellow-500',
+        UNDER_REVIEW: 'bg-blue-500',
+        APPROVED: 'bg-purple-500',
+        IN_PROGRESS: 'bg-indigo-500',
         COMPLETED: 'bg-green-500',
         REJECTED: 'bg-red-500',
-        ON_HOLD: 'bg-yellow-500',
+        ON_HOLD: 'bg-orange-500',
     }
 
     // Fetch all categories for sidebar
@@ -96,6 +107,7 @@ export default async function FeatureRequestPage({
             <FeatureBanner
                 title={feature.title}
                 status={feature.status}
+                priority={feature.priority}
                 category={feature.category}
                 creator={feature.creator?.name || feature.createdByName || 'Anonymous'}
                 creatorImage={feature.creator?.image}
@@ -108,33 +120,44 @@ export default async function FeatureRequestPage({
             />
 
             {/* Main Container  */}
-            <div className="max-w-7xl mx-auto px-12">
+            <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-12">
+
+                {/* Admin Menubar */}
+                {(session?.user?.role === 'admin' || session?.user?.id === feature.createdBy) && (
+                    <AdminMenubar
+                        featureId={feature.id}
+                        isPinned={feature.isPinned || false}
+                        isArchived={feature.isArchived || false}
+                        commentsLocked={feature.commentsLocked || false}
+                        priority={feature.priority || 'medium'}
+                        currentTitle={feature.title}
+                        currentDescription={feature.description}
+                        hasExternalWorkItem={!!feature.externalId}
+                        currentStatus={feature.status}
+                        featureTitle={feature.title}
+                        featureDescription={feature.description}
+                        integrationType={(feature.category?.integrationType as 'github' | 'azure-devops') || null}
+                        autoCreateOnApproval={feature.category?.autoCreateOnApproval || false}
+                        hasExistingWorkItem={!!feature.externalId}
+                        userRole={session?.user?.role || null}
+                        isCreator={session?.user?.id === feature.createdBy}
+                        internalNotes={feature.internalNotes.map(note => ({
+                            id: note.id,
+                            content: note.content,
+                            createdAt: note.createdAt.toISOString(),
+                            creator: {
+                                id: note.creator.id,
+                                name: note.creator.name,
+                                email: note.creator.email
+                            }
+                        }))}
+                    />
+                )}
+
                 {/* Main Content */}
                 <div className="grid gap-8 lg:grid-cols-3">
                     {/* Feature Details - Main Column */}
                     <div className="lg:col-span-2 space-y-6">
-                        {/* Admin/Creator Actions */}
-                        {(session?.user?.role === 'admin' || session?.user?.id === feature.createdBy) && (
-                            <div className="flex justify-end gap-2">
-                                <EditFeatureDialog
-                                    featureId={feature.id}
-                                    currentTitle={feature.title}
-                                    currentDescription={feature.description}
-                                    hasExternalWorkItem={!!feature.externalId}
-                                />
-                                {session?.user?.role === 'admin' && (
-                                    <StatusUpdateDialog
-                                        featureId={feature.id}
-                                        currentStatus={feature.status}
-                                        featureTitle={feature.title}
-                                        featureDescription={feature.description}
-                                        integrationType={(feature.category?.integrationType as 'github' | 'azure-devops') || null}
-                                        autoCreateOnApproval={feature.category?.autoCreateOnApproval || false}
-                                        hasExistingWorkItem={!!feature.externalId}
-                                    />
-                                )}
-                            </div>
-                        )}
 
                         {/* Description */}
                         <Card>
@@ -142,9 +165,9 @@ export default async function FeatureRequestPage({
                                 <h2 className="text-xl font-semibold">Description</h2>
                             </CardHeader>
                             <CardContent>
-                                <div className="prose prose-sm max-w-none dark:prose-invert">
-                                    <ReactMarkdown>{feature.description}</ReactMarkdown>
-                                </div>
+                                <EnhancedMarkdown className="prose prose-sm max-w-none dark:prose-invert [&>*]:text-foreground/90 [&>h1]:text-foreground [&>h2]:text-foreground [&>h3]:text-foreground [&>strong]:text-foreground [&>code]:text-foreground [&>pre]:text-foreground">
+                                    {feature.description}
+                                </EnhancedMarkdown>
                             </CardContent>
                         </Card>
 
@@ -190,6 +213,7 @@ export default async function FeatureRequestPage({
 
                     {/* Sidebar */}
                     <div className="space-y-6">
+
                         {/* Work Item Link */}
                         {feature.externalId && feature.externalUrl && (
                             <Card className="border-brand-orange/50">
@@ -321,7 +345,7 @@ export default async function FeatureRequestPage({
                                                             <Badge
                                                                 className={`${statusColors[history.newStatus]} text-white text-xs`}
                                                             >
-                                                                {history.newStatus.replace('_', ' ')}
+                                                                {history.newStatus.replace('_', ' ').toLowerCase().replace(/^\w/, c => c.toUpperCase())}
                                                             </Badge>
                                                         </div>
                                                         <div className="text-xs text-foreground/60 mt-1">

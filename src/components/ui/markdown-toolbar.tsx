@@ -12,12 +12,18 @@ import {
   Minus
 } from 'lucide-react';
 import { Button } from './button';
+import { ImageUpload } from './image-upload';
 
 interface MarkdownToolbarProps {
   onInsert: (before: string, after?: string, placeholder?: string) => void;
+  disabled?: boolean;
 }
 
-export function MarkdownToolbar({ onInsert }: MarkdownToolbarProps) {
+export function MarkdownToolbar({ onInsert, disabled }: MarkdownToolbarProps) {
+  
+  const handleImageInsert = (markdownText: string) => {
+    onInsert(markdownText, '', '');
+  };
   const tools = [
     {
       icon: Bold,
@@ -77,10 +83,17 @@ export function MarkdownToolbar({ onInsert }: MarkdownToolbarProps) {
           onClick={tool.action}
           title={tool.label}
           className="h-8 w-8 p-0"
+          disabled={disabled}
         >
           <tool.icon className="h-4 w-4" />
         </Button>
       ))}
+      
+      {/* Image Upload */}
+      <div className="border-l pl-1 ml-1 relative">
+        <ImageUpload onImageInsert={handleImageInsert} disabled={disabled} />
+      </div>
+      
       <div className="ml-auto flex items-center">
         <span className="text-xs text-muted-foreground">Formatting tools</span>
       </div>

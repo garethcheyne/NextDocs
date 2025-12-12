@@ -185,7 +185,7 @@ export function SearchTrigger() {
                 />
             )}
 
-            <div className={`${isExpanded ? 'fixed top-12 left-1/2 -translate-x-1/2 w-[95vw] max-w-6xl z-50' : 'relative'}`}>
+            <div className={`${isExpanded ? 'fixed top-4 left-1/2 -translate-x-1/2 w-[95vw] max-w-6xl z-50' : 'relative'}`}>
                 {isExpanded && (
                     <div className="mb-4 text-center px-6 pt-6">
                         <h2 className="text-2xl font-bold gradient-text mb-1">
@@ -198,7 +198,21 @@ export function SearchTrigger() {
                 )}
 
                 <div className={`relative ${isExpanded ? 'px-6 pb-6' : ''}`}>
-                    <div className="relative">
+                    {/* Mobile: Icon Button */}
+                    <button
+                        onClick={() => {
+                            setIsExpanded(true)
+                            setIsOpen(true)
+                            setTimeout(() => inputRef.current?.focus(), 100)
+                        }}
+                        className="md:hidden h-9 w-9 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center"
+                        aria-label="Open search"
+                    >
+                        <Search className="h-4 w-4 text-muted-foreground" />
+                    </button>
+
+                    {/* Desktop: Full Search Bar */}
+                    <div className="hidden md:block relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
                         <Input
                             ref={inputRef}
@@ -240,49 +254,80 @@ export function SearchTrigger() {
                             </kbd>
                         </div>
                     </div>
+
+                    {/* Mobile: Expanded Search Input (shown when isExpanded) */}
+                    {isExpanded && (
+                        <div className="md:hidden relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+                            <Input
+                                ref={inputRef}
+                                type="text"
+                                placeholder="Search..."
+                                value={query}
+                                onChange={(e) => {
+                                    setQuery(e.target.value)
+                                    setIsOpen(true)
+                                }}
+                                onKeyDown={handleKeyDown}
+                                className="pl-9 pr-10 h-12 rounded-lg bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-brand-orange w-full text-base"
+                            />
+                            {query && (
+                                <button
+                                    onClick={() => {
+                                        setQuery('')
+                                        setResults([])
+                                    }}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center"
+                                    aria-label="Clear search"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Results Dropdown */}
                 {isOpen && (query || results.length > 0) && (
-                    <div className={`absolute top-full mt-2 rounded-lg shadow-lg overflow-hidden flex ${isExpanded
-                        ? 'w-full max-h-[calc(100vh-10rem)] bg-popover/95 backdrop-blur-xl border-border/50'
-                        : 'w-full max-h-96 bg-popover border backdrop-blur-xl'
+                    <div className={`absolute top-full mt-2 rounded-lg shadow-lg overflow-hidden ${isExpanded
+                        ? 'w-full max-h-[calc(100vh-12rem)] bg-popover/95 backdrop-blur-xl border-border/50 flex flex-col md:flex-row'
+                        : 'w-full max-h-96 bg-popover border backdrop-blur-xl flex'
                         }`}>
-                        <div className={`flex flex-col ${isExpanded ? 'w-1/2 border-r' : 'w-full'}`}>
+                        <div className={`flex flex-col ${isExpanded ? 'w-full md:w-1/2 md:border-r' : 'w-full'}`}>
                             {/* Filter Pills */}
-                            <div className="flex gap-2 p-3 border-b bg-transparent">
+                            <div className="flex gap-2 p-3 border-b bg-transparent overflow-x-auto">
                                 <button
                                     onClick={() => toggleFilter('document')}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border ${getFilterColor('document')}`}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border shrink-0 ${getFilterColor('document')}`}
                                 >
                                     {getFilterIcon('document')}
                                     <span>Docs</span>
                                 </button>
                                 <button
                                     onClick={() => toggleFilter('blog')}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border ${getFilterColor('blog')}`}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border shrink-0 ${getFilterColor('blog')}`}
                                 >
                                     {getFilterIcon('blog')}
                                     <span>Blog</span>
                                 </button>
                                 <button
                                     onClick={() => toggleFilter('api-spec')}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border ${getFilterColor('api-spec')}`}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border shrink-0 ${getFilterColor('api-spec')}`}
                                 >
                                     {getFilterIcon('api-spec')}
                                     <span>API</span>
                                 </button>
                                 <button
                                     onClick={() => toggleFilter('feature-request')}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border ${getFilterColor('feature-request')}`}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border shrink-0 ${getFilterColor('feature-request')}`}
                                 >
                                     {getFilterIcon('feature-request')}
                                     <span>Features</span>
                                 </button>
                             </div>
 
-                            {/* Keyboard Shortcuts Footer */}
-                            <div className="border-t px-3 py-2 bg-muted/30 text-xs text-muted-foreground flex items-center justify-between">
+                            {/* Keyboard Shortcuts Footer - Hidden on mobile */}
+                            <div className="hidden md:flex border-t px-3 py-2 bg-muted/30 text-xs text-muted-foreground items-center justify-between">
                                 <div className="flex gap-3">
                                     <span className="flex items-center gap-1">
                                         <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium">
@@ -309,6 +354,13 @@ export function SearchTrigger() {
                                     </span>
                                 )}
                             </div>
+
+                            {/* Mobile: Simple result count */}
+                            {results.length > 0 && (
+                                <div className="md:hidden border-t px-3 py-2 bg-muted/30 text-xs text-muted-foreground text-center font-medium">
+                                    {results.length} result{results.length === 1 ? '' : 's'}
+                                </div>
+                            )}
 
                             {/* Results with custom scrollbar */}
                             <div className="overflow-y-auto flex-1 custom-scrollbar">
@@ -381,9 +433,9 @@ export function SearchTrigger() {
                             </div>
                         </div>
 
-                        {/* Preview Panel - Shows when expanded */}
+                        {/* Preview Panel - Shows when expanded on desktop only */}
                         {isExpanded && hoveredResult && (
-                            <div className="w-1/2 p-6 overflow-y-auto custom-scrollbar bg-transparent">
+                            <div className="hidden md:block w-1/2 p-6 overflow-y-auto custom-scrollbar bg-transparent">
                                 <div className="mb-4">
                                     <div className="flex items-start justify-between gap-4 mb-2">
                                         <h3 className="text-lg font-semibold text-foreground">

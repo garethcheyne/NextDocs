@@ -1,4 +1,5 @@
 import { useRef, useCallback } from 'react';
+import { useImagePaste } from './use-image-paste';
 
 export function useMarkdownEditor(content: string, setContent: (content: string) => void) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -32,5 +33,33 @@ export function useMarkdownEditor(content: string, setContent: (content: string)
     [content, setContent]
   );
 
-  return { textareaRef, handleInsert };
+  const handleImageInsert = useCallback(
+    (markdownText: string) => {
+      const textarea = textareaRef.current;
+      if (!textarea) return;
+
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+
+      const newContent =
+        content.substring(0, start) +
+        markdownText +
+        content.substring(end);
+
+      setContent(newContent);
+
+      // Set cursor position after the inserted image
+      setTimeout(() => {
+        const newCursorPos = start + markdownText.length;
+        textarea.focus();
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+      }, 0);
+    },
+    [content, setContent]
+  );
+
+  // Enable image paste functionality
+  useImagePaste(textareaRef, { onImagePaste: handleImageInsert });
+
+  return { textareaRef, handleInsert, handleImageInsert };
 }
