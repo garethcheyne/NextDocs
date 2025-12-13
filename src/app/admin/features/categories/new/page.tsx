@@ -8,6 +8,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { CategoryIconUpload } from '@/components/ui/category-icon-upload'
+import { SidebarTrigger } from '@/components/ui/sidebar'
+import { Separator } from '@/components/ui/separator'
+import { ThemeToggle } from '@/components/theme-toggle'
+import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
+import { Toaster } from 'sonner'
 import {
   Card,
   CardContent,
@@ -24,6 +30,7 @@ export default function NewCategoryPage() {
     slug: '',
     description: '',
     icon: 'Box',
+    iconBase64: null as string | null,
     color: '#ff6b35',
     order: 0,
     enabled: true,
@@ -63,27 +70,41 @@ export default function NewCategoryPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <>
       {/* Header */}
-      <div>
-        <Link href="/admin/features">
-          <Button variant="ghost" size="sm" className="mb-4">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Features
-          </Button>
-        </Link>
-        <h1 className="text-3xl font-bold tracking-tight">New Application Category</h1>
-        <p className="text-muted-foreground mt-1">
-          Create a new application that users can request features for
-        </p>
-      </div>
+      <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
+        <SidebarTrigger className="-ml-1" />
+        <Separator orientation="vertical" className="mr-2 h-4" />
+        <BreadcrumbNavigation
+          items={[
+            { label: 'Admin', href: '/admin' },
+            { label: 'Features', href: '/admin/features' },
+            { label: 'Categories', href: '/admin/features' },
+            { label: 'New Category', href: '/admin/features/categories/new' },
+          ]}
+        />
+        <div className="ml-auto flex items-center gap-2">
+          <ThemeToggle />
+        </div>
+      </header>
+
+      {/* Page Content */}
+      <div className="flex-1 p-6 space-y-6 overflow-auto">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">New Application Category</h1>
+            <p className="text-gray-400 mt-2">
+              Create a new application that users can request features for
+            </p>
+          </div>
+        </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
-        <Card>
+        <Card className="hover:border-primary hover:shadow-md transition-all">
           <CardHeader>
             <CardTitle>Basic Information</CardTitle>
-            <CardDescription>General details about the application</CardDescription>
+            <CardDescription>General details about the category</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -121,6 +142,12 @@ export default function NewCategoryPage() {
                 rows={3}
               />
             </div>
+
+            <CategoryIconUpload
+              onImageChange={(iconBase64) => setFormData({ ...formData, iconBase64 })}
+              currentImage={formData.iconBase64}
+              disabled={isSaving}
+            />
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -203,6 +230,8 @@ export default function NewCategoryPage() {
           </Link>
         </div>
       </form>
-    </div>
+      </div>
+      <Toaster />
+    </>
   )
 }

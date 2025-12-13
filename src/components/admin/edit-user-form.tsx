@@ -78,8 +78,8 @@ export default function EditUserForm({ user }: { user: User }) {
                     </Button>
                 </Link>
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Edit User</h1>
-                    <p className="text-muted-foreground">Update user role and permissions</p>
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">Edit User</h1>
+                    <p className="text-gray-400 mt-2">Update user role and permissions</p>
                 </div>
             </div>
 

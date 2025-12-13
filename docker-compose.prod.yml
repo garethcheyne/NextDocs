@@ -2,7 +2,7 @@
 # Usage: docker-compose -f docker-compose.prod.yml up -d
 
 services:
-  # Production Next.js application
+  # Next.js application (production by default, can be overridden for development)
   app:
     env_file:
       - .env
@@ -15,7 +15,7 @@ services:
     ports:
       - "8101:8100"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=${NODE_ENV:-production}
       - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/nextdocs
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
       - NEXTAUTH_URL=${NEXTAUTH_URL:-https://docs.harveynorman.com}

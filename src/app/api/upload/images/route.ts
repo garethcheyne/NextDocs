@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
         const filepath = join(uploadsDir, filename)
         await writeFile(filepath, buffer)
 
-        // Return the URL
-        const imageUrl = `/uploads/images/${filename}`
+        // Return the URL using the API route for serving images
+        const imageUrl = `/api/images/${filename}`
 
         return NextResponse.json({ 
             success: true, 

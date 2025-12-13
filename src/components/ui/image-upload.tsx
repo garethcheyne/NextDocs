@@ -169,7 +169,7 @@ export function ImageUpload({ onImageInsert, disabled }: ImageUploadProps) {
             </Dialog>
 
             {/* Hidden File Input */}
-            <input
+            <Input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"

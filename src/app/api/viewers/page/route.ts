@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db/prisma'
 export async function GET(request: NextRequest) {
   try {
     const session = await auth()
-    
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -13,19 +13,20 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const { searchParams } = new URL(request.url)
-    const page = searchParams.get('page')
-    
-    if (!page) {
+    const url = request.nextUrl.searchParams.get('url')
+
+    if (!url) {
       return NextResponse.json(
         { error: 'Page URL is required' },
         { status: 400 }
       )
     }
 
+    const page = decodeURIComponent(url)
+
     // Get viewers who have been active in the last 5 minutes
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
-    
+
     const viewers = await prisma.pageViewer.findMany({
       where: {
         page: page,

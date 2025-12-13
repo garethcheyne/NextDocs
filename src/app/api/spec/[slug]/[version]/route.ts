@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { readFile } from 'fs/promises'
 import path from 'path'
 import { prisma } from '@/lib/db/prisma'
+import { auth } from '@/lib/auth/auth'
 
 interface RouteParams {
   params: Promise<{
@@ -12,6 +13,12 @@ interface RouteParams {
 
 export async function GET(request: Request, { params }: RouteParams) {
   try {
+    // Check authentication
+    const session = await auth()
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { slug, version } = await params
 
     // Find the API spec

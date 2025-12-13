@@ -3,8 +3,10 @@
 import Link from 'next/link'
 import { Lightbulb, Plus, Calendar, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { VoteButton } from '@/components/features/vote-button'
+import { StatusBadge } from './status-badge'
+import { PriorityBadge } from './priority-badge'
+import { CategoryBadge } from './category-badge'
 
 interface FeatureBannerProps {
     totalRequests?: number
@@ -13,7 +15,7 @@ interface FeatureBannerProps {
     title?: string
     status?: string
     priority?: string | null
-    category?: { name: string; color?: string | null } | null
+    category?: { id: string; name: string; color?: string | null; icon?: string | null; iconBase64?: string | null } | null
     creator?: string
     creatorImage?: string | null
     createdAt?: Date
@@ -22,23 +24,6 @@ interface FeatureBannerProps {
     downvotes?: number
     featureId?: string
     userVoteType?: 'upvote' | 'downvote' | null
-}
-
-const statusColors: Record<string, string> = {
-    PENDING: 'bg-yellow-500',
-    UNDER_REVIEW: 'bg-blue-500',
-    APPROVED: 'bg-purple-500',
-    IN_PROGRESS: 'bg-indigo-500',
-    COMPLETED: 'bg-green-500',
-    REJECTED: 'bg-red-500',
-    ON_HOLD: 'bg-orange-500',
-}
-
-const priorityColors: Record<string, string> = {
-    low: 'bg-gray-500',
-    medium: 'bg-blue-500',
-    high: 'bg-orange-500',
-    critical: 'bg-red-500',
 }
 
 export function FeatureBanner({
@@ -67,21 +52,12 @@ export function FeatureBanner({
                             <div className="flex-1 space-y-4 w-full">
                                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">{title}</h1>
                                 <div className="flex items-center gap-3">
-                                    {status && (
-                                        <Badge className={`${statusColors[status]} text-white`}>
-                                            {status.replace('_', ' ').toLowerCase().replace(/^\w/, c => c.toUpperCase())}
-                                        </Badge>
+                                    {category && typeof category === 'object' && category.name && (
+                                        <CategoryBadge category={category} />
                                     )}
-                                    {priority && (
-                                        <Badge className={`${priorityColors[priority]} text-white`}>
-                                            {priority.charAt(0).toUpperCase() + priority.slice(1)} Priority
-                                        </Badge>
-                                    )}
-                                    {category && (
-                                        <Badge variant="outline" style={{ borderColor: category.color || undefined }}>
-                                            {category.name}
-                                        </Badge>
-                                    )}
+                                    {status && <StatusBadge status={status} />}
+                                    {priority && <PriorityBadge priority={priority} />}
+
                                 </div>
                                 <div className="flex items-center gap-4 text-sm text-foreground/70 dark:text-foreground/80">
                                     {creator && (
@@ -101,7 +77,11 @@ export function FeatureBanner({
                                     {createdAt && (
                                         <div className="flex items-center gap-1">
                                             <Calendar className="w-4 h-4" />
-                                            {new Date(createdAt).toLocaleDateString()}
+                                            {new Date(createdAt).toLocaleDateString('en-US', {
+                                                year: 'numeric',
+                                                month: '2-digit',
+                                                day: '2-digit'
+                                            })}
                                         </div>
                                     )}
                                 </div>

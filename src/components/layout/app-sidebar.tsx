@@ -521,7 +521,7 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                             <SidebarGroupContent>
                                 <SidebarMenu>
                                     <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={currentPath === '/admin' || (currentPath.startsWith('/admin') && !currentPath.match(/\/admin\/(users|repositories|features|analytics)/))}>
+                                        <SidebarMenuButton asChild isActive={currentPath === '/admin'}>
                                             <Link href="/admin">
                                                 <Activity className="w-4 h-4" />
                                                 <span>Dashboard</span>

@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
 import { headers } from 'next/headers'
+import { auth } from '@/lib/auth/auth'
 
 export async function POST(req: NextRequest) {
   try {
+    // Check authentication
+    const session = await auth()
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const body = await req.json()
     const headersList = await headers()
     
@@ -30,7 +37,19 @@ export async function POST(req: NextRequest) {
     }
     
     // Extract request metadata
-    const ipAddress = headersList.get('x-forwarded-for') || headersList.get('x-real-ip')
+    const forwardedFor = headersList.get('x-forwarded-for')
+    const realIp = headersList.get('x-real-ip')
+    
+    // Extract the real client IP (first IP in x-forwarded-for, ignore Cloudflare proxies)
+    let ipAddress: string | null = null
+    if (forwardedFor) {
+      // x-forwarded-for format: "client_ip, proxy1_ip, proxy2_ip"
+      // Take only the first IP (real client IP)
+      ipAddress = forwardedFor.split(',')[0].trim()
+    } else if (realIp) {
+      ipAddress = realIp
+    }
+    
     const userAgent = headersList.get('user-agent')
     const referrer = headersList.get('referer')
     

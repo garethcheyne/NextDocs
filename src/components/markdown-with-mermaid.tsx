@@ -18,6 +18,7 @@ import { Maximize2, Copy, Check, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { Input } from '@/components/ui/input'
 
 // Code block component with copy functionality and syntax highlighting
 function CodeBlock({ language, children }: { language: string; children: string }) {
@@ -513,11 +514,11 @@ export function MarkdownWithMermaid({ children, className, repositorySlug, docum
             // Task list checkbox
             if (type === 'checkbox') {
                 return (
-                    <input
+                    <Input
                         type="checkbox"
                         checked={checked}
                         disabled={disabled}
-                        className="mr-2 rounded border-border"
+                        className="mr-2 rounded border-border w-4 h-4"
                         readOnly
                         aria-label="Task list item"
                     />

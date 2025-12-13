@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(npm run dev:stop:*)",
+      "Bash(docker exec:*)",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec:*)",
+      "Bash(docker restart:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker-compose:*)",
+      "Bash(timeout 30 sh -c 'until docker logs nextdocs-app-dev 2>&1 | grep -q \"\"Ready in\"\"; do sleep 1; done && echo \"\"✅ Next.js is ready!\"\"')",
+      "Bash(npm run update:*)"
+    ]
+  }
+}

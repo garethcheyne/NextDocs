@@ -65,6 +65,7 @@ export const authConfig = {
 
         // Use oid (Object ID) as the unique identifier for Entra ID users
         const oid = (profile as any).oid
+        const groups = (profile as any).groups || []
 
         return {
           id: oid || profile.sub,
@@ -72,6 +73,7 @@ export const authConfig = {
           email: profile.email,
           image: undefined,
           role: (profile as any).roles?.[0] || 'user',
+          groups: groups,
         }
       },
     }),
@@ -221,11 +223,132 @@ export const authConfig = {
       return true
     },
 
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, profile, trigger }) {
       if (user) {
         token.id = user.id
         token.role = (user as any).role
         token.provider = account?.provider
+
+        // Store Azure AD groups for role-based content access
+        if (account?.provider === 'microsoft-entra-id') {
+          let groups = (profile as any)?.groups || []
+
+          // If groups are not in token claims, try to fetch from Microsoft Graph using app credentials
+          if (groups.length === 0 && (profile as any)?.oid) {
+            try {
+              console.log('📡 Fetching user groups from Microsoft Graph API using app credentials...')
+
+              // First get an app-only access token
+              const tokenResponse = await fetch(`https://login.microsoftonline.com/${process.env.AZURE_GRAPH_TENANT_ID}/oauth2/v2.0/token`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                  client_id: process.env.AZURE_GRAPH_CLIENT_ID!,
+                  client_secret: process.env.AZURE_GRAPH_CLIENT_SECRET!,
+                  scope: 'https://graph.microsoft.com/.default',
+                  grant_type: 'client_credentials'
+                })
+              })
+
+              if (tokenResponse.ok) {
+                const tokenData = await tokenResponse.json()
+
+                // Now fetch user groups using the user's OID
+                const userOid = (profile as any).oid
+                const groupsResponse = await fetch(`https://graph.microsoft.com/v1.0/users/${userOid}/memberOf`, {
+                  headers: {
+                    'Authorization': `Bearer ${tokenData.access_token}`,
+                    'Content-Type': 'application/json'
+                  }
+                })
+
+                if (groupsResponse.ok) {
+                  const groupsData = await groupsResponse.json()
+                  groups = groupsData.value
+                    ?.filter((group: any) => group['@odata.type'] === '#microsoft.graph.group')
+                    ?.map((group: any) => group.displayName || group.id) || []
+                  console.log('✅ Successfully fetched user groups from Graph API:', groups.length)
+                  console.log('👥 User groups:', groups)
+                } else {
+                  console.log('⚠️ Failed to fetch user groups from Graph API:', groupsResponse.status, await groupsResponse.text())
+                }
+              } else {
+                console.log('⚠️ Failed to get app token for Graph API:', tokenResponse.status, await tokenResponse.text())
+              }
+            } catch (error) {
+              console.error('❌ Error fetching groups from Graph API:', error)
+            }
+          }
+
+          // Store groups in database to avoid JWT size issues
+          try {
+            const now = new Date()
+            
+            // Ensure user.id exists (it should at this point in auth flow)
+            const userId = user.id as string
+            if (!userId) {
+              throw new Error('User ID is missing')
+            }
+            
+            // First, get existing groups to see what needs to be updated
+            const existingGroups = await prisma.userGroup.findMany({
+              where: { userId },
+              select: { groupName: true }
+            })
+            const existingGroupNames = new Set(existingGroups.map(g => g.groupName))
+            
+            // Remove groups that are no longer present
+            const groupsToRemove = existingGroupNames
+            const currentGroupsSet = new Set(groups)
+            for (const existingGroup of groupsToRemove) {
+              if (!currentGroupsSet.has(existingGroup)) {
+                await prisma.userGroup.deleteMany({
+                  where: { 
+                    userId,
+                    groupName: existingGroup
+                  }
+                })
+              }
+            }
+            
+            // Upsert each group individually to handle duplicates gracefully
+            for (const group of groups) {
+              await prisma.userGroup.upsert({
+                where: {
+                  userId_groupName: {
+                    userId,
+                    groupName: group
+                  }
+                },
+                update: {
+                  lastUpdated: now
+                },
+                create: {
+                  userId,
+                  groupName: group,
+                  lastUpdated: now
+                }
+              })
+            }
+            
+            console.log(`💾 Synced ${groups.length} groups in database for user ${userId}`)
+            
+            // Only store a minimal groups indicator in token
+            token.groupsCount = groups.length
+            token.groupsUpdated = now.toISOString()
+          } catch (error) {
+            console.error('❌ Error storing groups in database:', error)
+            // Fallback: store limited groups in token if database fails
+            token.groups = groups.slice(0, 5) // Only store first 5 groups as fallback
+            token.groupsCount = Math.min(groups.length, 5)
+            token.groupsUpdated = new Date().toISOString()
+          }
+        } else if ((user as any).groups) {
+          // For non-Azure AD providers, store in token (usually fewer groups)
+          token.groups = (user as any).groups
+        }
 
         // For SSO logins, fetch the role from database since it's not in the provider data
         if (account?.provider && account.provider !== 'credentials') {
@@ -242,6 +365,10 @@ export const authConfig = {
           }
         }
       }
+
+      // For existing tokens, we don't need to do anything as groups are in database
+      // Groups will be fetched on-demand when needed
+
       return token
     },
 
@@ -251,6 +378,15 @@ export const authConfig = {
         session.user.id = token.id as string
         session.user.role = token.role as string
         session.user.provider = token.provider as string
+        
+        // For Azure AD users, groups are stored in database, not in session
+        // For other providers, include groups from token if they exist
+        if (token.provider === 'microsoft-entra-id') {
+          (session.user as any).groupsCount = token.groupsCount || 0;
+          (session.user as any).groupsUpdated = token.groupsUpdated;
+        } else {
+          (session.user as any).groups = token.groups as string[] || [];
+        }
       }
       return session
     },

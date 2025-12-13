@@ -1,6 +1,8 @@
 'use client'
 
-import { ArrowUp, MessageSquare, Filter, Lightbulb, Calendar, User } from 'lucide-react'
+import { useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { ArrowUp, MessageSquare, Filter, Lightbulb, Calendar, User, Settings, GitBranch } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import Link from 'next/link'
@@ -15,6 +17,11 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { FeatureBanner } from '@/components/features/feature-banner'
 import { VoteButton } from '@/components/features/vote-button'
+import { StatusBadge } from '@/components/features/status-badge'
+import { PriorityBadge } from '@/components/features/priority-badge'
+import { CategoryBadge } from '@/components/features/category-badge'
+import { ReclassifyDialog } from '@/components/admin/reclassify-dialog'
+import { MergeDialog } from '@/components/admin/merge-dialog'
 
 interface Feature {
     id: string
@@ -27,22 +34,28 @@ interface Feature {
     commentCount: number
     createdAt: Date
     createdByName: string
+    externalId: string | null
     creator?: {
         name: string | null
         email: string | null
         image: string | null
     } | null
     category: {
+        id: string
         name: string
         slug: string
         icon: string | null
+        iconBase64: string | null
         color: string | null
+        integrationType: string | null
     } | null
-        tagIds: string[]
+    tagIds: string[]
     votes: Array<{
         id: string
         voteType: number
     }>
+    upvotes: number
+    downvotes: number
 }
 
 interface FeatureCategory {
@@ -62,26 +75,18 @@ interface FeaturesClientProps {
 }
 
 export function FeaturesClient({ features, categories, params }: FeaturesClientProps) {
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'proposal': return 'bg-gray-500/10 text-gray-700 dark:text-gray-300 border-gray-500/20'
-            case 'approved': return 'bg-green-500/10 text-green-700 dark:text-green-300 border-green-500/20'
-            case 'in-progress': return 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20'
-            case 'completed': return 'bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20'
-            case 'declined': return 'bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/20'
-            default: return 'bg-muted text-muted-foreground'
-        }
-    }
+    const { data: session } = useSession()
+    const [reclassifyDialog, setReclassifyDialog] = useState<{
+        open: boolean
+        feature: Feature | null
+    }>({ open: false, feature: null })
 
-    const getPriorityColor = (priority: string | null) => {
-        switch (priority) {
-            case 'critical': return 'bg-red-500/10 text-red-700 dark:text-red-300'
-            case 'high': return 'bg-orange-500/10 text-orange-700 dark:text-orange-300'
-            case 'medium': return 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-300'
-            case 'low': return 'bg-green-500/10 text-green-700 dark:text-green-300'
-            default: return 'bg-muted text-muted-foreground'
-        }
-    }
+    const [mergeDialog, setMergeDialog] = useState<{
+        open: boolean
+        feature: Feature | null
+    }>({ open: false, feature: null })
+
+    const isAdmin = session?.user?.role && ['admin', 'super_admin'].includes(session.user.role)
 
     return (
         <>
@@ -90,11 +95,40 @@ export function FeaturesClient({ features, categories, params }: FeaturesClientP
                 completedRequests={features.filter(f => f.status === 'completed').length}
             />
 
-            <div className="max-w-7xl mx-auto px-12 py-6">
+            <div className="max-w-7xl mx-auto p-2 sm:px-6 lg:px-12 py-6">
 
 
                 {/* Filters Bar */}
                 <div className="flex items-center gap-3 mb-6">
+                    {/* Category Filter */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm">
+                                <Filter className="w-4 h-4 mr-2" />
+                                Category: {params.category ? categories.find(c => c.id === params.category)?.name || 'Unknown' : 'All'}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start">
+                            <DropdownMenuLabel>Filter by Category</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem asChild>
+                                <Link href={`/features?${params.status ? `status=${params.status}` : ''}${params.sort ? `&sort=${params.sort}` : ''}`} className="cursor-pointer">
+                                    All Categories
+                                </Link>
+                            </DropdownMenuItem>
+                            {categories.map((category) => (
+                                <DropdownMenuItem key={category.id} asChild>
+                                    <Link
+                                        href={`/features?category=${category.id}${params.status ? `&status=${params.status}` : ''}${params.sort ? `&sort=${params.sort}` : ''}`}
+                                        className="cursor-pointer"
+                                    >
+                                        {category.name}
+                                    </Link>
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
                     {/* Status Filter */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -179,7 +213,7 @@ export function FeaturesClient({ features, categories, params }: FeaturesClientP
 
                 {/* Feature List */}
                 <div className="space-y-4">
-                    {features.map((feature) => {
+                    {features.filter(Boolean).map((feature) => {
                         const userVote = feature.votes?.[0]
                         const userVoteType = userVote ? (userVote.voteType === 1 ? 'upvote' : 'downvote') : null
 
@@ -187,46 +221,37 @@ export function FeaturesClient({ features, categories, params }: FeaturesClientP
                             <Card key={feature.id} className="hover:border-brand-orange/50 transition-colors">
                                 <CardContent className="p-4">
                                     <div className="flex gap-4">
-                                        {/* Vote Button */}
-                                        <div className="flex flex-col items-center min-w-[60px]">
-                                            <VoteButton
-                                                featureId={feature.id}
-                                                initialVote={userVoteType}
-                                                initialUpvotes={Math.max(0, Math.floor(feature.voteCount * 0.8))}
-                                                initialDownvotes={Math.max(0, Math.floor(feature.voteCount * 0.2))}
-                                            />
-                                        </div>
-
                                         {/* Content */}
                                         <Link href={`/features/${feature.slug}`} className="flex-1 min-w-0">
                                             <div>
-                                <h3 className="text-base font-semibold mb-1 hover:text-brand-orange cursor-pointer transition-colors">
-                                    {feature.title}
-                                </h3>
-                                <p className="text-sm text-foreground/80 dark:text-foreground/70 line-clamp-2 mb-2">
-                                    {feature.description}
-                                </p>                                                {/* Meta */}
+                                                <h3 className="text-base font-semibold mb-1 text-brand-orange hover:text-orange-600 cursor-pointer transition-colors">
+                                                    {feature.title}
+                                                </h3>
+
+
+                                                <p className="text-sm text-foreground/80 dark:text-foreground/70 line-clamp-2 mb-2">
+                                                    {feature.description}
+                                                </p>
+                                                {/* Meta */}
                                                 <div className="flex flex-wrap items-center gap-2 text-xs">
-                                                    <span className={`px-2 py-0.5 rounded border ${getStatusColor(feature.status)}`}>
-                                                        {feature.status}
-                                                    </span>
+                                                    {feature.category && typeof feature.category === 'object' && feature.category.id && feature.category.name && (
+                                                        <CategoryBadge category={feature.category} />
+                                                    )}
+                                                    <StatusBadge status={feature.status} />
+                                                    <PriorityBadge priority={feature.priority} />
 
-                                                    {feature.priority && (
-                                                        <span className={`px-2 py-0.5 rounded ${getPriorityColor(feature.priority)}`}>
-                                                            {feature.priority}
-                                                        </span>
+                                                    {/* Show merged indicator */}
+                                                    {feature.status === 'merged' && (
+                                                        <Badge variant="outline" className="text-xs">
+                                                            Merged
+                                                        </Badge>
                                                     )}
 
-                                                    {feature.category && (
-                                                        <span className="text-foreground/70 dark:text-foreground/80">
-                                                            {feature.category.name}
-                                                        </span>
-                                                    )}
 
                                                     <span className="text-foreground/70 dark:text-foreground/80 flex items-center gap-1">
                                                         {feature.creator?.image ? (
-                                                            <img 
-                                                                src={feature.creator.image} 
+                                                            <img
+                                                                src={feature.creator.image}
                                                                 alt={feature.creator.name || 'User'}
                                                                 className="w-4 h-4 rounded-full object-cover"
                                                             />
@@ -238,7 +263,11 @@ export function FeaturesClient({ features, categories, params }: FeaturesClientP
 
                                                     <span className="text-foreground/70 dark:text-foreground/80 flex items-center gap-1">
                                                         <Calendar className="w-3 h-3" />
-                                                        {new Date(feature.createdAt).toLocaleDateString()}
+                                                        {new Date(feature.createdAt).toLocaleDateString('en-US', {
+                                                            year: 'numeric',
+                                                            month: '2-digit',
+                                                            day: '2-digit'
+                                                        })}
                                                     </span>
 
                                                     <span className="flex items-center gap-1 text-xs">
@@ -254,6 +283,41 @@ export function FeaturesClient({ features, categories, params }: FeaturesClientP
                                                 </div>
                                             </div>
                                         </Link>
+
+                                        {/* Admin Actions */}
+                                        {isAdmin && feature.status !== 'merged' && (
+                                            <div className="flex flex-col items-center justify-start min-w-[40px] ml-2 gap-1">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setReclassifyDialog({ open: true, feature })}
+                                                    className="h-6 w-8 p-0 text-muted-foreground hover:text-foreground"
+                                                    title="Reclassify category"
+                                                >
+                                                    <Settings className="w-3 h-3" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setMergeDialog({ open: true, feature })}
+                                                    className="h-6 w-8 p-0 text-muted-foreground hover:text-foreground"
+                                                    title="Merge with another feature"
+                                                >
+                                                    <GitBranch className="w-3 h-3" />
+                                                </Button>
+                                            </div>
+                                        )}
+
+                                        {/* Vote Button - Right Side Vertical Stack */}
+                                        <div className="flex flex-col items-center justify-center min-w-[50px] ml-2">
+                                            <VoteButton
+                                                featureId={feature.id}
+                                                initialVote={userVoteType}
+                                                initialUpvotes={feature.upvotes}
+                                                initialDownvotes={feature.downvotes}
+                                                compact={true}
+                                            />
+                                        </div>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -273,6 +337,26 @@ export function FeaturesClient({ features, categories, params }: FeaturesClientP
                         </Card>
                     )}
                 </div>
+
+                {/* Reclassify Dialog */}
+                {reclassifyDialog.open && reclassifyDialog.feature && (
+                    <ReclassifyDialog
+                        feature={reclassifyDialog.feature}
+                        categories={categories}
+                        open={reclassifyDialog.open}
+                        onOpenChange={(open) => setReclassifyDialog({ open, feature: null })}
+                    />
+                )}
+
+                {/* Merge Dialog */}
+                {mergeDialog.open && mergeDialog.feature && (
+                    <MergeDialog
+                        sourceFeature={mergeDialog.feature}
+                        availableFeatures={features}
+                        open={mergeDialog.open}
+                        onOpenChange={(open) => setMergeDialog({ open, feature: null })}
+                    />
+                )}
             </div>
         </>
     )

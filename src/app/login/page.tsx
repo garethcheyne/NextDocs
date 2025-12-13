@@ -78,20 +78,18 @@ function LoginForm() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-
-              <div className="w-20 h-20 flex items-center justify-center">
-                <ThemeAwareLogo
-                  width={80}
-                  height={80}
-                  className="drop-shadow-2xl drop-shadow-brand-orange/50"
+              <div className="w-32 h-32 flex items-center justify-center">
+                <img
+                  src="/img/cat_logo.png"
+                  alt="Documentation Platform"
+                  className="w-28 h-28 object-contain drop-shadow-2xl"
                 />
-
               </div>
             </div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">
-              Wiki
+              Documentation Platform
             </h1>
-            <p className="text-sm text-gray-400 mt-1">Commercial Apps Team</p>
+            <p className="text-sm text-gray-400 mt-1">Commercial Apps Documentation</p>
           </div>
 
           <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl shadow-2xl">
@@ -100,7 +98,7 @@ function LoginForm() {
                 Sign In
               </CardTitle>
               <CardDescription className="text-gray-400">
-                Choose your preferred authentication method
+                Sign in to access documentation and resources
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -134,95 +132,7 @@ function LoginForm() {
                 )}
               </Button>
 
-              {/* Toggle for local login */}
-              {!showLocalLogin && (
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      console.log('Admin Sign In clicked')
-                      setShowLocalLogin(true)
-                    }}
-                    className="text-xs text-gray-500 hover:text-brand-orange transition-colors cursor-pointer underline decoration-dotted"
-                  >
-                    Admin Sign In
-                  </button>
-                </div>
-              )}
 
-              {/* Collapsible Local Login */}
-              {showLocalLogin && (
-                <>
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-700"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-4 bg-gray-900/40 text-gray-400">
-                        or use local credentials
-                      </span>
-                    </div>
-                  </div>
-
-                  <form onSubmit={handleLocalLogin} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email" className="text-gray-300">
-                        Email
-                      </Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="admin@harveynorman.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        disabled={isLoading}
-                        required
-                        className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-brand-orange"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="password" className="text-gray-300">
-                          Password
-                        </Label>
-                        <Link
-                          href="/forgot-password"
-                          className="text-sm text-brand-orange hover:text-orange-400 transition-colors"
-                        >
-                          Forgot?
-                        </Link>
-                      </div>
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        disabled={isLoading}
-                        required
-                        className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-brand-orange"
-                      />
-                    </div>
-
-                    <Button
-                      type="submit"
-                      variant="outline"
-                      disabled={isLoading}
-                      className="w-full border-gray-700 bg-gray-800/30 text-gray-300 hover:bg-gray-800 hover:text-white"
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Signing in...
-                        </>
-                      ) : (
-                        'Sign in with password'
-                      )}
-                    </Button>
-                  </form>
-                </>
-              )}
 
               <div className="pt-4 text-center">
                 <Link

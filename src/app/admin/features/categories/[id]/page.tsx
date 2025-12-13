@@ -8,6 +8,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { CategoryIconUpload } from '@/components/ui/category-icon-upload'
+import { SidebarTrigger } from '@/components/ui/sidebar'
+import { Separator } from '@/components/ui/separator'
+import { ThemeToggle } from '@/components/theme-toggle'
+import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
+import { Toaster } from 'sonner'
 import {
   Card,
   CardContent,
@@ -39,6 +45,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
     slug: '',
     description: '',
     icon: '',
+    iconBase64: null as string | null,
     color: '#ff6b35',
     order: 0,
     enabled: true,
@@ -60,6 +67,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
         slug: data.category.slug,
         description: data.category.description || '',
         icon: data.category.icon || '',
+        iconBase64: data.category.iconBase64 || null,
         color: data.category.color || '#ff6b35',
         order: data.category.order || 0,
         enabled: data.category.enabled,
@@ -145,19 +153,30 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
   }
 
   return (
-    <div className="space-y-6">
+    <>
       {/* Header */}
-      <div>
-        <Link href="/admin/features">
-          <Button variant="ghost" size="sm" className="mb-4">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Features
-          </Button>
-        </Link>
-        <div className="flex items-start justify-between">
+      <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
+        <SidebarTrigger className="-ml-1" />
+        <Separator orientation="vertical" className="mr-2 h-4" />
+        <BreadcrumbNavigation
+          items={[
+            { label: 'Admin', href: '/admin' },
+            { label: 'Features', href: '/admin/features' },
+            { label: 'Categories', href: '/admin/features' },
+            { label: 'Edit Category', href: `/admin/features/categories/${resolvedParams.id}` },
+          ]}
+        />
+        <div className="ml-auto flex items-center gap-2">
+          <ThemeToggle />
+        </div>
+      </header>
+
+      {/* Page Content */}
+      <div className="flex-1 p-6 space-y-6 overflow-auto">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Edit Category</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">Edit Category</h1>
+            <p className="text-gray-400 mt-2">
               {category._count.featureRequests} feature request(s) in this category
             </p>
           </div>
@@ -186,13 +205,13 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
                   <p className="text-sm font-medium">What would you like to do with the feature requests?</p>
                   <div className="space-y-2">
                     <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-accent">
-                      <input
+                      <Input
                         type="radio"
                         name="deleteAction"
                         value="orphan"
                         checked={deleteAction === 'orphan'}
                         onChange={(e) => setDeleteAction(e.target.value as 'orphan' | 'delete')}
-                        className="mt-0.5"
+                        className="mt-0.5 w-4 h-4"
                       />
                       <div>
                         <div className="font-medium">Orphan requests</div>
@@ -202,13 +221,13 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
                       </div>
                     </label>
                     <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-accent">
-                      <input
+                      <Input
                         type="radio"
                         name="deleteAction"
                         value="delete"
                         checked={deleteAction === 'delete'}
                         onChange={(e) => setDeleteAction(e.target.value as 'orphan' | 'delete')}
-                        className="mt-0.5"
+                        className="mt-0.5 w-4 h-4"
                       />
                       <div>
                         <div className="font-medium text-destructive">Delete all requests</div>
@@ -234,29 +253,28 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
             </AlertDialogContent>
           </AlertDialog>
         </div>
-      </div>
 
-      {/* Integration Settings Link */}
-      <Card>
-        <CardHeader>
-          <CardTitle>DevOps Integration</CardTitle>
-          <CardDescription>Configure GitHub or Azure DevOps integration for this category</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Link href={`/admin/features/categories/${resolvedParams.id}/integrations`}>
-            <Button variant="outline">
-              Configure Integration Settings
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
+        {/* Integration Settings Link */}
+        <Card className="hover:border-primary hover:shadow-md transition-all">
+          <CardHeader>
+            <CardTitle>DevOps Integration</CardTitle>
+            <CardDescription>Configure GitHub or Azure DevOps integration for this category</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href={`/admin/features/categories/${resolvedParams.id}/integrations`}>
+              <Button variant="outline">
+                Configure Integration Settings
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
-        <Card>
+        <Card className="hover:border-primary hover:shadow-md transition-all">
           <CardHeader>
             <CardTitle>Basic Information</CardTitle>
-            <CardDescription>General details about the application</CardDescription>
+            <CardDescription>General details about the category</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -288,6 +306,12 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
                 rows={3}
               />
             </div>
+
+            <CategoryIconUpload
+              onImageChange={(iconBase64) => setFormData({ ...formData, iconBase64 })}
+              currentImage={formData.iconBase64}
+              disabled={isSaving}
+            />
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -362,7 +386,9 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
             </Button>
           </Link>
         </div>
-      </form>
-    </div>
+        </form>
+      </div>
+      <Toaster />
+    </>
   )
 }

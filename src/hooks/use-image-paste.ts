@@ -16,18 +16,20 @@ export function useImagePaste(
         if (!textarea || disabled) return
 
         const handlePaste = async (e: ClipboardEvent) => {
-            const items = e.clipboardData?.items
-            if (!items) return
+            try {
+                const items = e.clipboardData?.items
+                if (!items) return
 
-            // Check if there's an image in the clipboard
-            for (const item of Array.from(items)) {
-                if (item.type.startsWith('image/')) {
-                    e.preventDefault()
-                    
-                    const file = item.getAsFile()
-                    if (!file) continue
+                // Check if there's an image in the clipboard
+                for (const item of Array.from(items)) {
+                    if (item.type.startsWith('image/')) {
+                        e.preventDefault()
+                        
+                        const file = item.getAsFile()
+                        if (!file) continue
 
-                    try {
+                        console.log('Pasting image:', file.type, file.size)
+
                         const formData = new FormData()
                         formData.append('file', file)
 
@@ -36,11 +38,14 @@ export function useImagePaste(
                             body: formData,
                         })
 
-                        const result = await response.json()
-
                         if (!response.ok) {
-                            throw new Error(result.error || 'Upload failed')
+                            const errorText = await response.text()
+                            console.error('Upload error response:', errorText)
+                            throw new Error(`Upload failed: ${response.status}`)
                         }
+
+                        const result = await response.json()
+                        console.log('Upload result:', result)
 
                         // Generate markdown with timestamp as alt text
                         const altText = `Pasted image ${new Date().toLocaleTimeString()}`
@@ -48,20 +53,18 @@ export function useImagePaste(
                         
                         onImagePaste(markdownText)
                         
-                        // Show success feedback (you can enhance this with a toast library)
                         console.log('Image pasted successfully!')
-                        
-                    } catch (error) {
-                        console.error('Image paste error:', error)
-                        // Show error feedback
-                        alert('Failed to upload pasted image. Please try again.')
+                        break
                     }
-                    break
                 }
+            } catch (error) {
+                console.error('Image paste error:', error)
+                alert('Failed to upload pasted image. Please try again.')
             }
         }
 
-        textarea.addEventListener('paste', handlePaste)
+        // Use passive listener to prevent React warnings
+        textarea.addEventListener('paste', handlePaste, { passive: false })
         
         return () => {
             textarea.removeEventListener('paste', handlePaste)

@@ -3,45 +3,62 @@ import { FeatureRequest, User } from '@prisma/client'
 const baseStyles = `
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   line-height: 1.6;
-  color: #333;
+  color: #1f2937;
+  margin: 0;
+  padding: 0;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
 `
 
 const containerStyles = `
   max-width: 600px;
   margin: 0 auto;
-  padding: 20px;
   background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
 `
 
 const headerStyles = `
-  background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
   color: #ffffff;
-  padding: 30px 20px;
+  padding: 40px 20px;
   text-align: center;
-  border-radius: 8px 8px 0 0;
+`
+
+const logoStyles = `
+  margin-bottom: 24px;
+  display: block;
 `
 
 const contentStyles = `
-  padding: 30px 20px;
-  background-color: #f9fafb;
+  padding: 40px 20px;
+  background-color: #ffffff;
 `
 
 const buttonStyles = `
   display: inline-block;
-  padding: 12px 24px;
-  background-color: #ff6b35;
-  color: #ffffff;
-  text-decoration: none;
-  border-radius: 6px;
+  padding: 16px 32px;
+  background-color: #f59e0b;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff !important;
+  text-decoration: none !important;
+  border-radius: 8px;
   font-weight: 600;
-  margin: 20px 0;
+  font-size: 16px;
+  margin: 24px 0;
+  text-align: center;
+  line-height: 1.2;
+  mso-padding-alt: 16px 32px;
+  mso-text-raise: 4px;
 `
 
 const footerStyles = `
-  padding: 20px;
+  padding: 32px 20px;
   text-align: center;
-  color: #666;
-  font-size: 12px;
+  color: #6b7280;
+  font-size: 14px;
+  background-color: #f9fafb;
   border-top: 1px solid #e5e7eb;
 `
 
@@ -74,13 +91,25 @@ export function buildFeatureStatusChangeEmail(
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+      <meta name="x-apple-disable-message-reformatting">
       <title>Feature Status Update</title>
+      <style>
+        @media only screen and (max-width: 480px) {
+          .container { width: 100% !important; margin: 0 !important; border-radius: 0 !important; }
+          .content { padding: 20px !important; }
+          .button { width: 100% !important; padding: 16px !important; }
+        }
+      </style>
     </head>
     <body style="${baseStyles} background-color: #f3f4f6; padding: 20px;">
       <div style="${containerStyles}">
         <!-- Header -->
         <div style="${headerStyles}">
-          <h1 style="margin: 0; font-size: 24px;">
+          <div style="${logoStyles}">
+            <img src="${process.env.NEXT_PUBLIC_URL}/img/cat_logo.png" alt="CAT" style="max-height: 50px; height: auto; width: auto;" />
+          </div>
+          <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             ${statusEmoji[newStatus] || '📢'} Feature Status Updated
           </h1>
         </div>
@@ -133,11 +162,16 @@ export function buildFeatureStatusChangeEmail(
             <a href="${process.env.NEXT_PUBLIC_URL}/features" style="color: #ff6b35;">All Features</a> |
             <a href="${process.env.NEXT_PUBLIC_URL}/settings/notifications" style="color: #666;">Notification Settings</a>
           </p>
-          <p style="margin: 15px 0 0 0; color: #999;">
-            NextDocs - Harvey Norman Commercial Apps Team
+          <p style="margin: 16px 0 0 0; color: #9ca3af; font-weight: 500;">
+            CAT - Enterprise Documentation Platform
           </p>
         </div>
       </div>
+      <!--[if mso | IE]>
+          </td>
+        </tr>
+      </table>
+      <![endif]-->
     </body>
     </html>
   `
@@ -160,13 +194,25 @@ export function buildNewCommentEmail(
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+      <meta name="x-apple-disable-message-reformatting">
       <title>New Comment on Feature Request</title>
+      <style>
+        @media only screen and (max-width: 480px) {
+          .container { width: 100% !important; margin: 0 !important; border-radius: 0 !important; }
+          .content { padding: 20px !important; }
+          .button { width: 100% !important; padding: 16px !important; }
+        }
+      </style>
     </head>
     <body style="${baseStyles} background-color: #f3f4f6; padding: 20px;">
       <div style="${containerStyles}">
         <!-- Header -->
         <div style="${headerStyles}">
-          <h1 style="margin: 0; font-size: 24px;">
+          <div style="${logoStyles}">
+            <img src="${process.env.NEXT_PUBLIC_URL}/img/cat_logo.png" alt="CAT" style="max-height: 50px; height: auto; width: auto;" />
+          </div>
+          <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             💬 New Comment Added
           </h1>
         </div>
@@ -204,11 +250,16 @@ export function buildNewCommentEmail(
             <a href="${process.env.NEXT_PUBLIC_URL}/features" style="color: #ff6b35;">All Features</a> |
             <a href="${process.env.NEXT_PUBLIC_URL}/settings/notifications" style="color: #666;">Notification Settings</a>
           </p>
-          <p style="margin: 15px 0 0 0; color: #999;">
-            NextDocs - Harvey Norman Commercial Apps Team
+          <p style="margin: 16px 0 0 0; color: #9ca3af; font-weight: 500;">
+            CAT - Enterprise Documentation Platform
           </p>
         </div>
       </div>
+      <!--[if mso | IE]>
+          </td>
+        </tr>
+      </table>
+      <![endif]-->
     </body>
     </html>
   `
@@ -227,13 +278,25 @@ export function buildNewFeatureEmail(
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+      <meta name="x-apple-disable-message-reformatting">
       <title>New Feature Request Submitted</title>
+      <style>
+        @media only screen and (max-width: 480px) {
+          .container { width: 100% !important; margin: 0 !important; border-radius: 0 !important; }
+          .content { padding: 20px !important; }
+          .button { width: 100% !important; padding: 16px !important; }
+        }
+      </style>
     </head>
-    <body style="${baseStyles} background-color: #f3f4f6; padding: 20px;">
-      <div style="${containerStyles}">
+    <body style="${baseStyles} background-color: #f3f4f6; padding: 20px; width: 100% !important; min-width: 100%;">
+      <div style="${containerStyles}" class="container">
         <!-- Header -->
         <div style="${headerStyles}">
-          <h1 style="margin: 0; font-size: 24px;">
+          <div style="${logoStyles}">
+            <img src="${process.env.NEXT_PUBLIC_URL}/img/cat_logo.png" alt="CAT" style="max-height: 50px; height: auto; width: auto;" />
+          </div>
+          <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             ✨ New Feature Request
           </h1>
         </div>
@@ -281,11 +344,16 @@ export function buildNewFeatureEmail(
             <a href="${process.env.NEXT_PUBLIC_URL}/features" style="color: #ff6b35;">All Features</a> |
             <a href="${process.env.NEXT_PUBLIC_URL}/settings/notifications" style="color: #666;">Notification Settings</a>
           </p>
-          <p style="margin: 15px 0 0 0; color: #999;">
-            NextDocs - Harvey Norman Commercial Apps Team
+          <p style="margin: 16px 0 0 0; color: #9ca3af; font-weight: 500;">
+            CAT - Enterprise Documentation Platform
           </p>
         </div>
       </div>
+      <!--[if mso | IE]>
+          </td>
+        </tr>
+      </table>
+      <![endif]-->
     </body>
     </html>
   `

@@ -13,5 +13,20 @@ npx prisma db push --accept-data-loss || {
 
 echo "Migrations complete!"
 
-echo "Starting application..."
-exec node server.js
+# Check if we're in development mode
+if [ "$NODE_ENV" = "development" ]; then
+  echo "Starting application in DEVELOPMENT mode..."
+  echo "This will provide detailed error messages and hot reloading capabilities."
+  
+  # Install dev dependencies if not present (for development mode)
+  if [ ! -d "node_modules/@types" ]; then
+    echo "Installing development dependencies..."
+    npm install
+  fi
+  
+  # Start in development mode with detailed debugging
+  exec npm run dev
+else
+  echo "Starting application in PRODUCTION mode..."
+  exec node server.js
+fi

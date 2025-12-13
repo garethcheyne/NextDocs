@@ -74,11 +74,13 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
         setIsActive(false)
         // Set timeout for 30 seconds of inactivity
         visibilityTimeout.current = setTimeout(() => {
-          // Track session pause
-          trackEvent('page_blur', {
-            duration: Date.now() - startTime,
-            scrollDepth
-          })
+          // Only track session pause if user is still authenticated
+          if (session?.user) {
+            trackEvent('page_blur', {
+              duration: Date.now() - startTime,
+              scrollDepth
+            })
+          }
         }, 30000)
       } else {
         setIsActive(true)
@@ -135,13 +137,18 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
       return
     }
     
+    // Don't track if user is not authenticated - prevents 405 errors on login redirect
+    if (!session?.user) {
+      return
+    }
+    
     try {
       await fetch('/api/analytics/track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId,
-          userId: session?.user?.id,
+          userId: session.user.id,
           eventType,
           eventData,
           path: pathname,

@@ -243,7 +243,11 @@ export function UsersTable({ users: initialUsers, currentUserId }: { users: User
                                     </td>
                                     <td className="p-4">{user._count.repositories}</td>
                                     <td className="p-4 text-muted-foreground">
-                                        {new Date(user.createdAt).toLocaleDateString()}
+                                        {new Date(user.createdAt).toLocaleDateString('en-US', {
+                                            year: 'numeric',
+                                            month: '2-digit',
+                                            day: '2-digit'
+                                        })}
                                     </td>
                                     <td className="p-4 text-right">
                                         <div className="flex items-center justify-end gap-2">

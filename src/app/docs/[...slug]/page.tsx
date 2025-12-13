@@ -10,17 +10,21 @@ import { Badge } from '@/components/ui/badge'
 import { getAuthorBySlug, getAuthorDocuments, getAuthorBlogPosts } from '@/lib/authors'
 import { AuthorHoverCard } from '@/components/author-hover-card'
 import { ContentEngagement } from '@/components/content-engagement'
+import { processContentForUser } from '@/lib/content-access'
+import { RestrictionBadge, RestrictionSummary } from '@/components/content/restriction-indicators'
+import { RestrictedAccess } from '@/components/auth/restricted-access'
 
 export default async function DocPage({ params }: { params: Promise<{ slug: string[] }> }) {
     const session = await auth()
     const resolvedParams = await params
 
-    if (!session) {
-        redirect('/')
-    }
-
     // Join slug parts to create the full path
     const fullSlug = resolvedParams.slug.join('/')
+
+    if (!session) {
+        const callbackUrl = `/docs/${fullSlug}`
+        redirect(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`)
+    }
 
     // Find the document by slug (prepend "docs/" to match database format)
     const document = await prisma.document.findFirst({
@@ -39,6 +43,8 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
             publishedAt: true,
             updatedAt: true,
             repositoryId: true,
+            restricted: true,
+            restrictedRoles: true,
             repository: {
                 select: {
                     id: true,
@@ -51,6 +57,20 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
 
     // If no document found, return 404 (categories are dropdown-only, not pages)
     if (!document) {
+        notFound()
+    }
+
+    // Process content for role-based access control
+    const processedContent = await processContentForUser({
+        id: document.id,
+        title: document.title,
+        content: document.content,
+        restricted: document.restricted,
+        restrictedRoles: document.restrictedRoles,
+    })
+
+    // If user doesn't have access, return 404
+    if (!processedContent.hasAccess) {
         notFound()
     }
 
@@ -203,6 +223,17 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
                         ))}
                     </div>
                 )}
+
+                {/* Restriction Information for Admins */}
+                {processedContent.hasRestrictions && processedContent.restrictionInfo && (
+                    <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                        <RestrictionSummary 
+                            isRestricted={processedContent.restrictionInfo.isRestricted}
+                            documentRoles={processedContent.restrictionInfo.documentRoles}
+                            variants={processedContent.restrictionInfo.restrictedVariants}
+                        />
+                    </div>
+                )}
             </div>
 
             {/* Engagement Actions */}
@@ -241,7 +272,7 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
                     repositorySlug={document.repository.slug}
                     documentPath={`docs/${fullSlug}`}
                 >
-                    {document.content}
+                    {processedContent.content}
                 </MarkdownWithMermaid>
             </div>            {/* Footer */}
             <div className="mt-12 pt-8 border-t">

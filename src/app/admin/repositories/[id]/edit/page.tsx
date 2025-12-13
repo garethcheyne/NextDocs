@@ -312,7 +312,7 @@ export default function EditRepositoryPage() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <input
+                    <Input
                       placeholder='true'
                       id="enabled"
                       type="checkbox"

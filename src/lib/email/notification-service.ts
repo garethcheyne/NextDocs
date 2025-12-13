@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db/prisma'
-import { getEWSClient } from './ews-client'
+import { getRestEmailClient } from './rest-email-client'
 import {
   buildFeatureStatusChangeEmail,
   buildNewCommentEmail,
@@ -76,14 +76,14 @@ export async function notifyFeatureStatusChange(
     )
 
     // Send emails
-    const ewsClient = getEWSClient()
-    if (!ewsClient.isReady()) {
-      console.warn('EWS client not ready. Skipping email notifications.')
+    const emailClient = getRestEmailClient()
+    if (!emailClient.isReady()) {
+      console.warn('REST email client not ready. Skipping email notifications.')
       return
     }
 
     const recipients = usersToNotify.map((u) => u.email)
-    await ewsClient.sendEmail({
+    await emailClient.sendEmail({
       to: recipients,
       subject: `Feature Status Update: ${feature.title}`,
       body: emailBody,
@@ -162,14 +162,14 @@ export async function notifyNewComment(
     const emailBody = buildNewCommentEmail(feature, comment)
 
     // Send emails
-    const ewsClient = getEWSClient()
-    if (!ewsClient.isReady()) {
-      console.warn('EWS client not ready. Skipping email notifications.')
+    const emailClient = getRestEmailClient()
+    if (!emailClient.isReady()) {
+      console.warn('REST email client not ready. Skipping email notifications.')
       return
     }
 
     const recipients = usersToNotify.map((u) => u.email)
-    await ewsClient.sendEmail({
+    await emailClient.sendEmail({
       to: recipients,
       subject: `New Comment: ${feature.title}`,
       body: emailBody,
@@ -219,14 +219,14 @@ export async function notifyNewFeature(featureId: string) {
     const emailBody = buildNewFeatureEmail(feature, feature.category || undefined)
 
     // Send emails
-    const ewsClient = getEWSClient()
-    if (!ewsClient.isReady()) {
-      console.warn('EWS client not ready. Skipping email notifications.')
+    const emailClient = getRestEmailClient()
+    if (!emailClient.isReady()) {
+      console.warn('REST email client not ready. Skipping email notifications.')
       return
     }
 
     const recipients = usersToNotify.map((u) => u.email)
-    await ewsClient.sendEmail({
+    await emailClient.sendEmail({
       to: recipients,
       subject: `New Feature Request: ${feature.title}`,
       body: emailBody,
@@ -242,9 +242,158 @@ export async function notifyNewFeature(featureId: string) {
 }
 
 /**
- * Send a test email to verify EWS configuration
+ * Send a test email to verify REST email configuration
  */
 export async function sendTestEmail(to: string): Promise<boolean> {
-  const ewsClient = getEWSClient()
-  return ewsClient.sendTestEmail(to)
+  try {
+    const emailClient = getRestEmailClient()
+    
+    if (!emailClient.isReady()) {
+      console.warn('REST email client not ready')
+      return false
+    }
+
+    await emailClient.sendEmail({
+      to: [to],
+      subject: 'Test Email from Enterprise Documentation Platform',
+      body: '<h2>Test Email</h2><p>This is a test email to verify the REST email API configuration.</p><p>If you receive this email, the configuration is working correctly.</p>',
+      isHtml: true,
+    })
+
+    return true
+  } catch (error) {
+    console.error('Failed to send test email:', error)
+    return false
+  }
+}
+
+/**
+ * Send a test email using specific template
+ */
+export async function sendTestTemplateEmail(to: string, template: string): Promise<boolean> {
+  try {
+    const emailClient = getRestEmailClient()
+    
+    if (!emailClient.isReady()) {
+      console.warn('REST email client not ready')
+      return false
+    }
+
+    // Generate sample data for different templates
+    const sampleFeature = {
+      id: 'test-feature-id',
+      title: 'Sample Feature Request - Email Template Test',
+      slug: 'sample-feature-request',
+      description: 'This is a test feature request to demonstrate the email template. It includes detailed information about what the feature would do and why it would be valuable for the NextDocs platform.',
+      status: 'proposal',
+      priority: 'medium',
+      targetVersion: null,
+      expectedDate: null,
+      isPinned: false,
+      isArchived: false,
+      commentsLocked: false,
+      createdBy: 'test-user-id',
+      createdByName: 'Test User',
+      createdByEmail: 'testuser@example.com',
+      categoryId: null,
+      epicId: null,
+      tagIds: [],
+      storyPoints: null,
+      sprint: null,
+      assignedTo: null,
+      searchVector: null,
+      attachments: [],
+      externalId: null,
+      externalUrl: null,
+      externalType: null,
+      syncEnabled: false,
+      lastSyncAt: null,
+      syncStatus: null,
+      syncError: null,
+      voteCount: 15,
+      commentCount: 0,
+      followerCount: 3,
+      mergedIntoId: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastActivityAt: new Date(),
+      creator: {
+        id: 'test-user-id',
+        name: 'Test User',
+        firstName: 'Test',
+        lastName: 'User',
+        email: 'testuser@example.com',
+        emailVerified: new Date(),
+        password: null,
+        image: null,
+        role: 'user',
+        provider: 'azuread',
+        active: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        emailNotifications: true,
+        notifyOnFeatureStatusChange: true,
+        notifyOnFeatureComment: true,
+        notifyOnNewFeature: false,
+        notifyOnFeatureVote: false,
+      },
+    }
+
+    const sampleCategory = {
+      name: 'User Interface',
+    }
+
+    const sampleComment = {
+      content: 'This is a sample comment to demonstrate the email notification template. It shows how users receive notifications when someone comments on a feature they are following.',
+      user: {
+        name: 'Sample Commenter',
+        email: 'commenter@example.com',
+      },
+      createdAt: new Date(),
+    }
+
+    let htmlContent = ''
+    let subject = ''
+
+    switch (template) {
+      case 'feature-status-change':
+        subject = '[TEST] Feature Status Update - Sample Feature Request'
+        htmlContent = buildFeatureStatusChangeEmail(
+          sampleFeature,
+          'proposal',
+          'in-progress',
+          'Moving this feature to development based on user feedback and priority assessment.',
+          'Admin User'
+        )
+        break
+
+      case 'new-comment':
+        subject = '[TEST] New Comment - Sample Feature Request'
+        htmlContent = buildNewCommentEmail(
+          sampleFeature,
+          sampleComment
+        )
+        break
+
+      case 'new-feature':
+        subject = '[TEST] New Feature Request - Sample Feature Request'
+        htmlContent = buildNewFeatureEmail(sampleFeature, sampleCategory)
+        break
+
+      default:
+        return false
+    }
+
+    await emailClient.sendEmail({
+      to: [to],
+      subject,
+      body: htmlContent,
+      isHtml: true,
+    })
+
+    return true
+  } catch (error) {
+    console.error('Failed to send test template email:', error)
+    return false
+  }
 }

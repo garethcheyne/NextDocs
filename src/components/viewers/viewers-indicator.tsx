@@ -47,9 +47,8 @@ export function ViewersIndicator({ pageUrl, className = '' }: ViewersIndicatorPr
   // Fetch other viewers
   const fetchViewers = async () => {
     try {
-      const encodedPage = encodeURIComponent(pageUrl)
-      const response = await fetch(`/api/viewers/${encodedPage}`)
-      
+      const response = await fetch(`/api/viewers/page?url=${encodeURIComponent(pageUrl)}`)
+
       if (response.ok) {
         const data = await response.json()
         setViewers(data.viewers || [])

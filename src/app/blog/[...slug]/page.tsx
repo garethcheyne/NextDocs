@@ -10,6 +10,8 @@ import Image from 'next/image'
 import { getAuthorBySlug, getAuthorDocuments, getAuthorBlogPosts } from '@/lib/authors'
 import { AuthorHoverCard } from '@/components/author-hover-card'
 import { ContentEngagement } from '@/components/content-engagement'
+import { processContentForUser } from '@/lib/content-access'
+import { RestrictionBadge, RestrictionSummary } from '@/components/content/restriction-indicators'
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string[] }> }) {
     const session = await auth()
@@ -43,6 +45,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             createdAt: true,
             updatedAt: true,
             repositoryId: true,
+            restricted: true,
+            restrictedRoles: true,
             repository: {
                 select: {
                     id: true,
@@ -54,6 +58,20 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     })
 
     if (!blogPost) {
+        notFound()
+    }
+
+    // Process content for role-based access control
+    const processedContent = await processContentForUser({
+        id: blogPost.id,
+        title: blogPost.title,
+        content: blogPost.content,
+        restricted: blogPost.restricted,
+        restrictedRoles: blogPost.restrictedRoles,
+    })
+
+    // If user doesn't have access, return 404
+    if (!processedContent.hasAccess) {
         notFound()
     }
 
@@ -180,6 +198,17 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                                             ))}
                                         </div>
                                     )}
+
+                                    {/* Restriction Information for Admins */}
+                                    {processedContent.hasRestrictions && processedContent.restrictionInfo && (
+                                        <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                                            <RestrictionSummary 
+                                                isRestricted={processedContent.restrictionInfo.isRestricted}
+                                                documentRoles={processedContent.restrictionInfo.documentRoles}
+                                                variants={processedContent.restrictionInfo.restrictedVariants}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Engagement Actions */}
@@ -218,7 +247,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                                         repositorySlug={blogPost.repository.slug}
                                         documentPath={`blog/${fullSlug}`}
                                     >
-                                        {blogPost.content}
+                                        {processedContent.content}
                                     </MarkdownWithMermaid>
                                 </div>
 

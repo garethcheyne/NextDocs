@@ -33,8 +33,8 @@ export default async function AnalyticsDetailsPage() {
       <div className="flex-1 p-6 overflow-auto">
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl font-bold">Analytics Details</h1>
-            <p className="text-muted-foreground">Detailed view of all analytics events</p>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">Analytics Details</h1>
+            <p className="text-gray-400 mt-2">Detailed view of all analytics events</p>
           </div>
           
           <AnalyticsDetailsTable />

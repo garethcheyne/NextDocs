@@ -5,11 +5,12 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { AuthProvider } from '@/components/auth/auth-provider'
 import { AnalyticsProvider } from '@/lib/analytics/client'
 import ParticlesBackground from '@/components/particles-background'
+import { Toaster } from '@/components/ui/sonner'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Harvey Norman Commercial Apps Team',
+  title: 'Enterprise Documentation Platform',
   description: 'Enterprise Solutions Hub for Microsoft Technologies & Business Applications',
   icons: {
     icon: [
@@ -59,6 +60,7 @@ export default function RootLayout({
               <div className="relative z-10">
                 {children}
               </div>
+              <Toaster />
             </AnalyticsProvider>
           </AuthProvider>
         </ThemeProvider>

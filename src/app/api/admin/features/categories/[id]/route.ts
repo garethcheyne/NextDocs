@@ -51,7 +51,7 @@ export async function PATCH(
 
     const { id } = await params
     const body = await request.json()
-    const { name, slug, description, icon, color, order, enabled } = body
+    const { name, slug, description, icon, iconBase64, color, order, enabled } = body
 
     // Check if slug is being changed and if it conflicts
     if (slug) {
@@ -74,6 +74,7 @@ export async function PATCH(
         ...(slug !== undefined && { slug }),
         ...(description !== undefined && { description }),
         ...(icon !== undefined && { icon }),
+        ...(iconBase64 !== undefined && { iconBase64 }),
         ...(color !== undefined && { color }),
         ...(order !== undefined && { order }),
         ...(enabled !== undefined && { enabled }),

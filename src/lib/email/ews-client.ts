@@ -157,7 +157,7 @@ export class EWSClient {
             <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;" />
             <p style="color: #666; font-size: 12px;">
               Sent from NextDocs Enterprise Documentation Platform<br />
-              Harvey Norman Commercial Apps Team
+              Enterprise Documentation Platform
             </p>
           </body>
         </html>

@@ -210,7 +210,11 @@ export function CommentItem({ comment }: CommentItemProps) {
                 
                 <div className="flex items-center gap-2">
                     <span className="text-xs text-foreground/60">
-                        {new Date(comment.createdAt).toLocaleDateString()} at{' '}
+                        {new Date(comment.createdAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit'
+                        })} at{' '}
                         {new Date(comment.createdAt).toLocaleTimeString()}
                     </span>
                     {canEdit && !isEditing && (

@@ -319,5 +319,32 @@
   .animate-pulse-slow {
     animation: pulse-slow 4s ease-in-out infinite;
   }
+
+  /* Floating animation for icon arc */
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    33% {
+      transform: translateY(-6px) rotate(1deg);
+    }
+    66% {
+      transform: translateY(3px) rotate(-1deg);
+    }
+  }
+
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+
+  .animate-float:nth-child(2n) {
+    animation-delay: 1s;
+    animation-duration: 5s;
+  }
+
+  .animate-float:nth-child(3n) {
+    animation-delay: 2s;
+    animation-duration: 4.5s;
+  }
 }
 

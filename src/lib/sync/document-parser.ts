@@ -13,6 +13,8 @@ export interface ParsedDocument {
   author?: string
   publishedAt?: Date
   isDraft: boolean
+  restricted: boolean
+  restrictedRoles: string[]
   sourceHash: string
 }
 
@@ -88,6 +90,19 @@ export function parseMarkdownDocument(
   // Check if draft
   const isDraft = frontmatter.draft === true || frontmatter.status === 'draft'
 
+  // Extract restriction settings
+  const restricted = Boolean(frontmatter.restricted)
+  let restrictedRoles: string[] = []
+  if (frontmatter.restrictedRoles) {
+    if (Array.isArray(frontmatter.restrictedRoles)) {
+      restrictedRoles = frontmatter.restrictedRoles
+        .map((role: any) => String(role).trim())
+        .filter(Boolean)
+    } else if (typeof frontmatter.restrictedRoles === 'string') {
+      restrictedRoles = [frontmatter.restrictedRoles.trim()].filter(Boolean)
+    }
+  }
+
   // Extract category from folder structure
   // For /docs/product-name/index.md -> category: product-name
   // For /docs/product-name/topic.md -> category: product-name
@@ -121,6 +136,8 @@ export function parseMarkdownDocument(
     author: frontmatter.author,
     publishedAt,
     isDraft,
+    restricted,
+    restrictedRoles,
     sourceHash,
   }
 }

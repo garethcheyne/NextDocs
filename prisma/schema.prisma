@@ -32,6 +32,7 @@ model User {
   
   accounts      Account[]
   sessions      Session[]
+  userGroups    UserGroup[]
   repositories  Repository[] // Repositories created by user
   ssoProviders  SSOProvider[] @relation("SSOProviderCreator")
   apiSpecs      APISpec[] @relation("APISpecCreator")
@@ -44,6 +45,7 @@ model User {
   featureFollowers      FeatureFollower[] @relation("FeatureFollowers")
   statusChanges         FeatureStatusHistory[] @relation("StatusChanges")
   internalNotes         FeatureInternalNote[] @relation("InternalNotes")
+  featureMerges         FeatureMerge[] @relation("FeatureMerger")
   
   // Content Engagement Relations
   contentVotes          ContentVote[] @relation("ContentVotes")
@@ -55,6 +57,9 @@ model User {
   // Analytics Relations
   analyticsEvents       AnalyticsEvent[] @relation("AnalyticsEvents")
   analyticsSessions     AnalyticsSession[] @relation("AnalyticsSessions")
+  
+  // Notification Settings
+  notificationSettings  UserNotificationSettings? @relation("UserNotificationSettings")
 }
 
 model Author {
@@ -108,6 +113,18 @@ model VerificationToken {
   expires    DateTime
   
   @@unique([identifier, token])
+}
+
+model UserGroup {
+  id          String   @id @default(uuid())
+  userId      String
+  groupName   String
+  lastUpdated DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, groupName])
+  @@index([userId])
 }
 
 model Repository {
@@ -335,6 +352,10 @@ model Document {
   publishedAt     DateTime?
   updatedAt       DateTime  @updatedAt
   
+  // Access control
+  restricted      Boolean   @default(false) // Whether content is restricted
+  restrictedRoles String[]  @default([])    // Roles that can access restricted content
+  
   // Search optimization
   searchVector    Unsupported("tsvector")? // For full-text search
   
@@ -377,6 +398,10 @@ model BlogPost {
   
   // Engagement (for future use)
   views           Int       @default(0)
+  
+  // Access control
+  restricted      Boolean   @default(false) // Whether content is restricted
+  restrictedRoles String[]  @default([])    // Roles that can access restricted content
   
   // Search optimization
   searchVector    Unsupported("tsvector")? // For full-text search
@@ -439,8 +464,9 @@ model FeatureCategory {
   name            String    @unique // e.g., "Dynamics 365 BC", "Dynamics 365 CE"
   slug            String    @unique
   description     String?   @db.Text
-  icon            String?   // Lucide icon name
-  color           String?   // Badge color
+  icon            String?   // Legacy Lucide icon name (deprecated)
+  iconBase64      String?   @db.Text // Base64 encoded icon (64x64 PNG)
+  color           String?   // Badge color (hex format)
   order           Int       @default(0)
   
   // Integration settings
@@ -548,6 +574,8 @@ model FeatureRequest {
   mergedInto      FeatureRequest? @relation("MergedRequests", fields: [mergedIntoId], references: [id])
   mergedIntoId    String?
   mergedRequests  FeatureRequest[] @relation("MergedRequests")
+  parentMerges    FeatureMerge[] @relation("ParentMerges")
+  childMerges     FeatureMerge[] @relation("ChildMerges")
   
   @@index([status])
   @@index([categoryId])
@@ -884,4 +912,59 @@ model PageViewer {
   @@unique([userId, page])
   @@index([page])
   @@index([lastSeen])
+}
+
+model FeatureMerge {
+  id                  String    @id @default(uuid())
+  parentId            String
+  childId             String
+  mergedBy            String
+  mergedAt            DateTime  @default(now())
+  originalDescription String    @db.Text
+  mergedDescription   String    @db.Text
+  
+  parent              FeatureRequest @relation("ParentMerges", fields: [parentId], references: [id], onDelete: Cascade)
+  child               FeatureRequest @relation("ChildMerges", fields: [childId], references: [id], onDelete: Cascade)
+  merger              User      @relation("FeatureMerger", fields: [mergedBy], references: [id])
+  
+  @@index([parentId])
+  @@index([childId])
+  @@index([mergedBy])
+}
+
+model UserNotificationSettings {
+  id                   String    @id @default(uuid())
+  userId               String    @unique
+  
+  // Email notifications
+  emailEnabled         Boolean   @default(true)
+  emailNewFeatures     Boolean   @default(true)
+  emailStatusChanges   Boolean   @default(true)
+  emailNewComments     Boolean   @default(true)
+  emailWeeklyDigest    Boolean   @default(false)
+  
+  // Teams notifications
+  teamsEnabled         Boolean   @default(false)
+  teamsWebhook         String?
+  teamsNewFeatures     Boolean   @default(false)
+  teamsStatusChanges   Boolean   @default(false)
+  teamsNewComments     Boolean   @default(false)
+  teamsChannel         String?
+  
+  // In-app notifications
+  inAppEnabled         Boolean   @default(true)
+  inAppNewFeatures     Boolean   @default(true)
+  inAppStatusChanges   Boolean   @default(true)
+  inAppNewComments     Boolean   @default(true)
+  inAppMentions        Boolean   @default(true)
+  
+  // Frequency settings
+  frequency            String    @default("immediate") // immediate, daily, weekly, never
+  
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  
+  user                 User      @relation("UserNotificationSettings", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
 }

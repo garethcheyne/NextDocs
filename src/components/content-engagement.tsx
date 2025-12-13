@@ -27,6 +27,7 @@ export function ContentEngagement({ contentType, contentId, contentTitle }: Cont
   const [following, setFollowing] = useState(false)
   const [loading, setLoading] = useState(false)
   const [copiedUrl, setCopiedUrl] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchVotes()
@@ -34,6 +35,15 @@ export function ContentEngagement({ contentType, contentId, contentTitle }: Cont
       fetchFollowStatus()
     }
   }, [contentType, contentId, session])
+
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError(null)
+      }, 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [error])
 
   const fetchVotes = async () => {
     try {
@@ -68,6 +78,7 @@ export function ContentEngagement({ contentType, contentId, contentTitle }: Cont
     }
 
     setLoading(true)
+    setError(null)
     try {
       // If clicking the same vote, remove it
       if (userVote === voteType) {
@@ -79,6 +90,9 @@ export function ContentEngagement({ contentType, contentId, contentTitle }: Cont
           setUpvotes(data.upvotes)
           setDownvotes(data.downvotes)
           setUserVote(null)
+        } else {
+          const errorData = await response.json()
+          setError(errorData.error || 'Failed to remove vote')
         }
       } else {
         // Otherwise, set or change the vote
@@ -92,10 +106,14 @@ export function ContentEngagement({ contentType, contentId, contentTitle }: Cont
           setUpvotes(data.upvotes)
           setDownvotes(data.downvotes)
           setUserVote(data.userVote)
+        } else {
+          const errorData = await response.json()
+          setError(errorData.error || 'Failed to vote')
         }
       }
     } catch (error) {
       console.error('Failed to vote:', error)
+      setError('Network error - please try again')
     } finally {
       setLoading(false)
     }
@@ -108,6 +126,7 @@ export function ContentEngagement({ contentType, contentId, contentTitle }: Cont
     }
 
     setLoading(true)
+    setError(null)
     try {
       const response = await fetch(`/api/content/${contentType}/${contentId}/follow`, {
         method: following ? 'DELETE' : 'POST',
@@ -115,9 +134,13 @@ export function ContentEngagement({ contentType, contentId, contentTitle }: Cont
       if (response.ok) {
         const data = await response.json()
         setFollowing(data.following)
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Failed to update follow status')
       }
     } catch (error) {
       console.error('Failed to toggle follow:', error)
+      setError('Network error - please try again')
     } finally {
       setLoading(false)
     }
@@ -153,7 +176,13 @@ export function ContentEngagement({ contentType, contentId, contentTitle }: Cont
 
   return (
     <TooltipProvider>
-      <div className="flex items-center gap-2 py-4 border-y border-border">
+      <div className="space-y-2">
+        {error && (
+          <div className="text-sm text-red-500 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-md px-3 py-2">
+            {error}
+          </div>
+        )}
+        <div className="flex items-center gap-2 py-4 border-y border-border">
         {/* Voting */}
         <div className="flex items-center gap-1">
           <Tooltip>
@@ -163,7 +192,10 @@ export function ContentEngagement({ contentType, contentId, contentTitle }: Cont
                 size="sm"
                 onClick={() => handleVote('up')}
                 disabled={loading}
-                className="gap-1"
+                className={`gap-1 ${userVote === 'up' 
+                  ? 'bg-green-500 hover:bg-green-600 text-white border-green-500' 
+                  : 'border-border hover:bg-accent hover:text-accent-foreground'
+                }`}
               >
                 <ThumbsUp className="w-4 h-4" />
                 <span className="text-xs">{upvotes}</span>
@@ -181,7 +213,10 @@ export function ContentEngagement({ contentType, contentId, contentTitle }: Cont
                 size="sm"
                 onClick={() => handleVote('down')}
                 disabled={loading}
-                className="gap-1"
+                className={`gap-1 ${userVote === 'down' 
+                  ? 'bg-red-500 hover:bg-red-600 text-white border-red-500' 
+                  : 'border-border hover:bg-accent hover:text-accent-foreground'
+                }`}
               >
                 <ThumbsDown className="w-4 h-4" />
                 <span className="text-xs">{downvotes}</span>
@@ -200,7 +235,10 @@ export function ContentEngagement({ contentType, contentId, contentTitle }: Cont
               variant="outline"
               size="sm"
               onClick={handleShare}
-              className="gap-2"
+              className={`gap-2 ${copiedUrl 
+                ? 'bg-blue-500 hover:bg-blue-600 text-white border-blue-500' 
+                : 'border-border hover:bg-accent hover:text-accent-foreground'
+              }`}
             >
               <Share2 className="w-4 h-4" />
               <span className="text-xs">{copiedUrl ? 'Copied!' : 'Share'}</span>
@@ -219,7 +257,10 @@ export function ContentEngagement({ contentType, contentId, contentTitle }: Cont
               size="sm"
               onClick={handleFollow}
               disabled={loading}
-              className="gap-2"
+              className={`gap-2 ${following 
+                ? 'bg-blue-500 hover:bg-blue-600 text-white border-blue-500' 
+                : 'border-border hover:bg-accent hover:text-accent-foreground'
+              }`}
             >
               {following ? (
                 <>
@@ -238,6 +279,7 @@ export function ContentEngagement({ contentType, contentId, contentTitle }: Cont
             <p>{following ? 'Stop receiving updates' : 'Get notified of updates'}</p>
           </TooltipContent>
         </Tooltip>
+        </div>
       </div>
     </TooltipProvider>
   )

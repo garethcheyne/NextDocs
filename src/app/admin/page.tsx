@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Users, GitBranch, Activity, Plus, BookOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { TestEmailDialog } from '@/components/admin/test-email-dialog'
 import {
   Card,
   CardContent,
@@ -197,10 +198,13 @@ export default async function AdminPage() {
                     <Activity className="w-4 h-4 mr-2" />
                     Trigger Sync
                   </Button>
-                  <Button variant="outline">
-                    <Users className="w-4 h-4 mr-2" />
-                    Manage Users
-                  </Button>
+                  <Link href="/admin/users">
+                    <Button variant="outline">
+                      <Users className="w-4 h-4 mr-2" />
+                      Manage Users
+                    </Button>
+                  </Link>
+                  <TestEmailDialog />
                 </CardContent>
               </Card>
 

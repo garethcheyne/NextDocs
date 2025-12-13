@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth/auth'
-import { sendTestEmail } from '@/lib/email/notification-service'
+import { sendTestEmail, sendTestTemplateEmail } from '@/lib/email/notification-service'
 
-// POST /api/admin/test-email - Send a test email to verify EWS configuration
+// POST /api/admin/test-email - Send a test email to verify REST email API configuration
 export async function POST(request: NextRequest) {
   try {
     const session = await auth()
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { email } = body
+    const { email, template } = body
 
     if (!email) {
       return NextResponse.json(
@@ -22,13 +22,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Send test email
-    const success = await sendTestEmail(email)
+    let success = false
+    let message = ''
+
+    if (template && template !== 'basic') {
+      // Send template-specific test email
+      success = await sendTestTemplateEmail(email, template)
+      message = template 
+        ? `Test ${template.replace('-', ' ')} email sent to ${email}`
+        : `Test email sent to ${email}`
+    } else {
+      // Send basic test email
+      success = await sendTestEmail(email)
+      message = `Test email sent to ${email}`
+    }
 
     if (success) {
       return NextResponse.json({
         success: true,
-        message: `Test email sent to ${email}`,
+        message,
       })
     } else {
       return NextResponse.json(

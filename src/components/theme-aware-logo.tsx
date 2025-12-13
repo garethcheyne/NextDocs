@@ -29,7 +29,7 @@ export function ThemeAwareLogo({ width = 48, height = 48, className = '' }: Them
     return (
         <Image
             src={isDark ? '/img/hnc_cat_logo.svg' : '/img/hnc_cat_logo_blk.svg'}
-            alt="Harvey Norman Commercial"
+            alt="Enterprise Platform"
             width={width}
             height={height}
             className={className}

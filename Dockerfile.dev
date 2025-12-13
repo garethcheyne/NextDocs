@@ -1,0 +1,28 @@
+# Development Dockerfile - no build step, just run dev server
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install PostgreSQL client for database operations
+RUN apk add --no-cache postgresql-client
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including dev dependencies)
+RUN npm install
+
+# Copy project files
+COPY . .
+
+# Generate Prisma Client
+RUN npx prisma generate
+
+EXPOSE 3000
+ENV PORT=3000
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV HOSTNAME="0.0.0.0"
+
+# Development entrypoint with proper error handling
+CMD ["sh", "-c", "echo 'Starting development server...' && echo 'Running database sync...' && npx prisma db push --accept-data-loss && echo 'Starting Next.js development server with error overlay...' && npm run dev:local"]

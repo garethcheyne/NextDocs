@@ -14,9 +14,10 @@ interface VoteButtonProps {
     initialVote: VoteType
     initialUpvotes: number
     initialDownvotes: number
+    compact?: boolean
 }
 
-export function VoteButton({ featureId, initialVote, initialUpvotes, initialDownvotes }: VoteButtonProps) {
+export function VoteButton({ featureId, initialVote, initialUpvotes, initialDownvotes, compact = false }: VoteButtonProps) {
     const { data: session } = useSession()
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
@@ -102,9 +103,58 @@ export function VoteButton({ featureId, initialVote, initialUpvotes, initialDown
     const scoreColor = score > 0 ? 'text-green-500' : score < 0 ? 'text-red-500' : 'text-muted-foreground'
 
     return (
-        <div className="w-full max-w-xs lg:max-w-none">
-            {/* Mobile Layout (< lg) */}
-            <div className="lg:hidden">
+        <div className={compact ? "flex flex-col items-center gap-1" : "w-full max-w-xs lg:max-w-none"}>
+            {/* Compact Layout for Feature Cards */}
+            {compact && (
+                <>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleVote('upvote')}
+                        disabled={isPending}
+                        className={cn(
+                            'h-6 w-8 p-0 transition-all',
+                            userVote === 'upvote' 
+                                ? 'text-green-600 bg-green-100 dark:bg-green-900/30' 
+                                : 'hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-950/20'
+                        )}
+                    >
+                        <ArrowBigUp className={cn('w-4 h-4', userVote === 'upvote' && 'fill-current')} />
+                    </Button>
+                    
+                    <div className="text-center py-1">
+                        <div className={cn('text-lg font-bold leading-none', scoreColor)}>
+                            {score}
+                        </div>
+                        <div className="text-xs text-muted-foreground leading-none mt-0.5">
+                            Score
+                        </div>
+                    </div>
+                    
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleVote('downvote')}
+                        disabled={isPending}
+                        className={cn(
+                            'h-6 w-8 p-0 transition-all',
+                            userVote === 'downvote' 
+                                ? 'text-red-600 bg-red-100 dark:bg-red-900/30' 
+                                : 'hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20'
+                        )}
+                    >
+                        <ArrowBigDown className={cn('w-4 h-4', userVote === 'downvote' && 'fill-current')} />
+                    </Button>
+                    
+                    {error && (
+                        <p className="text-xs text-red-600 dark:text-red-400 text-center mt-1">{error}</p>
+                    )}
+                </>
+            )}
+
+            {/* Mobile Layout (< lg) - Only show if not compact */}
+            {!compact && (
+                <div className="lg:hidden">
                 <div className="flex items-center justify-center gap-4 p-3 rounded-lg bg-gradient-to-r from-primary/5 to-transparent">
                     <Button
                         variant="outline"
@@ -151,10 +201,12 @@ export function VoteButton({ featureId, initialVote, initialUpvotes, initialDown
                 {error && (
                     <p className="text-sm text-red-600 dark:text-red-400 text-center mt-2">{error}</p>
                 )}
-            </div>
+                </div>
+            )}
 
-            {/* Desktop Layout (>= lg) */}
-            <div className="hidden lg:flex flex-col items-center gap-4 p-4 rounded-lg border-2 bg-gradient-to-br from-primary/5 to-transparent">
+            {/* Desktop Layout (>= lg) - Only show if not compact */}
+            {!compact && (
+                <div className="hidden lg:flex flex-col items-center gap-4 p-4 rounded-lg border-2 bg-gradient-to-br from-primary/5 to-transparent">
                 {/* Score Display */}
                 <div className="text-center">
                     <div className={cn('text-4xl font-bold mb-1', scoreColor)}>
@@ -211,7 +263,8 @@ export function VoteButton({ featureId, initialVote, initialUpvotes, initialDown
                 {error && (
                     <p className="text-sm text-red-600 dark:text-red-400 text-center">{error}</p>
                 )}
-            </div>
+                </div>
+            )}
         </div>
     )
 }

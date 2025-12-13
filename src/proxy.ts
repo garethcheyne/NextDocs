@@ -1,7 +1,50 @@
 import NextAuth from 'next-auth'
 import { authConfig } from '@/lib/auth/auth.config'
+import { NextRequest, NextResponse } from 'next/server'
 
-export default NextAuth(authConfig).auth
+const auth = NextAuth(authConfig).auth
+
+export default auth((req: NextRequest & { auth: any }) => {
+  const { pathname } = req.nextUrl
+  const isAuthenticated = !!req.auth
+  
+  // Always allow access to the root path
+  if (pathname === '/') {
+    return NextResponse.next()
+  }
+  
+  // Allow access to auth-related paths
+  if (
+    pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/auth') ||
+    pathname.startsWith('/login')
+  ) {
+    return NextResponse.next()
+  }
+  
+  // Allow access to public assets
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon') ||
+    pathname.startsWith('/icon') ||
+    pathname.startsWith('/apple-icon') ||
+    pathname.startsWith('/manifest') ||
+    pathname.includes('.')
+  ) {
+    return NextResponse.next()
+  }
+  
+  // For all other paths, require authentication
+  // Redirect unauthenticated users to login with callback
+  if (!isAuthenticated) {
+    const loginUrl = new URL('/login', req.url)
+    loginUrl.searchParams.set('callbackUrl', pathname)
+    return NextResponse.redirect(loginUrl)
+  }
+  
+  // Let authenticated users through - pages will handle authorization
+  return NextResponse.next()
+})
 
 export const config = {
   matcher: [

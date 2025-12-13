@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
-import { BookOpen, Newspaper, Code2, Settings, LogOut, User, ChevronDown } from 'lucide-react'
+import { BookOpen, Newspaper, Code2, Settings, LogOut, User, ChevronDown, UserCog } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
     DropdownMenu,
@@ -44,7 +44,7 @@ export function Navigation() {
                     <Link href="/docs" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                         <Image
                             src="/img/hnc_cat_logo.svg"
-                            alt="Harvey Norman Commercial"
+                            alt="Enterprise Platform"
                             width={40}
                             height={40}
                             className="drop-shadow-lg"
@@ -133,6 +133,13 @@ export function Navigation() {
                                         <Link href="/api-docs" className="flex items-center">
                                             <Code2 className="w-4 h-4 mr-2" />
                                             API Docs
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator className="bg-gray-800" />
+                                    <DropdownMenuItem asChild className="cursor-pointer hover:bg-gray-800 focus:bg-gray-800">
+                                        <Link href="/preferences" className="flex items-center">
+                                            <UserCog className="w-4 h-4 mr-2" />
+                                            Preferences
                                         </Link>
                                     </DropdownMenuItem>
                                     {session.user.role?.toLowerCase() === 'admin' && (

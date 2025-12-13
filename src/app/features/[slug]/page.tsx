@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/db/prisma'
 import { ArrowLeft, Calendar, MessageSquare, ThumbsUp, ThumbsDown, User } from 'lucide-react'
@@ -18,6 +18,8 @@ import { AdminMenubar } from '@/components/admin/admin-menubar'
 import { FeatureBanner } from '@/components/features/feature-banner'
 import { SyncCommentsButton } from '@/components/features/sync-comments-button'
 import { EnhancedMarkdown } from '@/components/ui/enhanced-markdown'
+import { RestrictedAccess } from '@/components/auth/restricted-access'
+import { checkFeatureAccess } from '@/lib/auth/access-control'
 
 export default async function FeatureRequestPage({
     params,
@@ -27,6 +29,11 @@ export default async function FeatureRequestPage({
     const { slug } = await params
     const session = await auth()
 
+    // Check authentication first
+    if (!session) {
+        redirect(`/login?callbackUrl=/features/${slug}`)
+    }
+
     const feature = await prisma.featureRequest.findUnique({
         where: { slug },
         include: {
@@ -34,7 +41,7 @@ export default async function FeatureRequestPage({
             votes: {
                 include: {
                     user: {
-                        select: { id: true, name: true, email: true },
+                        select: { id: true, name: true, email: true, image: true },
                     },
                 },
             },
@@ -65,6 +72,28 @@ export default async function FeatureRequestPage({
 
     if (!feature) {
         notFound()
+    }
+
+    // Check if user has access to this specific feature
+    const accessCheck = checkFeatureAccess(session, feature)
+    if (!accessCheck.hasAccess) {
+        return (
+            <ContentDetailLayout
+                user={session?.user ?? { name: null, email: null, role: null }}
+                currentPath="/features"
+                breadcrumbs={[
+                    { label: 'Home', href: '/' },
+                    { label: 'Feature Requests', href: '/features' },
+                    { label: feature.title, href: `/features/${feature.slug}` },
+                ]}
+                showTOC={false}
+            >
+                <RestrictedAccess 
+                    title="Feature Access Restricted"
+                    message={accessCheck.reason || "You don't have permission to view this feature request."}
+                />
+            </ContentDetailLayout>
+        )
     }
 
     const userVote = session?.user?.id
@@ -283,15 +312,28 @@ export default async function FeatureRequestPage({
                                                         Upvoted ({upvotes})
                                                     </h4>
                                                 </div>
-                                                <div className="space-y-1">
+                                                <div className="space-y-2">
                                                     {feature.votes
                                                         .filter((vote) => vote.voteType === 1)
                                                         .map((vote) => (
                                                             <div
                                                                 key={vote.userId}
-                                                                className="text-sm text-foreground/70 pl-6"
+                                                                className="flex items-center gap-2 pl-6"
                                                             >
-                                                                {vote.user?.name || 'Anonymous'}
+                                                                {vote.user?.image ? (
+                                                                    <img
+                                                                        src={vote.user.image}
+                                                                        alt={vote.user.name || 'Anonymous'}
+                                                                        className="w-6 h-6 rounded-full object-cover border border-border"
+                                                                    />
+                                                                ) : (
+                                                                    <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
+                                                                        <User className="w-3 h-3 text-muted-foreground" />
+                                                                    </div>
+                                                                )}
+                                                                <span className="text-sm text-foreground/70">
+                                                                    {vote.user?.name || 'Anonymous'}
+                                                                </span>
                                                             </div>
                                                         ))}
                                                 </div>
@@ -310,15 +352,28 @@ export default async function FeatureRequestPage({
                                                         Downvoted ({downvotes})
                                                     </h4>
                                                 </div>
-                                                <div className="space-y-1">
+                                                <div className="space-y-2">
                                                     {feature.votes
                                                         .filter((vote) => vote.voteType === -1)
                                                         .map((vote) => (
                                                             <div
                                                                 key={vote.userId}
-                                                                className="text-sm text-foreground/70 pl-6"
+                                                                className="flex items-center gap-2 pl-6"
                                                             >
-                                                                {vote.user?.name || 'Anonymous'}
+                                                                {vote.user?.image ? (
+                                                                    <img
+                                                                        src={vote.user.image}
+                                                                        alt={vote.user.name || 'Anonymous'}
+                                                                        className="w-6 h-6 rounded-full object-cover border border-border"
+                                                                    />
+                                                                ) : (
+                                                                    <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
+                                                                        <User className="w-3 h-3 text-muted-foreground" />
+                                                                    </div>
+                                                                )}
+                                                                <span className="text-sm text-foreground/70">
+                                                                    {vote.user?.name || 'Anonymous'}
+                                                                </span>
                                                             </div>
                                                         ))}
                                                 </div>

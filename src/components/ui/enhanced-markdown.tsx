@@ -11,24 +11,26 @@ interface EnhancedMarkdownProps {
 
 export function EnhancedMarkdown({ children, className = "prose prose-sm max-w-none dark:prose-invert" }: EnhancedMarkdownProps) {
     return (
-        <div className={className}>
+        <div className={className} suppressHydrationWarning>
             <ReactMarkdown
                 components={{
-                    // Custom image rendering with Next.js Image component
+                    // Custom image rendering
                     img: ({ src, alt, ...props }: ComponentProps<'img'>) => {
                         if (!src) return null
                         
                         return (
-                            <div className="my-4">
+                            <div className="my-4" suppressHydrationWarning>
                                 <div className="relative max-w-full">
                                     <img
                                         src={src}
                                         alt={alt || 'Uploaded image'}
                                         className="max-w-full h-auto rounded-lg border border-muted shadow-sm cursor-pointer hover:shadow-md transition-shadow"
                                         loading="lazy"
-                                        onClick={() => {
-                                            // Open image in new tab when clicked
-                                            window.open(src, '_blank')
+                                        onClick={(e) => {
+                                            e.preventDefault()
+                                            if (typeof window !== 'undefined') {
+                                                window.open(src, '_blank', 'noopener,noreferrer')
+                                            }
                                         }}
                                         {...props}
                                     />

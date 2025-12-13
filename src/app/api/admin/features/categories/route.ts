@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, slug, description, icon, color, order, enabled } = body
+    const { name, slug, description, icon, iconBase64, color, order, enabled } = body
 
     // Validate required fields
     if (!name || !slug) {
@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
         slug,
         description: description || null,
         icon: icon || null,
+        iconBase64: iconBase64 || null,
         color: color || null,
         order: order || 0,
         enabled: enabled !== undefined ? enabled : true,
