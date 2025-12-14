@@ -88,110 +88,114 @@ export default async function AdminFeaturesPage() {
                     </Link>
                 </div>
 
-            {/* Statistics Cards */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 hover:border-blue-500/40 transition-colors">
-                    <CardHeader className="pb-3">
-                        <div className="flex items-center gap-2">
-                            <Lightbulb className="w-4 h-4 text-blue-400" />
-                            <CardTitle className="text-xs font-medium text-blue-400">Total Requests</CardTitle>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-3xl font-bold text-white">{stats.total}</div>
-                    </CardContent>
-                </Card>
+                {/* Statistics Cards */}
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 hover:border-blue-500/40 transition-colors">
+                        <CardHeader className="pb-3">
+                            <div className="flex items-center gap-2">
+                                <Lightbulb className="w-4 h-4 text-blue-400" />
+                                <CardTitle className="text-xs font-medium text-blue-400">Total Requests</CardTitle>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-3xl font-bold text-white">{stats.total}</div>
+                        </CardContent>
+                    </Card>
 
-                <Card className="bg-gradient-to-br from-yellow-500/10 to-yellow-600/5 border-yellow-500/20 hover:border-yellow-500/40 transition-colors">
-                    <CardHeader className="pb-3">
-                        <div className="flex items-center gap-2">
-                            <Lightbulb className="w-4 h-4 text-yellow-400" />
-                            <CardTitle className="text-xs font-medium text-yellow-400">Pending Approval</CardTitle>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-3xl font-bold text-white">{stats.proposal}</div>
-                    </CardContent>
-                </Card>
+                    <Card className="bg-gradient-to-br from-yellow-500/10 to-yellow-600/5 border-yellow-500/20 hover:border-yellow-500/40 transition-colors">
+                        <CardHeader className="pb-3">
+                            <div className="flex items-center gap-2">
+                                <Lightbulb className="w-4 h-4 text-yellow-400" />
+                                <CardTitle className="text-xs font-medium text-yellow-400">Pending Approval</CardTitle>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-3xl font-bold text-white">{stats.proposal}</div>
+                        </CardContent>
+                    </Card>
 
-                <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20 hover:border-purple-500/40 transition-colors">
-                    <CardHeader className="pb-3">
-                        <div className="flex items-center gap-2">
-                            <Lightbulb className="w-4 h-4 text-purple-400" />
-                            <CardTitle className="text-xs font-medium text-purple-400">In Progress</CardTitle>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-3xl font-bold text-white">{stats.inProgress}</div>
-                    </CardContent>
-                </Card>
+                    <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20 hover:border-purple-500/40 transition-colors">
+                        <CardHeader className="pb-3">
+                            <div className="flex items-center gap-2">
+                                <Lightbulb className="w-4 h-4 text-purple-400" />
+                                <CardTitle className="text-xs font-medium text-purple-400">In Progress</CardTitle>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-3xl font-bold text-white">{stats.inProgress}</div>
+                        </CardContent>
+                    </Card>
 
-                <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20 hover:border-green-500/40 transition-colors">
-                    <CardHeader className="pb-3">
-                        <div className="flex items-center gap-2">
-                            <Lightbulb className="w-4 h-4 text-green-400" />
-                            <CardTitle className="text-xs font-medium text-green-400">Completed</CardTitle>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-3xl font-bold text-white">{stats.completed}</div>
-                    </CardContent>
-                </Card>
-            </div>
+                    <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20 hover:border-green-500/40 transition-colors">
+                        <CardHeader className="pb-3">
+                            <div className="flex items-center gap-2">
+                                <Lightbulb className="w-4 h-4 text-green-400" />
+                                <CardTitle className="text-xs font-medium text-green-400">Completed</CardTitle>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-3xl font-bold text-white">{stats.completed}</div>
+                        </CardContent>
+                    </Card>
+                </div>
 
-            {/* Application Categories */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Application Categories</CardTitle>
-                    <CardDescription>
-                        Manage applications that users can request features for
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
-                        {categories.map((category) => (
-                            <div
-                                key={category.id}
-                                className="flex items-center justify-between p-4 rounded-lg border hover:border-brand-orange/50 transition-colors"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div>
-                                        <h3 className="font-semibold">{category.name}</h3>
-                                        {category.description && (
-                                            <p className="text-sm text-muted-foreground mt-1">{category.description}</p>
+                {/* Application Categories */}
+                <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+
+
+                    <CardHeader>
+                        <CardTitle>Application Categories</CardTitle>
+                        <CardDescription>
+                            Manage applications that users can request features for
+                        </CardDescription>
+                    </CardHeader>
+
+
+                    <CardContent>
+                        <div className="space-y-4">
+                            {categories.map((category) => (
+                                <div
+                                    key={category.id}
+                                    className="flex items-center justify-between p-4 rounded-lg border hover:border-brand-orange/50 transition-colors"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div>
+                                            <h3 className="font-semibold">{category.name}</h3>
+                                            {category.description && (
+                                                <p className="text-sm text-muted-foreground mt-1">{category.description}</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-right">
+                                            <div className="text-sm font-medium">{category._count.featureRequests}</div>
+                                            <div className="text-xs text-muted-foreground">requests</div>
+                                        </div>
+
+                                        {!category.enabled && (
+                                            <Badge variant="secondary">Disabled</Badge>
                                         )}
+
+                                        <Link href={`/admin/features/categories/${category.id}`}>
+                                            <Button variant="ghost" size="sm">
+                                                <Settings className="w-4 h-4" />
+                                            </Button>
+                                        </Link>
                                     </div>
                                 </div>
+                            ))}
 
-                                <div className="flex items-center gap-4">
-                                    <div className="text-right">
-                                        <div className="text-sm font-medium">{category._count.featureRequests}</div>
-                                        <div className="text-xs text-muted-foreground">requests</div>
-                                    </div>
-
-                                    {!category.enabled && (
-                                        <Badge variant="secondary">Disabled</Badge>
-                                    )}
-
-                                    <Link href={`/admin/features/categories/${category.id}`}>
-                                        <Button variant="ghost" size="sm">
-                                            <Settings className="w-4 h-4" />
-                                        </Button>
-                                    </Link>
+                            {categories.length === 0 && (
+                                <div className="text-center py-12 text-muted-foreground">
+                                    <Lightbulb className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                                    <p>No categories configured yet.</p>
+                                    <p className="text-sm mt-2">Create your first application category to get started.</p>
                                 </div>
-                            </div>
-                        ))}
-
-                        {categories.length === 0 && (
-                            <div className="text-center py-12 text-muted-foreground">
-                                <Lightbulb className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                                <p>No categories configured yet.</p>
-                                <p className="text-sm mt-2">Create your first application category to get started.</p>
-                            </div>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
         </>
     )

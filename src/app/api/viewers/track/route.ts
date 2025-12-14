@@ -3,8 +3,10 @@ import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/db/prisma'
 
 export async function POST(request: NextRequest) {
+  let session: any = null
+  
   try {
-    const session = await auth()
+    session = await auth()
     
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -19,6 +21,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Page URL is required' },
         { status: 400 }
+      )
+    }
+
+    // Check if user exists in database before creating PageViewer record
+    const userExists = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true }
+    })
+
+    if (!userExists) {
+      console.error(`User with ID ${session.user.id} not found in database but exists in session`)
+      return NextResponse.json(
+        { error: 'User session is invalid' },
+        { status: 401 }
       )
     }
 
@@ -41,7 +57,15 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Track viewer error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorCode = error instanceof Error && 'code' in error ? (error as any).code : undefined
+    
+    console.error('Track viewer error:', {
+      error: errorMessage,
+      userId: session?.user?.id,
+      userEmail: session?.user?.email,
+      code: errorCode
+    })
     return NextResponse.json(
       { error: 'Failed to track viewer' },
       { status: 500 }

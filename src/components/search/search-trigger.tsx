@@ -6,6 +6,15 @@ import { Search, X, BookOpen, FileText, Code2, Lightbulb } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useDebounce } from '@/hooks/use-debounce'
 import { useRouter } from 'next/navigation'
+import DOMPurify from 'isomorphic-dompurify'
+
+// Sanitize HTML to prevent XSS attacks
+function sanitizeHtml(html: string): string {
+    return DOMPurify.sanitize(html, {
+        ALLOWED_TAGS: ['b', 'strong', 'em', 'i', 'mark', 'span'],
+        ALLOWED_ATTR: ['class'],
+    })
+}
 
 interface SearchResult {
     id: string
@@ -187,7 +196,18 @@ export function SearchTrigger() {
 
             <div className={`${isExpanded ? 'fixed top-4 left-1/2 -translate-x-1/2 w-[95vw] max-w-6xl z-50' : 'relative'}`}>
                 {isExpanded && (
-                    <div className="mb-4 text-center px-6 pt-6">
+                    <div className="mb-4 text-center px-6 pt-6 relative">
+                        <button
+                            onClick={() => {
+                                setIsOpen(false)
+                                setIsExpanded(false)
+                                setQuery('')
+                            }}
+                            className="absolute top-6 right-6 h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center md:hidden"
+                            aria-label="Close search"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
                         <h2 className="text-2xl font-bold gradient-text mb-1">
                             Search Everything
                         </h2>
@@ -203,9 +223,9 @@ export function SearchTrigger() {
                         onClick={() => {
                             setIsExpanded(true)
                             setIsOpen(true)
-                            setTimeout(() => inputRef.current?.focus(), 100)
+                            setTimeout(() => inputRef.current?.focus(), 150)
                         }}
-                        className="md:hidden h-9 w-9 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center"
+                        className="block md:hidden h-9 w-9 rounded-full bg-muted/50 hover:bg-muted/80 active:bg-muted active:scale-95 flex items-center justify-center transition-all duration-200 touch-manipulation"
                         aria-label="Open search"
                     >
                         <Search className="h-4 w-4 text-muted-foreground" />
@@ -217,7 +237,7 @@ export function SearchTrigger() {
                         <Input
                             ref={inputRef}
                             type="text"
-                            placeholder="Search..."
+                            placeholder="Search docs, blog posts, APIs..."
                             value={query}
                             onChange={(e) => {
                                 setQuery(e.target.value)
@@ -233,7 +253,7 @@ export function SearchTrigger() {
                                 }
                             }}
                             onKeyDown={handleKeyDown}
-                            className="pl-9 pr-20 h-9 rounded-full bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-brand-orange w-full"
+                            className="pl-9 pr-20 h-9 rounded-full bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-brand-orange/50 focus-visible:bg-background/80 w-full transition-all duration-200"
                         />
                         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                             {query && (
@@ -257,19 +277,20 @@ export function SearchTrigger() {
 
                     {/* Mobile: Expanded Search Input (shown when isExpanded) */}
                     {isExpanded && (
-                        <div className="md:hidden relative">
+                        <div className="block md:hidden relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
                             <Input
                                 ref={inputRef}
                                 type="text"
-                                placeholder="Search..."
+                                placeholder="What are you looking for?"
                                 value={query}
                                 onChange={(e) => {
                                     setQuery(e.target.value)
                                     setIsOpen(true)
                                 }}
                                 onKeyDown={handleKeyDown}
-                                className="pl-9 pr-10 h-12 rounded-lg bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-brand-orange w-full text-base"
+                                autoFocus
+                                className="pl-9 pr-10 h-12 rounded-lg bg-background/80 border border-border/50 focus-visible:ring-2 focus-visible:ring-brand-orange/50 focus-visible:border-brand-orange/50 w-full text-base transition-all duration-200"
                             />
                             {query && (
                                 <button
@@ -365,14 +386,25 @@ export function SearchTrigger() {
                             {/* Results with custom scrollbar */}
                             <div className="overflow-y-auto flex-1 custom-scrollbar">
                                 {loading && (
-                                    <div className="p-4 text-center text-sm text-muted-foreground">
-                                        Searching...
+                                    <div className="p-6 text-center">
+                                        <div className="flex items-center justify-center mb-2">
+                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-orange"></div>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground">
+                                            Searching through all content...
+                                        </p>
                                     </div>
                                 )}
 
                                 {!loading && query && results.length === 0 && (
-                                    <div className="p-4 text-center text-sm text-muted-foreground">
-                                        No results for &quot;{query}&quot;
+                                    <div className="p-6 text-center">
+                                        <Search className="h-8 w-8 mx-auto mb-3 text-muted-foreground/50" />
+                                        <p className="text-sm text-muted-foreground mb-1">
+                                            No results for <span className="font-medium text-foreground">&quot;{query}&quot;</span>
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                            Try adjusting your search terms or using different keywords
+                                        </p>
                                     </div>
                                 )}
 
@@ -416,7 +448,7 @@ export function SearchTrigger() {
                                                         {result.highlight && (
                                                             <div
                                                                 className="text-xs text-muted-foreground dark:text-muted-foreground line-clamp-2"
-                                                                dangerouslySetInnerHTML={{ __html: result.highlight }}
+                                                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(result.highlight) }}
                                                             />
                                                         )}
                                                         {!result.highlight && result.excerpt && (
@@ -466,7 +498,7 @@ export function SearchTrigger() {
 
                                 <div className="prose prose-sm dark:prose-invert max-w-none">
                                     {hoveredResult.highlight ? (
-                                        <div dangerouslySetInnerHTML={{ __html: hoveredResult.highlight }} />
+                                        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(hoveredResult.highlight) }} />
                                     ) : hoveredResult.excerpt ? (
                                         <p className="text-sm text-muted-foreground">{hoveredResult.excerpt}</p>
                                     ) : (

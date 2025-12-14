@@ -38,9 +38,9 @@ export function CategoryBadge({ category, className }: CategoryBadgeProps) {
         <div className={cn('inline-block', className)}>
             {/* Outer wrapper to protect circle spacing */}
             <div className="relative inline-flex items-center ml-3">
-                {/* Badge background - matching other badge heights */}
+                {/* Badge background - matching other badge heights (24px) */}
                 <div
-                    className="flex items-center rounded-md px-4 py-0.5 shadow-lg hover:shadow-xl transition-all duration-200 pl-6"
+                    className="flex items-center rounded-md px-4 py-1 shadow-lg hover:shadow-xl transition-all duration-200 pl-6 h-6"
                     style={{
                         backgroundColor,
                         color: textColor

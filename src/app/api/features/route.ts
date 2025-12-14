@@ -3,14 +3,13 @@ import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/db/prisma'
 import { updateFeatureRequestSearchVector } from '@/lib/search/indexer'
 import { notifyNewFeature } from '@/lib/email/notification-service'
+import { withReadAuth, withWriteAuth } from '@/lib/api-keys/middleware'
 
 // GET /api/features - List all feature requests with filters
-export async function GET(request: NextRequest) {
+export const GET = withReadAuth(async (request) => {
     try {
-        const session = await auth()
-        if (!session?.user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        }
+        // User is already authenticated via API key or session
+        const user = request.user
 
         const { searchParams } = new URL(request.url)
         const status = searchParams.get('status')
@@ -70,7 +69,7 @@ export async function GET(request: NextRequest) {
         const userVotes = await prisma.featureVote.findMany({
             where: {
                 featureId: { in: featureIds },
-                userId: session.user.id,
+                userId: user.id,
             },
             select: {
                 featureId: true,
@@ -95,15 +94,13 @@ export async function GET(request: NextRequest) {
         console.error('Error fetching features:', error)
         return NextResponse.json({ error: 'Failed to fetch features' }, { status: 500 })
     }
-}
+})
 
 // POST /api/features - Create new feature request
-export async function POST(request: NextRequest) {
+export const POST = withWriteAuth(async (request) => {
     try {
-        const session = await auth()
-        if (!session?.user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        }
+        // User is already authenticated via API key or session
+        const user = request.user
 
         const body = await request.json()
         const { title, description, categoryId, tags, slug } = body
@@ -126,9 +123,9 @@ export async function POST(request: NextRequest) {
                 description,
                 categoryId: categoryId || null,
                 tagIds: tags || [],
-                createdBy: session.user.id,
-                createdByName: session.user.name || session.user.email || 'Unknown',
-                createdByEmail: session.user.email || '',
+                createdBy: user.id,
+                createdByName: user.name || user.email || 'Unknown',
+                createdByEmail: user.email || '',
             },
             include: {
                 creator: {
@@ -155,7 +152,7 @@ export async function POST(request: NextRequest) {
         await prisma.featureFollower.create({
             data: {
                 featureId: feature.id,
-                userId: session.user.id,
+                userId: user.id,
             },
         })
 
@@ -173,4 +170,4 @@ export async function POST(request: NextRequest) {
         console.error('Error creating feature:', error)
         return NextResponse.json({ error: 'Failed to create feature' }, { status: 500 })
     }
-}
+})

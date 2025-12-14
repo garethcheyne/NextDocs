@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { StatusBadge } from '@/components/features/status-badge'
+import { PriorityBadge } from '@/components/features/priority-badge'
 // ScrollArea component not available, using regular div
 import { Heart, MessageSquare, Plus, Eye, Calendar, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
@@ -62,35 +64,9 @@ export function ActivityTab({ userId }: ActivityTabProps) {
     fetchActivity()
   }, [userId])
 
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'completed':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-      case 'in-progress':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-      case 'approved':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-      case 'under-review':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-      case 'rejected':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-    }
-  }
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority?.toLowerCase()) {
-      case 'high':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-      case 'low':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-    }
-  }
+
+
 
   const FeatureCard = ({ feature }: { feature: FeatureRequest }) => (
     <div className="p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
@@ -103,12 +79,8 @@ export function ActivityTab({ userId }: ActivityTabProps) {
           <ExternalLink className="h-3 w-3" />
         </Link>
         <div className="flex gap-1">
-          <Badge className={getStatusColor(feature.status)} variant="secondary">
-            {feature.status}
-          </Badge>
-          <Badge className={getPriorityColor(feature.priority)} variant="secondary">
-            {feature.priority}
-          </Badge>
+          <StatusBadge status={feature.status} />
+          <PriorityBadge priority={feature.priority} />
         </div>
       </div>
       
@@ -140,7 +112,7 @@ export function ActivityTab({ userId }: ActivityTabProps) {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Card>
+        <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
           <CardContent className="p-6">
             <div className="text-center">
               <div className="animate-pulse space-y-4">
@@ -159,7 +131,7 @@ export function ActivityTab({ userId }: ActivityTabProps) {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
         <CardHeader>
           <CardTitle>Your Activity</CardTitle>
           <CardDescription>

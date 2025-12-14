@@ -100,8 +100,8 @@ export default async function DocsPage() {
             <div className="space-y-6">
                 <div className='px-12 py-6'>
                     {categoriesWithMeta.length === 0 ? (
-                        <Card>
-                            <CardContent className="pt-6">
+                        <Card className=\"bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl\">
+                            <CardContent className=\"pt-6\">
                                 <div className="text-center py-12">
                                     <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                                     <h3 className="text-lg font-semibold mb-2">

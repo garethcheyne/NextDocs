@@ -17,17 +17,12 @@ interface ProfileTabProps {
     email?: string | null
     role?: string | null
     image?: string | null
+    provider?: string | null
+    createdAt?: Date | null
   }
 }
 
 export function ProfileTab({ user }: ProfileTabProps) {
-  const [isEditing, setIsEditing] = useState(false)
-  const [name, setName] = useState(user.name || '')
-
-  const handleSave = async () => {
-    // TODO: Implement profile update API call
-    setIsEditing(false)
-  }
 
   const getRoleBadgeColor = (role: string) => {
     switch (role?.toLowerCase()) {
@@ -43,7 +38,7 @@ export function ProfileTab({ user }: ProfileTabProps) {
   return (
     <div className="space-y-6">
       {/* Profile Information */}
-      <Card>
+      <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
@@ -81,39 +76,13 @@ export function ProfileTab({ user }: ProfileTabProps) {
 
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="name">Display Name</Label>
-              {isEditing ? (
-                <div className="flex gap-2">
-                  <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter your display name"
-                  />
-                  <Button onClick={handleSave} size="sm">
-                    Save
-                  </Button>
-                  <Button 
-                    onClick={() => {
-                      setName(user.name || '')
-                      setIsEditing(false)
-                    }} 
-                    variant="outline" 
-                    size="sm"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {user.name || 'Not set'}
-                  </span>
-                  <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
-                    Edit
-                  </Button>
-                </div>
-              )}
+              <Label>Display Name</Label>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {user.name || 'Not set'}
+                </span>
+                <span className="text-xs text-gray-500">Managed by Active Directory</span>
+              </div>
             </div>
 
             <div className="grid gap-2">
@@ -125,7 +94,7 @@ export function ProfileTab({ user }: ProfileTabProps) {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="role">Account Role</Label>
+              <Label>Account Role</Label>
               <div className="flex items-center justify-between">
                 <Badge className={getRoleBadgeColor(user.role || 'user')}>
                   <Shield className="h-3 w-3 mr-1" />
@@ -134,6 +103,18 @@ export function ProfileTab({ user }: ProfileTabProps) {
                 <span className="text-xs text-gray-500">Assigned by administrator</span>
               </div>
             </div>
+
+            {user.createdAt && (
+              <div className="grid gap-2">
+                <Label>Member Since</Label>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    {new Date(user.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            )}
 
             <div className="grid gap-2">
               <Label htmlFor="user-id">User ID</Label>
@@ -148,7 +129,7 @@ export function ProfileTab({ user }: ProfileTabProps) {
       </Card>
 
       {/* Account Statistics */}
-      <Card>
+      <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
         <CardHeader>
           <CardTitle>Account Overview</CardTitle>
           <CardDescription>

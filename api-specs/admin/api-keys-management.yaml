@@ -1,0 +1,498 @@
+openapi: 3.0.3
+info:
+  title: NextDocs API Key Management API
+  description: |
+    **Admin-only API** for managing programmatic access tokens in NextDocs.
+    
+    This API allows administrators to create, manage, and revoke API keys that provide 
+    tokenized access to NextDocs without requiring interactive OAuth authentication.
+    
+    **Key Features:**
+    - Secure 64-character hex tokens with `nxd_` prefix
+    - Read/Write permission levels
+    - Expiration date management  
+    - Usage tracking and monitoring
+    - Immediate revocation capabilities
+    
+    **Use Cases:**
+    - CI/CD pipeline integration
+    - Third-party system connections
+    - Automated scripts and batch operations
+    - Webhook and notification systems
+    
+  version: 1.0.0
+  contact:
+    name: NextDocs API Support
+    url: https://docs.company.com/support
+    email: api-support@company.com
+  license:
+    name: Internal Use Only
+    url: https://docs.company.com/legal/api-license
+
+servers:
+  - url: https://docs.company.com/api/admin/api-keys
+    description: Production API Server
+  - url: http://localhost:3000/api/admin/api-keys
+    description: Development API Server
+
+security:
+  - SessionAuth: []
+
+paths:
+  /:
+    get:
+      tags:
+        - API Key Management
+      summary: List API Keys
+      description: |
+        Retrieve all API keys created by the authenticated administrator.
+        
+        Returns a list of API key objects with metadata including usage statistics,
+        expiration status, and permissions. The actual key values are never returned
+        after initial creation.
+      operationId: listApiKeys
+      responses:
+        '200':
+          description: Successfully retrieved API keys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApiKeyResponse'
+              examples:
+                typical_response:
+                  summary: Typical response with multiple keys
+                  value:
+                    - id: "api_550e8400-e29b-41d4-a716-446655440000"
+                      name: "CI/CD Pipeline Key"
+                      description: "For automated documentation updates from GitHub Actions"
+                      keyPreview: "nxd_a1b2...x9y0"
+                      permissions: "write"
+                      expiresAt: "2025-12-31T23:59:59.000Z"
+                      lastUsedAt: "2024-12-14T10:30:00.000Z"
+                      isActive: true
+                      createdAt: "2024-01-15T09:00:00.000Z"
+                      updatedAt: "2024-12-14T10:30:00.000Z"
+                    - id: "api_6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+                      name: "Read-Only Monitoring"
+                      description: "For external monitoring system to check API health"
+                      keyPreview: "nxd_c3d4...a1b2"
+                      permissions: "read"
+                      expiresAt: "2025-06-30T23:59:59.000Z"
+                      lastUsedAt: "2024-12-14T15:45:00.000Z"
+                      isActive: true
+                      createdAt: "2024-03-20T14:30:00.000Z"
+                      updatedAt: "2024-03-20T14:30:00.000Z"
+                empty_response:
+                  summary: No API keys found
+                  value: []
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - API Key Management
+      summary: Create API Key
+      description: |
+        Generate a new API key with specified permissions and expiration date.
+        
+        **Important**: The full API key is only returned in the creation response.
+        Store it securely as it cannot be retrieved again. Only the preview 
+        (first 8 and last 4 characters) will be shown in future API calls.
+        
+        **Validation Rules:**
+        - Name: Required, 1-100 characters
+        - Description: Optional, max 500 characters  
+        - Permissions: Must be "read" or "write"
+        - ExpiresAt: Must be a future datetime
+      operationId: createApiKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApiKeyRequest'
+            examples:
+              write_permission_key:
+                summary: Full access key for CI/CD
+                value:
+                  name: "GitHub Actions CI/CD"
+                  description: "Automated documentation updates and feature creation from repository workflows"
+                  permissions: "write"
+                  expiresAt: "2025-12-31T23:59:59.000Z"
+              read_only_key:
+                summary: Read-only monitoring key
+                value:
+                  name: "Health Check Monitor"
+                  description: "External monitoring system for API availability checks"
+                  permissions: "read"
+                  expiresAt: "2025-06-30T23:59:59.000Z"
+              minimal_key:
+                summary: Minimal required fields
+                value:
+                  name: "Test Integration"
+                  permissions: "read"
+                  expiresAt: "2025-03-01T23:59:59.000Z"
+      responses:
+        '201':
+          description: API key created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateApiKeyResponse'
+              examples:
+                successful_creation:
+                  summary: Successful API key creation
+                  value:
+                    id: "api_550e8400-e29b-41d4-a716-446655440000"
+                    name: "GitHub Actions CI/CD"
+                    description: "Automated documentation updates and feature creation from repository workflows"
+                    keyPreview: "nxd_a1b2...x9y0"
+                    permissions: "write"
+                    expiresAt: "2025-12-31T23:59:59.000Z"
+                    lastUsedAt: null
+                    isActive: true
+                    createdAt: "2024-12-14T16:30:00.000Z"
+                    updatedAt: "2024-12-14T16:30:00.000Z"
+                    key: "nxd_a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdefghijklmnop"
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missing_required_fields:
+                  summary: Missing required fields
+                  value:
+                    error: "Name and expiry date are required"
+                invalid_permissions:
+                  summary: Invalid permission value
+                  value:
+                    error: "Invalid permissions"
+                expiry_in_past:
+                  summary: Expiry date in the past
+                  value:
+                    error: "Expiry date must be in the future"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /{id}:
+    patch:
+      tags:
+        - API Key Management
+      summary: Update API Key
+      description: |
+        Update an existing API key. Currently only supports enabling/disabling keys.
+        
+        **Future Enhancements:** May support updating name, description, and expiration
+        date in future versions.
+        
+        **Use Cases:**
+        - Temporarily disable a key without deleting it
+        - Re-enable a previously disabled key
+        - Emergency revocation of compromised keys
+      operationId: updateApiKey
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the API key to update
+          schema:
+            type: string
+            format: uuid
+            example: "api_550e8400-e29b-41d4-a716-446655440000"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateApiKeyRequest'
+            examples:
+              disable_key:
+                summary: Disable an API key
+                value:
+                  isActive: false
+              enable_key:
+                summary: Re-enable an API key
+                value:
+                  isActive: true
+      responses:
+        '200':
+          description: API key updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_boolean:
+                  summary: Invalid isActive value
+                  value:
+                    error: "isActive must be a boolean"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: API key not found or not owned by authenticated admin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                not_found:
+                  summary: API key not found
+                  value:
+                    error: "API key not found"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - API Key Management
+      summary: Delete API Key
+      description: |
+        Permanently delete an API key. This action cannot be undone.
+        
+        **Warning:** Once deleted, any systems using this API key will lose access
+        immediately. Ensure all integrations are updated before deletion.
+        
+        **Best Practice:** Consider disabling the key first (PATCH with isActive: false)
+        to test impact before permanent deletion.
+      operationId: deleteApiKey
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the API key to delete
+          schema:
+            type: string
+            format: uuid
+            example: "api_550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: API key deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                required:
+                  - success
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: API key not found or not owned by authenticated admin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                not_found:
+                  summary: API key not found
+                  value:
+                    error: "API key not found"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    SessionAuth:
+      type: apiKey
+      in: cookie
+      name: next-auth.session-token
+      description: |
+        NextAuth.js session authentication. Admin role required.
+        
+        **Note:** This is different from the API keys being managed by this API.
+        This security scheme is for authenticating with the API key management
+        endpoints themselves, which require an active admin session.
+
+  schemas:
+    CreateApiKeyRequest:
+      type: object
+      required:
+        - name
+        - permissions
+        - expiresAt
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Human-readable name for the API key
+          example: "CI/CD Pipeline Integration"
+        description:
+          type: string
+          maxLength: 500
+          description: Optional description of the key's purpose
+          example: "Automated documentation updates from GitHub Actions workflow"
+        permissions:
+          type: string
+          enum: [read, write]
+          description: Permission level for the API key
+          example: "write"
+        expiresAt:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the key should expire (must be future)
+          example: "2025-12-31T23:59:59.000Z"
+
+    UpdateApiKeyRequest:
+      type: object
+      required:
+        - isActive
+      properties:
+        isActive:
+          type: boolean
+          description: Whether the API key is active and can be used for authentication
+          example: false
+
+    ApiKeyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the API key
+          example: "api_550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          description: Human-readable name for the API key
+          example: "CI/CD Pipeline Integration"
+        description:
+          type: string
+          nullable: true
+          description: Optional description of the key's purpose
+          example: "Automated documentation updates from GitHub Actions workflow"
+        keyPreview:
+          type: string
+          description: Preview of the API key (first 8 + '...' + last 4 characters)
+          example: "nxd_a1b2...x9y0"
+        permissions:
+          type: string
+          enum: [read, write]
+          description: Permission level for the API key
+          example: "write"
+        expiresAt:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the key expires
+          example: "2025-12-31T23:59:59.000Z"
+        lastUsedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: ISO 8601 timestamp of the last time this key was used
+          example: "2024-12-14T10:30:00.000Z"
+        isActive:
+          type: boolean
+          description: Whether the API key is currently active
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the key was created
+          example: "2024-01-15T09:00:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the key was last updated
+          example: "2024-12-14T10:30:00.000Z"
+      required:
+        - id
+        - name
+        - keyPreview
+        - permissions
+        - expiresAt
+        - lastUsedAt
+        - isActive
+        - createdAt
+        - updatedAt
+
+    CreateApiKeyResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiKeyResponse'
+        - type: object
+          properties:
+            key:
+              type: string
+              minLength: 64
+              maxLength: 64
+              pattern: '^nxd_[a-f0-9]{60}$'
+              description: |
+                **CRITICAL**: The complete API key value. This is shown only once 
+                during creation and cannot be retrieved again. Store it securely!
+              example: "nxd_a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdefghijklmnop"
+          required:
+            - key
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+          example: "Name and expiry date are required"
+      required:
+        - error
+
+  responses:
+    Unauthorized:
+      description: Admin authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            not_admin:
+              summary: User is not an administrator
+              value:
+                error: "Unauthorized"
+            not_authenticated:
+              summary: User is not logged in
+              value:
+                error: "Unauthorized"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            generic_error:
+              summary: Generic server error
+              value:
+                error: "Internal server error"
+
+tags:
+  - name: API Key Management
+    description: |
+      Operations for managing API keys that provide programmatic access to NextDocs.
+      
+      **Administrative Access Required**: All endpoints require the user to be logged in
+      with an administrator role. API keys can only be managed by admins and each admin
+      can only manage keys they have created.
+      
+      **Security Model**: 
+      - Keys are hashed using SHA-256 before storage
+      - Only the creator can view/manage their keys
+      - Full key values are never stored or returned after creation
+      - Usage tracking helps identify compromised or unused keys
+
+externalDocs:
+  description: Complete API Key Management Guide
+  url: https://docs.company.com/docs/api/api-keys

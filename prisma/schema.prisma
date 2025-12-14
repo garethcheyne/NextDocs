@@ -60,6 +60,32 @@ model User {
   
   // Notification Settings
   notificationSettings  UserNotificationSettings? @relation("UserNotificationSettings")
+  
+  // API Key Relations
+  apiKeys               APIKey[] @relation("UserAPIKeys")
+}
+
+model APIKey {
+  id          String   @id @default(uuid())
+  name        String   // Required: Human readable name
+  description String?  // Optional: Why this token was created
+  keyHash     String   @unique // Hashed version of the 64-char token
+  keyPreview  String   // First 8 chars for display (e.g., "abc12345...")
+  permissions String   @default("read") // "read" or "write"
+  expiresAt   DateTime // Required expiry date
+  lastUsedAt  DateTime? // Track when key was last used
+  isActive    Boolean  @default(true) // Can be deactivated without deletion
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  createdById String
+  createdBy   User     @relation("UserAPIKeys", fields: [createdById], references: [id], onDelete: Cascade)
+  
+  @@index([keyHash])
+  @@index([createdById])
+  @@index([expiresAt])
+  @@index([isActive])
 }
 
 model Author {

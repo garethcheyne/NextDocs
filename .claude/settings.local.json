@@ -9,7 +9,12 @@
       "Bash(docker logs:*)",
       "Bash(docker-compose:*)",
       "Bash(timeout 30 sh -c 'until docker logs nextdocs-app-dev 2>&1 | grep -q \"\"Ready in\"\"; do sleep 1; done && echo \"\"✅ Next.js is ready!\"\"')",
-      "Bash(npm run update:*)"
+      "Bash(npm run update:*)",
+      "WebFetch(domain:docs.err403.com)",
+      "Bash(npm install:*)",
+      "Bash(npm audit:*)",
+      "Bash(npm run build:*)",
+      "Bash(curl:*)"
     ]
   }
 }

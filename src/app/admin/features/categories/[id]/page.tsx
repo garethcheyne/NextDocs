@@ -255,7 +255,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
         </div>
 
         {/* Integration Settings Link */}
-        <Card className="hover:border-primary hover:shadow-md transition-all">
+        <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
           <CardHeader>
             <CardTitle>DevOps Integration</CardTitle>
             <CardDescription>Configure GitHub or Azure DevOps integration for this category</CardDescription>
@@ -270,122 +270,122 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
         </Card>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Information */}
-        <Card className="hover:border-primary hover:shadow-md transition-all">
-          <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-            <CardDescription>General details about the category</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Application Name *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="slug">Slug *</Label>
-              <Input
-                id="slug"
-                value={formData.slug}
-                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={3}
-              />
-            </div>
-
-            <CategoryIconUpload
-              onImageChange={(iconBase64) => setFormData({ ...formData, iconBase64 })}
-              currentImage={formData.iconBase64}
-              disabled={isSaving}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
+          {/* Basic Information */}
+          <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+            <CardHeader>
+              <CardTitle>Basic Information</CardTitle>
+              <CardDescription>General details about the category</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="icon">Icon</Label>
+                <Label htmlFor="name">Application Name *</Label>
                 <Input
-                  id="icon"
-                  value={formData.icon}
-                  onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                  placeholder="Lucide icon name"
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="color">Color</Label>
-                <div className="flex gap-2">
+                <Label htmlFor="slug">Slug *</Label>
+                <Input
+                  id="slug"
+                  value={formData.slug}
+                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={3}
+                />
+              </div>
+
+              <CategoryIconUpload
+                onImageChange={(iconBase64) => setFormData({ ...formData, iconBase64 })}
+                currentImage={formData.iconBase64}
+                disabled={isSaving}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="icon">Icon</Label>
                   <Input
-                    id="color"
-                    type="color"
-                    value={formData.color}
-                    onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                    className="w-20 h-10"
-                  />
-                  <Input
-                    value={formData.color}
-                    onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                    className="flex-1"
+                    id="icon"
+                    value={formData.icon}
+                    onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+                    placeholder="Lucide icon name"
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="color">Color</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="color"
+                      type="color"
+                      value={formData.color}
+                      onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                      className="w-20 h-10"
+                    />
+                    <Input
+                      value={formData.color}
+                      onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="order">Display Order</Label>
-              <Input
-                id="order"
-                type="number"
-                value={formData.order}
-                onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
-                min="0"
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="order">Display Order</Label>
+                <Input
+                  id="order"
+                  type="number"
+                  value={formData.order}
+                  onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
+                  min="0"
+                />
+              </div>
 
-            <div className="flex items-center gap-2">
-              <Input
-                id="enabled"
-                type="checkbox"
-                checked={formData.enabled}
-                onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
-                className="w-4 h-4 rounded border-gray-300"
-              />
-              <Label htmlFor="enabled" className="cursor-pointer">
-                Enabled
-              </Label>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="enabled"
+                  type="checkbox"
+                  checked={formData.enabled}
+                  onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
+                  className="w-4 h-4 rounded border-gray-300"
+                />
+                <Label htmlFor="enabled" className="cursor-pointer">
+                  Enabled
+                </Label>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Actions */}
-        <div className="flex gap-4">
-          <Button
-            type="submit"
-            disabled={isSaving}
-            className="bg-brand-orange hover:bg-brand-orange/90"
-          >
-            <Save className="w-4 h-4 mr-2" />
-            {isSaving ? 'Saving...' : 'Save Changes'}
-          </Button>
-
-          <Link href="/admin/features">
-            <Button type="button" variant="ghost">
-              Cancel
+          {/* Actions */}
+          <div className="flex gap-4">
+            <Button
+              type="submit"
+              disabled={isSaving}
+              className="bg-brand-orange hover:bg-brand-orange/90"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {isSaving ? 'Saving...' : 'Save Changes'}
             </Button>
-          </Link>
-        </div>
+
+            <Link href="/admin/features">
+              <Button type="button" variant="ghost">
+                Cancel
+              </Button>
+            </Link>
+          </div>
         </form>
       </div>
       <Toaster />

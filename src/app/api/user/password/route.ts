@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/db/prisma'
 import { verifyPassword, hashPassword } from '@/lib/auth/password'
+import {
+  checkRateLimit,
+  rateLimitResponse,
+  PASSWORD_RESET_RATE_LIMIT,
+} from '@/lib/security/rate-limiter'
 
 /**
  * POST /api/user/password - Change user password
@@ -16,6 +21,16 @@ export async function POST(request: NextRequest) {
         { error: 'Unauthorized' },
         { status: 401 }
       )
+    }
+
+    // Rate limit by user ID to prevent brute force password guessing
+    const rateLimitResult = await checkRateLimit(
+      session.user.id,
+      PASSWORD_RESET_RATE_LIMIT
+    )
+
+    if (!rateLimitResult.success) {
+      return rateLimitResponse(rateLimitResult)
     }
 
     const body = await request.json()
@@ -119,7 +134,9 @@ export async function POST(request: NextRequest) {
       console.error('Analytics tracking error:', error)
     }
 
-    console.log('✅ Password changed successfully for:', user.email)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('✅ Password changed successfully for:', user.email)
+    }
 
     return NextResponse.json({
       success: true,

@@ -143,7 +143,7 @@ export default async function ContentCreatorGuidePage() {
 
                 <div className="space-y-6">
                     {/* Quick Overview */}
-                    <Card>
+                    <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
                         <CardHeader>
                             <CardTitle>What is NextDocs?</CardTitle>
                             <CardDescription>Understanding the platform</CardDescription>
@@ -184,7 +184,7 @@ export default async function ContentCreatorGuidePage() {
                     </Card>
 
                     {/* Workflow */}
-                    <Card>
+                    <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
                         <CardHeader>
                             <CardTitle>Typical Workflow</CardTitle>
                             <CardDescription>How to create and publish documentation</CardDescription>

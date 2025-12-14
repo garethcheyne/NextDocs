@@ -14,13 +14,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: authConfig.callbacks,
   events: {
     async signIn({ user, account, profile, isNewUser }) {
-      console.log('✨ SignIn event:', { userId: user.id, provider: account?.provider, isNewUser })
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✨ SignIn event:', { userId: user.id, provider: account?.provider, isNewUser })
+      }
     },
     async session({ session, token }) {
-      console.log('🎫 Session event:', { userId: session.user?.id })
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🎫 Session event:', { userId: session.user?.id })
+      }
     },
   },
-  debug: true, // Enable debug logging
+  debug: process.env.NODE_ENV === 'development', // Only enable debug in development
   providers: [
     ...authConfig.providers,
     Credentials({
@@ -30,12 +34,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        console.log('🔐 Credentials login attempt:', credentials?.email)
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔐 Credentials login attempt:', credentials?.email)
+        }
 
         if (!credentials?.email || !credentials?.password) {
-          console.log('❌ Missing credentials')
+          if (process.env.NODE_ENV === 'development') {
+            console.log('❌ Missing credentials')
+          }
 
-          // Track failed login - missing credentials
+          // Track failed login - use generic reason to prevent user enumeration
           try {
             await prisma.analyticsEvent.create({
               data: {
@@ -43,7 +51,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 eventType: 'login_failure',
                 eventData: {
                   loginMethod: 'credentials',
-                  failureReason: 'Missing credentials'
+                  failureReason: 'Invalid credentials' // Generic message
                 },
                 path: '/login'
               }
@@ -58,9 +66,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const user = await getUserByEmail(credentials.email as string)
 
         if (!user) {
-          console.log('❌ User not found:', credentials.email)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('❌ User not found:', credentials.email)
+          }
 
-          // Track failed login - user not found
+          // Track failed login - use generic reason to prevent user enumeration
           try {
             await prisma.analyticsEvent.create({
               data: {
@@ -68,8 +78,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 eventType: 'login_failure',
                 eventData: {
                   loginMethod: 'credentials',
-                  email: credentials.email,
-                  failureReason: 'User not found'
+                  failureReason: 'Invalid credentials' // Generic - don't reveal if user exists
                 },
                 path: '/login'
               }
@@ -82,9 +91,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         if (!user.password) {
-          console.log('❌ User has no password (OAuth only):', credentials.email)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('❌ User has no password (OAuth only):', credentials.email)
+          }
 
-          // Track failed login - OAuth user
+          // Track failed login - use generic reason to prevent user enumeration
           try {
             await prisma.analyticsEvent.create({
               data: {
@@ -93,8 +104,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 eventType: 'login_failure',
                 eventData: {
                   loginMethod: 'credentials',
-                  email: credentials.email,
-                  failureReason: 'OAuth user - no password'
+                  failureReason: 'Invalid credentials' // Generic - don't reveal auth method
                 },
                 path: '/login'
               }
@@ -106,16 +116,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null
         }
 
-        console.log('🔍 Verifying password for:', credentials.email)
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔍 Verifying password for:', credentials.email)
+        }
         const isValid = await verifyPassword(
           credentials.password as string,
           user.password
         )
 
         if (!isValid) {
-          console.log('❌ Invalid password for:', credentials.email)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('❌ Invalid password for:', credentials.email)
+          }
 
-          // Track failed login - invalid password
+          // Track failed login - use generic reason to prevent user enumeration
           try {
             await prisma.analyticsEvent.create({
               data: {
@@ -124,8 +138,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 eventType: 'login_failure',
                 eventData: {
                   loginMethod: 'credentials',
-                  email: credentials.email,
-                  failureReason: 'Invalid password'
+                  failureReason: 'Invalid credentials' // Generic - don't reveal password was wrong
                 },
                 path: '/login'
               }
@@ -137,7 +150,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null
         }
 
-        console.log('✅ Login successful:', credentials.email, 'Role:', user.role)
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ Login successful:', credentials.email, 'Role:', user.role)
+        }
 
         // Track successful login
         try {

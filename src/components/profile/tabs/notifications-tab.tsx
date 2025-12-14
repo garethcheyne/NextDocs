@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Mail, MessageSquare, Bell, Users, Smartphone, Globe, Settings, CheckCircle, AlertCircle } from 'lucide-react'
+import { Mail, MessageSquare, Bell, Users, Smartphone, Globe, Settings, CheckCircle, AlertCircle, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface NotificationsTabProps {
@@ -141,7 +141,7 @@ export function NotificationsTab({ userId }: NotificationsTabProps) {
     if (loading) {
         return (
             <div className="space-y-6">
-                <Card>
+                <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
                     <CardContent className="p-6">
                         <div className="animate-pulse space-y-4">
                             <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
@@ -159,11 +159,11 @@ export function NotificationsTab({ userId }: NotificationsTabProps) {
     return (
         <div className="space-y-6">
             {/* Email Notifications */}
-            <Card>
+            <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Mail className="h-5 w-5" />
-                        Email Notifications
+                        <Globe className="w-5 h-5" />
+                        Web Notifications
                     </CardTitle>
                     <CardDescription>
                         Configure when and how you receive email notifications
@@ -513,10 +513,10 @@ export function NotificationsTab({ userId }: NotificationsTabProps) {
             </Card>
 
             {/* Notification Frequency */}
-            <Card>
+            <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Settings className="h-5 w-5" />
+                        <Clock className="w-5 h-5" />
                         Notification Frequency
                     </CardTitle>
                     <CardDescription>

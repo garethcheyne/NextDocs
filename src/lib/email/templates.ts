@@ -74,7 +74,7 @@ export function buildFeatureStatusChangeEmail(
   changedBy?: string
 ): string {
   const featureUrl = `${process.env.NEXT_PUBLIC_URL}/features/${feature.slug}`
-  
+
   const statusEmoji: Record<string, string> = {
     proposal: '💡',
     'under-review': '🔍',
@@ -107,7 +107,7 @@ export function buildFeatureStatusChangeEmail(
         <!-- Header -->
         <div style="${headerStyles}">
           <div style="${logoStyles}">
-            <img src="${process.env.NEXT_PUBLIC_URL}/img/cat_logo.png" alt="CAT" style="max-height: 50px; height: auto; width: auto;" />
+            <img src="${process.env.NEXT_PUBLIC_URL}/img/cat_logo.png" alt="CAT" style="max-height: 200px; height: auto; width: auto;" />
           </div>
           <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             ${statusEmoji[newStatus] || '📢'} Feature Status Updated
@@ -210,7 +210,7 @@ export function buildNewCommentEmail(
         <!-- Header -->
         <div style="${headerStyles}">
           <div style="${logoStyles}">
-            <img src="${process.env.NEXT_PUBLIC_URL}/img/cat_logo.png" alt="CAT" style="max-height: 50px; height: auto; width: auto;" />
+            <img src="${process.env.NEXT_PUBLIC_URL}/img/cat_logo.png" alt="CAT" style="max-height: 200px; height: auto; width: auto;" />
           </div>
           <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             💬 New Comment Added
@@ -294,7 +294,7 @@ export function buildNewFeatureEmail(
         <!-- Header -->
         <div style="${headerStyles}">
           <div style="${logoStyles}">
-            <img src="${process.env.NEXT_PUBLIC_URL}/img/cat_logo.png" alt="CAT" style="max-height: 50px; height: auto; width: auto;" />
+            <img src="${process.env.NEXT_PUBLIC_URL}/img/cat_logo.png" alt="CAT" style="max-height: 200px; height: auto; width: auto;" />
           </div>
           <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             ✨ New Feature Request

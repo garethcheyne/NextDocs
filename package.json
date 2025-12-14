@@ -4,14 +4,16 @@
   "description": "Enterprise documentation platform with Azure DevOps & GitHub sync, feature requests, and comprehensive admin tools",
   "private": true,
   "scripts": {
-    "build": "prisma generate && next build",
+    "build": "npm run docs:generate && prisma generate && next build",
     "start": "docker-compose -f docker-compose.prod.yml up -d",
     "stop": "docker-compose -f docker-compose.prod.yml down",
     "logs": "docker-compose -f docker-compose.prod.yml logs -f",
     "update": "docker-compose -f docker-compose.prod.yml build app && docker-compose -f docker-compose.prod.yml up -d app",
     "dev": "docker-compose -f docker-compose.prod.yml stop app && docker-compose -f docker-compose.prod.yml up -d postgres redis && docker-compose -f docker-compose.dev.yml up --build",
     "dev:stop": "docker-compose -f docker-compose.dev.yml down && docker-compose -f docker-compose.prod.yml up -d app",
-    "dev:local": "next dev --port 3000 --hostname 0.0.0.0"
+    "dev:local": "next dev --port 3000 --hostname 0.0.0.0",
+    "docs:generate": "node scripts/generate-swagger.js",
+    "docs:serve": "npm run docs:generate && next dev"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.6.0",
@@ -44,6 +46,7 @@
     "framer-motion": "^11.11.7",
     "gray-matter": "^4.0.3",
     "ioredis": "^5.8.2",
+    "isomorphic-dompurify": "^2.34.0",
     "lucide-react": "^0.453.0",
     "mermaid": "^11.12.1",
     "next": "^16.0.7",

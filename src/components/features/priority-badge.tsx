@@ -14,27 +14,27 @@ export function PriorityBadge({ priority, className }: PriorityBadgeProps) {
         switch (priority) {
             case 'critical':
                 return {
-                    styles: 'bg-red-500 text-white border-red-500 hover:bg-red-600',
+                    styles: 'bg-red-600 text-white border-red-600',
                     icon: AlertTriangle
                 }
             case 'high':
                 return {
-                    styles: 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600',
+                    styles: 'bg-orange-600 text-white border-orange-600',
                     icon: ArrowUp
                 }
             case 'medium':
                 return {
-                    styles: 'bg-yellow-500 text-white border-yellow-500 hover:bg-yellow-600',
+                    styles: 'bg-yellow-600 text-white border-yellow-600',
                     icon: Minus
                 }
             case 'low':
                 return {
-                    styles: 'bg-green-500 text-white border-green-500 hover:bg-green-600',
+                    styles: 'bg-green-600 text-white border-green-600',
                     icon: ArrowDown
                 }
             default:
                 return {
-                    styles: 'bg-gray-500 text-white border-gray-500 hover:bg-gray-600',
+                    styles: 'bg-gray-700 text-white border-gray-700',
                     icon: Minus
                 }
         }

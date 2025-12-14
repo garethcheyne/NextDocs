@@ -7,6 +7,7 @@ import { DocumentTracker } from '@/components/document-tracker'
 import { Clock, User } from 'lucide-react'
 import { MarkdownWithMermaid } from '@/components/markdown-with-mermaid'
 import { Badge } from '@/components/ui/badge'
+import { CategoryBadge } from '@/components/features/category-badge'
 import { getAuthorBySlug, getAuthorDocuments, getAuthorBlogPosts } from '@/lib/authors'
 import { AuthorHoverCard } from '@/components/author-hover-card'
 import { ContentEngagement } from '@/components/content-engagement'
@@ -100,6 +101,18 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
         ],
     })
 
+    // Fetch feature categories to check for matches
+    const featureCategories = await prisma.featureCategory.findMany({
+        where: { enabled: true },
+        select: {
+            id: true,
+            name: true,
+            slug: true,
+            color: true,
+            iconBase64: true
+        }
+    })
+
     // Fetch all index documents to determine which categories have index.md
     const indexDocuments = await prisma.document.findMany({
         where: {
@@ -182,11 +195,28 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
 
                 {/* Metadata */}
                 <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                    {document.category && (
-                        <Badge variant="secondary" className="capitalize">
-                            {document.category.replace(/-/g, ' ')}
-                        </Badge>
-                    )}
+                    {document.category && (() => {
+                        // Check if document category matches any feature category
+                        const matchingFeatureCategory = featureCategories.find(
+                            fc => fc.slug === document.category
+                        )
+                        
+                        if (matchingFeatureCategory) {
+                            return (
+                                <CategoryBadge 
+                                    category={matchingFeatureCategory}
+                                    className="-ml-3" 
+                                />
+                            )
+                        }
+                        
+                        // Fallback to generic badge
+                        return (
+                            <Badge variant="secondary" className="capitalize">
+                                {document.category.replace(/-/g, ' ')}
+                            </Badge>
+                        )
+                    })()}
 
 
                     {document.author && (

@@ -101,8 +101,8 @@ function verifyGitHubSignature(payload: string, signature: string | null): boole
 
   const secret = process.env.GITHUB_WEBHOOK_SECRET;
   if (!secret) {
-    console.warn('GITHUB_WEBHOOK_SECRET not configured - webhook signatures cannot be verified');
-    return true; // Allow in development if no secret configured
+    console.error('GITHUB_WEBHOOK_SECRET not configured - rejecting webhook request');
+    return false; // Never allow unsigned webhooks - secret MUST be configured
   }
 
   const hmac = crypto.createHmac('sha256', secret);

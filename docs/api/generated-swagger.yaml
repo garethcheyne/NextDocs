@@ -1,0 +1,2940 @@
+openapi: 3.0.3
+info:
+  title: NextDocs API
+  description: |-
+    Auto-generated API documentation for NextDocs
+
+    Generated on: 2025-12-14T09:37:21.234Z
+  version: 1.0.0-20251214
+  contact:
+    name: NextDocs Team
+servers:
+  - url: /api
+    description: API Server
+security:
+  - sessionAuth: []
+  - apiKeyAuth: []
+components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: authjs.session-token
+      description: NextAuth.js session cookie
+    apiKeyAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: hex
+      description: API Key authentication (64-char hex string)
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error description
+      required:
+        - error
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+      required:
+        - success
+  responses:
+    BadRequest:
+      description: Bad request - validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Unauthorized - authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+paths:
+  /admin/analytics/events:
+    get:
+      tags:
+        - Admin
+      summary: GET /admin/analytics/events
+      description: Auto-generated documentation for GET /admin/analytics/events
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /admin/analytics/metrics:
+    get:
+      tags:
+        - Admin
+      summary: GET /admin/analytics/metrics
+      description: Auto-generated documentation for GET /admin/analytics/metrics
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /admin/analytics/realtime:
+    get:
+      tags:
+        - Admin
+      summary: GET /admin/analytics/realtime
+      description: Auto-generated documentation for GET /admin/analytics/realtime
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /admin/api-keys:
+    get:
+      tags:
+        - Admin
+      summary: GET /admin/api-keys
+      description: Auto-generated documentation for GET /admin/api-keys
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Admin
+      summary: POST /admin/api-keys
+      description: Auto-generated documentation for POST /admin/api-keys
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+  /admin/api-keys/{id}:
+    patch:
+      tags:
+        - Admin
+      summary: PATCH /admin/api-keys/{id}
+      description: Auto-generated documentation for PATCH /admin/api-keys/{id}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+    delete:
+      tags:
+        - Admin
+      summary: DELETE /admin/api-keys/{id}
+      description: Auto-generated documentation for DELETE /admin/api-keys/{id}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /admin/features/categories:
+    get:
+      tags:
+        - Admin
+      summary: GET /admin/features/categories
+      description: Auto-generated documentation for GET /admin/features/categories
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Admin
+      summary: POST /admin/features/categories
+      description: Auto-generated documentation for POST /admin/features/categories
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+  /admin/features/categories/{id}/integrations:
+    put:
+      tags:
+        - Admin
+      summary: PUT /admin/features/categories/{id}/integrations
+      description: Auto-generated documentation for PUT /admin/features/categories/{id}/integrations
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /admin/features/categories/{id}:
+    get:
+      tags:
+        - Admin
+      summary: GET /admin/features/categories/{id}
+      description: Auto-generated documentation for GET /admin/features/categories/{id}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+    patch:
+      tags:
+        - Admin
+      summary: PATCH /admin/features/categories/{id}
+      description: Auto-generated documentation for PATCH /admin/features/categories/{id}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+    delete:
+      tags:
+        - Admin
+      summary: DELETE /admin/features/categories/{id}
+      description: Auto-generated documentation for DELETE /admin/features/categories/{id}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /admin/features/categories/{id}/test-connection:
+    post:
+      tags:
+        - Admin
+      summary: POST /admin/features/categories/{id}/test-connection
+      description: Auto-generated documentation for POST /admin/features/categories/{id}/test-connection
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /admin/features/merge:
+    post:
+      tags:
+        - Admin
+      summary: POST /admin/features/merge
+      description: Auto-generated documentation for POST /admin/features/merge
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+  /admin/features/{id}/create-work-item:
+    post:
+      tags:
+        - Admin
+      summary: POST /admin/features/{id}/create-work-item
+      description: Auto-generated documentation for POST /admin/features/{id}/create-work-item
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /admin/features/{id}/edit:
+    patch:
+      tags:
+        - Admin
+      summary: PATCH /admin/features/{id}/edit
+      description: Auto-generated documentation for PATCH /admin/features/{id}/edit
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /admin/features/{id}/reclassify:
+    patch:
+      tags:
+        - Admin
+      summary: PATCH /admin/features/{id}/reclassify
+      description: Auto-generated documentation for PATCH /admin/features/{id}/reclassify
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /admin/features/{id}/status:
+    post:
+      tags:
+        - Admin
+      summary: POST /admin/features/{id}/status
+      description: Auto-generated documentation for POST /admin/features/{id}/status
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /admin/features/{id}/sync-comments:
+    post:
+      tags:
+        - Admin
+      summary: POST /admin/features/{id}/sync-comments
+      description: Auto-generated documentation for POST /admin/features/{id}/sync-comments
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /admin/swagger:
+    get:
+      tags:
+        - Admin
+      summary: GET /admin/swagger
+      description: Auto-generated documentation for GET /admin/swagger
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    options:
+      tags:
+        - Admin
+      summary: OPTIONS /admin/swagger
+      description: Auto-generated documentation for OPTIONS /admin/swagger
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /admin/sync-all-comments:
+    post:
+      tags:
+        - Admin
+      summary: POST /admin/sync-all-comments
+      description: Auto-generated documentation for POST /admin/sync-all-comments
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+  /admin/test-email:
+    post:
+      tags:
+        - Admin
+      summary: POST /admin/test-email
+      description: Auto-generated documentation for POST /admin/test-email
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+  /admin/users/{id}:
+    patch:
+      tags:
+        - Admin
+      summary: PATCH /admin/users/{id}
+      description: Auto-generated documentation for PATCH /admin/users/{id}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+    delete:
+      tags:
+        - Admin
+      summary: DELETE /admin/users/{id}
+      description: Auto-generated documentation for DELETE /admin/users/{id}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /analytics/track:
+    post:
+      tags:
+        - Analytics
+      summary: POST /analytics/track
+      description: Auto-generated documentation for POST /analytics/track
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+  /auth/{...nextauth}:
+    post:
+      tags:
+        - Auth
+      summary: POST /auth/{...nextauth}
+      description: Auto-generated documentation for POST /auth/{...nextauth}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: ...nextauth
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ...nextauth parameter
+  /content/{type}/{id}/follow:
+    post:
+      tags:
+        - Content
+      summary: POST /content/{type}/{id}/follow
+      description: Auto-generated documentation for POST /content/{type}/{id}/follow
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+          description: type parameter
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+    delete:
+      tags:
+        - Content
+      summary: DELETE /content/{type}/{id}/follow
+      description: Auto-generated documentation for DELETE /content/{type}/{id}/follow
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+          description: type parameter
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+    get:
+      tags:
+        - Content
+      summary: GET /content/{type}/{id}/follow
+      description: Auto-generated documentation for GET /content/{type}/{id}/follow
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+          description: type parameter
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /content/{type}/{id}/vote:
+    post:
+      tags:
+        - Content
+      summary: POST /content/{type}/{id}/vote
+      description: Auto-generated documentation for POST /content/{type}/{id}/vote
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+          description: type parameter
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+    delete:
+      tags:
+        - Content
+      summary: DELETE /content/{type}/{id}/vote
+      description: Auto-generated documentation for DELETE /content/{type}/{id}/vote
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+          description: type parameter
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+    get:
+      tags:
+        - Content
+      summary: GET /content/{type}/{id}/vote
+      description: Auto-generated documentation for GET /content/{type}/{id}/vote
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+          description: type parameter
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /features/comments/{commentId}:
+    patch:
+      tags:
+        - Features
+      summary: PATCH /features/comments/{commentId}
+      description: Auto-generated documentation for PATCH /features/comments/{commentId}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: commentId parameter
+    delete:
+      tags:
+        - Features
+      summary: DELETE /features/comments/{commentId}
+      description: Auto-generated documentation for DELETE /features/comments/{commentId}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: commentId parameter
+  /features/{id}/admin/delete:
+    delete:
+      tags:
+        - Features
+      summary: DELETE /features/{id}/admin/delete
+      description: Auto-generated documentation for DELETE /features/{id}/admin/delete
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /features/{id}/admin/internal-notes:
+    post:
+      tags:
+        - Features
+      summary: POST /features/{id}/admin/internal-notes
+      description: Auto-generated documentation for POST /features/{id}/admin/internal-notes
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /features/{id}/admin/set-priority:
+    post:
+      tags:
+        - Features
+      summary: POST /features/{id}/admin/set-priority
+      description: Auto-generated documentation for POST /features/{id}/admin/set-priority
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /features/{id}/admin/toggle-archive:
+    post:
+      tags:
+        - Features
+      summary: POST /features/{id}/admin/toggle-archive
+      description: Auto-generated documentation for POST /features/{id}/admin/toggle-archive
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /features/{id}/admin/toggle-lock-comments:
+    post:
+      tags:
+        - Features
+      summary: POST /features/{id}/admin/toggle-lock-comments
+      description: Auto-generated documentation for POST /features/{id}/admin/toggle-lock-comments
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /features/{id}/admin/toggle-pin:
+    post:
+      tags:
+        - Features
+      summary: POST /features/{id}/admin/toggle-pin
+      description: Auto-generated documentation for POST /features/{id}/admin/toggle-pin
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /features/{id}/comments:
+    get:
+      tags:
+        - Features
+      summary: GET /features/{id}/comments
+      description: Auto-generated documentation for GET /features/{id}/comments
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+    post:
+      tags:
+        - Features
+      summary: POST /features/{id}/comments
+      description: Auto-generated documentation for POST /features/{id}/comments
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /features/{id}/export:
+    get:
+      tags:
+        - Features
+      summary: GET /features/{id}/export
+      description: Auto-generated documentation for GET /features/{id}/export
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /features/{id}:
+    get:
+      tags:
+        - Features
+      summary: GET /features/{id}
+      description: Auto-generated documentation for GET /features/{id}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+    put:
+      tags:
+        - Features
+      summary: PUT /features/{id}
+      description: Auto-generated documentation for PUT /features/{id}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+    delete:
+      tags:
+        - Features
+      summary: DELETE /features/{id}
+      description: Auto-generated documentation for DELETE /features/{id}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /features/{id}/vote:
+    post:
+      tags:
+        - Features
+      summary: POST /features/{id}/vote
+      description: Auto-generated documentation for POST /features/{id}/vote
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+    get:
+      tags:
+        - Features
+      summary: GET /features/{id}/vote
+      description: Auto-generated documentation for GET /features/{id}/vote
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /guide/download-sample:
+    get:
+      tags:
+        - Guide
+      summary: GET /guide/download-sample
+      description: Auto-generated documentation for GET /guide/download-sample
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /health:
+    get:
+      tags:
+        - Health
+      summary: GET /health
+      description: Auto-generated documentation for GET /health
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /images/{filename}:
+    get:
+      tags:
+        - Images
+      summary: GET /images/{filename}
+      description: Auto-generated documentation for GET /images/{filename}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+          description: filename parameter
+  /repositories:
+    post:
+      tags:
+        - Repositories
+      summary: POST /repositories
+      description: Auto-generated documentation for POST /repositories
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+    get:
+      tags:
+        - Repositories
+      summary: GET /repositories
+      description: Auto-generated documentation for GET /repositories
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /repositories/{id}/authors/count:
+    get:
+      tags:
+        - Repositories
+      summary: GET /repositories/{id}/authors/count
+      description: Auto-generated documentation for GET /repositories/{id}/authors/count
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /repositories/{id}/authors/list:
+    get:
+      tags:
+        - Repositories
+      summary: GET /repositories/{id}/authors/list
+      description: Auto-generated documentation for GET /repositories/{id}/authors/list
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /repositories/{id}/blog-posts/count:
+    get:
+      tags:
+        - Repositories
+      summary: GET /repositories/{id}/blog-posts/count
+      description: Auto-generated documentation for GET /repositories/{id}/blog-posts/count
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /repositories/{id}/blog-posts/list:
+    get:
+      tags:
+        - Repositories
+      summary: GET /repositories/{id}/blog-posts/list
+      description: Auto-generated documentation for GET /repositories/{id}/blog-posts/list
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /repositories/{id}/categories/count:
+    get:
+      tags:
+        - Repositories
+      summary: GET /repositories/{id}/categories/count
+      description: Auto-generated documentation for GET /repositories/{id}/categories/count
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /repositories/{id}/categories/list:
+    get:
+      tags:
+        - Repositories
+      summary: GET /repositories/{id}/categories/list
+      description: Auto-generated documentation for GET /repositories/{id}/categories/list
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /repositories/{id}/categories:
+    get:
+      tags:
+        - Repositories
+      summary: GET /repositories/{id}/categories
+      description: Auto-generated documentation for GET /repositories/{id}/categories
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+    put:
+      tags:
+        - Repositories
+      summary: PUT /repositories/{id}/categories
+      description: Auto-generated documentation for PUT /repositories/{id}/categories
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /repositories/{id}/documents/count:
+    get:
+      tags:
+        - Repositories
+      summary: GET /repositories/{id}/documents/count
+      description: Auto-generated documentation for GET /repositories/{id}/documents/count
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /repositories/{id}/documents/list:
+    get:
+      tags:
+        - Repositories
+      summary: GET /repositories/{id}/documents/list
+      description: Auto-generated documentation for GET /repositories/{id}/documents/list
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /repositories/{id}:
+    get:
+      tags:
+        - Repositories
+      summary: GET /repositories/{id}
+      description: Auto-generated documentation for GET /repositories/{id}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+    patch:
+      tags:
+        - Repositories
+      summary: PATCH /repositories/{id}
+      description: Auto-generated documentation for PATCH /repositories/{id}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+    delete:
+      tags:
+        - Repositories
+      summary: DELETE /repositories/{id}
+      description: Auto-generated documentation for DELETE /repositories/{id}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /repositories/{id}/sync:
+    post:
+      tags:
+        - Repositories
+      summary: POST /repositories/{id}/sync
+      description: Auto-generated documentation for POST /repositories/{id}/sync
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /repositories/{id}/test:
+    post:
+      tags:
+        - Repositories
+      summary: POST /repositories/{id}/test
+      description: Auto-generated documentation for POST /repositories/{id}/test
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: id parameter
+  /search:
+    get:
+      tags:
+        - Search
+      summary: GET /search
+      description: Auto-generated documentation for GET /search
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /spec/{slug}/{version}:
+    get:
+      tags:
+        - Spec
+      summary: GET /spec/{slug}/{version}
+      description: Auto-generated documentation for GET /spec/{slug}/{version}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: slug parameter
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: string
+          description: version parameter
+    options:
+      tags:
+        - Spec
+      summary: OPTIONS /spec/{slug}/{version}
+      description: Auto-generated documentation for OPTIONS /spec/{slug}/{version}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: slug parameter
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: string
+          description: version parameter
+  /sync/worker:
+    get:
+      tags:
+        - Sync
+      summary: GET /sync/worker
+      description: Auto-generated documentation for GET /sync/worker
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /sync/worker/start:
+    post:
+      tags:
+        - Sync
+      summary: POST /sync/worker/start
+      description: Auto-generated documentation for POST /sync/worker/start
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+  /sync/worker/status:
+    get:
+      tags:
+        - Sync
+      summary: GET /sync/worker/status
+      description: Auto-generated documentation for GET /sync/worker/status
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /sync/worker/stop:
+    post:
+      tags:
+        - Sync
+      summary: POST /sync/worker/stop
+      description: Auto-generated documentation for POST /sync/worker/stop
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+  /test/teams-webhook:
+    post:
+      tags:
+        - Test
+      summary: POST /test/teams-webhook
+      description: Auto-generated documentation for POST /test/teams-webhook
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+  /upload/images:
+    post:
+      tags:
+        - Upload
+      summary: POST /upload/images
+      description: Auto-generated documentation for POST /upload/images
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+  /user/activity:
+    get:
+      tags:
+        - User
+      summary: GET /user/activity
+      description: Auto-generated documentation for GET /user/activity
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /user/data-summary:
+    get:
+      tags:
+        - User
+      summary: GET /user/data-summary
+      description: Auto-generated documentation for GET /user/data-summary
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /user/delete-account:
+    delete:
+      tags:
+        - User
+      summary: DELETE /user/delete-account
+      description: Auto-generated documentation for DELETE /user/delete-account
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /user/export-data:
+    post:
+      tags:
+        - User
+      summary: POST /user/export-data
+      description: Auto-generated documentation for POST /user/export-data
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+  /user/notification-settings:
+    get:
+      tags:
+        - User
+      summary: GET /user/notification-settings
+      description: Auto-generated documentation for GET /user/notification-settings
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - User
+      summary: PUT /user/notification-settings
+      description: Auto-generated documentation for PUT /user/notification-settings
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+  /user/password:
+    post:
+      tags:
+        - User
+      summary: POST /user/password
+      description: Auto-generated documentation for POST /user/password
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+  /user/privacy-settings:
+    get:
+      tags:
+        - User
+      summary: GET /user/privacy-settings
+      description: Auto-generated documentation for GET /user/privacy-settings
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - User
+      summary: PUT /user/privacy-settings
+      description: Auto-generated documentation for PUT /user/privacy-settings
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+  /viewers/page:
+    get:
+      tags:
+        - Viewers
+      summary: GET /viewers/page
+      description: Auto-generated documentation for GET /viewers/page
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /viewers/track:
+    post:
+      tags:
+        - Viewers
+      summary: POST /viewers/track
+      description: Auto-generated documentation for POST /viewers/track
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+  /webhooks/azure-devops:
+    post:
+      tags:
+        - Webhooks
+      summary: POST /webhooks/azure-devops
+      description: Auto-generated documentation for POST /webhooks/azure-devops
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+  /webhooks/github:
+    post:
+      tags:
+        - Webhooks
+      summary: POST /webhooks/github
+      description: Auto-generated documentation for POST /webhooks/github
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+tags:
+  - name: Admin
+    description: Operations for Admin
+  - name: Analytics
+    description: Operations for Analytics
+  - name: Auth
+    description: Operations for Auth
+  - name: Content
+    description: Operations for Content
+  - name: Features
+    description: Operations for Features
+  - name: Guide
+    description: Operations for Guide
+  - name: Health
+    description: Operations for Health
+  - name: Images
+    description: Operations for Images
+  - name: Repositories
+    description: Operations for Repositories
+  - name: Search
+    description: Operations for Search
+  - name: Spec
+    description: Operations for Spec
+  - name: Sync
+    description: Operations for Sync
+  - name: Test
+    description: Operations for Test
+  - name: Upload
+    description: Operations for Upload
+  - name: User
+    description: Operations for User
+  - name: Viewers
+    description: Operations for Viewers
+  - name: Webhooks
+    description: Operations for Webhooks

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Home, BookOpen, FileText, Settings, LogOut, User, GitBranch, Activity, Users, ChevronsUpDown, ChevronRight, Code2, Lightbulb, BarChart3, Calendar, Tag, LucideIcon, PenTool } from 'lucide-react'
+import { Home, BookOpen, FileText, Settings, LogOut, User, GitBranch, Activity, Users, ChevronsUpDown, ChevronRight, Code2, Lightbulb, BarChart3, Calendar, Tag, LucideIcon, PenTool, Key } from 'lucide-react'
 import * as LucideIcons from 'lucide-react'
 import { SignOutButton } from '@/components/auth/signout-button'
 import {
@@ -521,29 +521,29 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                             <SidebarGroupContent>
                                 <SidebarMenu>
                                     <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={currentPath === '/admin'}>
+                                        <SidebarMenuButton asChild isActive={(() => {
+                                            const isActive = currentPath === '/admin';
+                                            console.log('Dashboard isActive:', { currentPath, isActive });
+                                            return isActive;
+                                        })()}>
                                             <Link href="/admin">
                                                 <Activity className="w-4 h-4" />
                                                 <span>Dashboard</span>
                                             </Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
+
+
                                     <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={currentPath === '/admin/users' || currentPath.startsWith('/admin/users/')}>
-                                            <Link href="/admin/users">
-                                                <Users className="w-4 h-4" />
-                                                <span>Users</span>
+                                        <SidebarMenuButton asChild isActive={currentPath === '/admin/analytics' || currentPath.startsWith('/admin/analytics/')}>
+                                            <Link href="/admin/analytics">
+                                                <BarChart3 className="w-4 h-4" />
+                                                <span>Analytics</span>
                                             </Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
-                                    <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={currentPath === '/admin/features' || currentPath.startsWith('/admin/features/')}>
-                                            <Link href="/admin/features">
-                                                <Lightbulb className="w-4 h-4" />
-                                                <span>Feature Requests</span>
-                                            </Link>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
+
+
                                     <SidebarMenuItem>
                                         <SidebarMenuButton asChild isActive={currentPath === '/admin/repositories' || currentPath.startsWith('/admin/repositories/')}>
                                             <Link href="/admin/repositories">
@@ -552,11 +552,40 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                                             </Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
+
+
                                     <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={currentPath === '/admin/analytics' || currentPath.startsWith('/admin/analytics/')}>
-                                            <Link href="/admin/analytics">
-                                                <BarChart3 className="w-4 h-4" />
-                                                <span>Analytics</span>
+                                        <SidebarMenuButton asChild isActive={currentPath === '/admin/features' || currentPath.startsWith('/admin/features/')}>
+                                            <Link href="/admin/features">
+                                                <Lightbulb className="w-4 h-4" />
+                                                <span>Feature / Categories</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+
+
+                                    <SidebarMenuItem>
+                                        <SidebarMenuButton asChild isActive={currentPath === '/admin/users' || currentPath.startsWith('/admin/users/')}>
+                                            <Link href="/admin/users">
+                                                <Users className="w-4 h-4" />
+                                                <span>Users</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+
+                                    <SidebarMenuItem>
+                                        <SidebarMenuButton asChild isActive={currentPath === '/admin/api-keys' || currentPath.startsWith('/admin/api-keys/')}>
+                                            <Link href="/admin/api-keys">
+                                                <Key className="w-4 h-4" />
+                                                <span>API Keys</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                    <SidebarMenuItem>
+                                        <SidebarMenuButton asChild isActive={currentPath === '/admin/api-docs' || currentPath.startsWith('/admin/api-docs/')}>
+                                            <Link href="/admin/api-docs">
+                                                <FileText className="w-4 h-4" />
+                                                <span>API Documentation</span>
                                             </Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
@@ -621,22 +650,13 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuGroup>
-                                        {isAdmin && (
-                                            <DropdownMenuItem asChild>
-                                                <Link href="/admin" className="cursor-pointer">
-                                                    <Settings className="mr-2 h-4 w-4" />
-                                                    <span>Admin Portal</span>
-                                                </Link>
-                                            </DropdownMenuItem>
-                                        )}
 
-                                        {/* Not developeed yes, will create later. */}
-                                        {/* <DropdownMenuItem asChild>
+                                        <DropdownMenuItem asChild>
                                             <Link href="/profile" className="cursor-pointer">
                                                 <User className="mr-2 h-4 w-4" />
                                                 <span>Profile</span>
                                             </Link>
-                                        </DropdownMenuItem> */}
+                                        </DropdownMenuItem>
 
 
                                     </DropdownMenuGroup>

@@ -19,6 +19,15 @@ import { Button } from '@/components/ui/button'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Input } from '@/components/ui/input'
+import DOMPurify from 'isomorphic-dompurify'
+
+// Sanitize SVG content from Mermaid diagrams
+function sanitizeSvg(html: string): string {
+    return DOMPurify.sanitize(html, {
+        USE_PROFILES: { svg: true, svgFilters: true },
+        ADD_TAGS: ['foreignObject'],
+    })
+}
 
 // Code block component with copy functionality and syntax highlighting
 function CodeBlock({ language, children }: { language: string; children: string }) {
@@ -240,7 +249,7 @@ function MermaidDiagram({ chart }: { chart: string }) {
                     <DialogDescription className="sr-only">Full screen view of the diagram</DialogDescription>
                     <div
                         className="flex items-center justify-center"
-                        dangerouslySetInnerHTML={{ __html: ref.current?.innerHTML || '' }}
+                        dangerouslySetInnerHTML={{ __html: sanitizeSvg(ref.current?.innerHTML || '') }}
                     />
                 </DialogContent>
             </Dialog>

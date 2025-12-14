@@ -60,7 +60,7 @@ export function BlogFilters({ categories, tags, dateGroups }: BlogFiltersProps) 
         <div className="space-y-4 sticky top-20">
             {/* Active Filters */}
             {hasActiveFilters && (
-                <Card>
+                <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
                     <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                             <CardTitle className="text-sm font-medium">Active Filters</CardTitle>
@@ -114,11 +114,11 @@ export function BlogFilters({ categories, tags, dateGroups }: BlogFiltersProps) 
 
             {/* Date Filter */}
             {dateGroups.length > 0 && (
-                <Card>
+                <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
                     <CardHeader>
                         <CardTitle className="text-sm font-medium flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
-                            Filter by Date
+                            Date Range
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
@@ -170,11 +170,11 @@ export function BlogFilters({ categories, tags, dateGroups }: BlogFiltersProps) 
 
             {/* Category Filter */}
             {categories.length > 0 && (
-                <Card>
+                <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
                     <CardHeader>
                         <CardTitle className="text-sm font-medium flex items-center gap-2">
                             <FolderOpen className="w-4 h-4" />
-                            Filter by Category
+                            Categories
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-1">

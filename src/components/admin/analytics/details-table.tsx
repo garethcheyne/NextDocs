@@ -201,7 +201,7 @@ export function AnalyticsDetailsTable() {
 
   if (loading) {
     return (
-      <Card>
+      <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
         <CardContent className="p-6">
           <p className="text-center text-muted-foreground">Loading events...</p>
         </CardContent>
@@ -212,7 +212,7 @@ export function AnalyticsDetailsTable() {
   const groupedData = groupEvents()
 
   return (
-    <Card>
+    <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
       <CardHeader>
         <CardTitle>Event Details</CardTitle>
         <CardDescription>

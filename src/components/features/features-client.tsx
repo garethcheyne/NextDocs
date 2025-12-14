@@ -325,8 +325,8 @@ export function FeaturesClient({ features, categories, params }: FeaturesClientP
                     })}
 
                     {features.length === 0 && (
-                        <Card>
-                            <CardContent className="py-12">
+                        <Card className=\"bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl\">
+                            <CardContent className=\"py-12\">
                                 <div className="flex flex-col items-center justify-center text-center">
                                     <Lightbulb className="w-12 h-12 text-muted-foreground/50 mb-4" />
                                     <p className="text-foreground/70">
