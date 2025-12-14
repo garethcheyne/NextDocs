@@ -521,11 +521,7 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                             <SidebarGroupContent>
                                 <SidebarMenu>
                                     <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={(() => {
-                                            const isActive = currentPath === '/admin';
-                                            console.log('Dashboard isActive:', { currentPath, isActive });
-                                            return isActive;
-                                        })()}>
+                                        <SidebarMenuButton asChild isActive={currentPath === '/admin'}>
                                             <Link href="/admin">
                                                 <Activity className="w-4 h-4" />
                                                 <span>Dashboard</span>

@@ -144,7 +144,7 @@ export function NewFeatureForm({ categories: initialCategories }: NewFeatureForm
 
             {/* Form */}
             <form onSubmit={handleSubmit}>
-                <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+                <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
                     <CardHeader>
                         <CardTitle>Feature Details</CardTitle>
                         <CardDescription>

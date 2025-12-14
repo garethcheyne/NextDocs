@@ -303,7 +303,7 @@ export default function NewRepositoryPage() {
             </Card>
 
             {/* Basic Information */}
-            <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+            <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
               <CardHeader>
                 <CardTitle className="text-white">Source Configuration</CardTitle>
               </CardHeader>
@@ -330,7 +330,7 @@ export default function NewRepositoryPage() {
 
             {/* Azure DevOps Configuration */}
             {provider === 'AZURE_DEVOPS' && (
-              <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+              <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
                 <CardHeader>
                   <CardTitle className="text-white">Azure DevOps Settings</CardTitle>
                 </CardHeader>
@@ -411,7 +411,7 @@ export default function NewRepositoryPage() {
 
             {/* GitHub Configuration */}
             {provider === 'GITHUB' && (
-              <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+              <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
                 <CardHeader>
                   <CardTitle className="text-white">GitHub Settings</CardTitle>
                 </CardHeader>
@@ -474,7 +474,7 @@ export default function NewRepositoryPage() {
             )}
 
             {/* Repository Settings */}
-            <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+            <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
               <CardHeader>
                 <CardTitle className="text-white">Repository Settings</CardTitle>
               </CardHeader>

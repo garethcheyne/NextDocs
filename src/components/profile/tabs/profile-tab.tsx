@@ -38,7 +38,7 @@ export function ProfileTab({ user }: ProfileTabProps) {
   return (
     <div className="space-y-6">
       {/* Profile Information */}
-      <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+      <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
@@ -129,7 +129,7 @@ export function ProfileTab({ user }: ProfileTabProps) {
       </Card>
 
       {/* Account Statistics */}
-      <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+      <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
         <CardHeader>
           <CardTitle>Account Overview</CardTitle>
           <CardDescription>

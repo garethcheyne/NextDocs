@@ -45,7 +45,7 @@ export default async function ContentCreatorGuidePage() {
                 {/* Quick Navigation Cards */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <Link href="/guide/getting-started">
-                        <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full">
+                        <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-base">
                                     <BookOpen className="w-5 h-5 text-brand-orange" />
@@ -61,7 +61,7 @@ export default async function ContentCreatorGuidePage() {
                     </Link>
 
                     <Link href="/guide/structure">
-                        <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full">
+                        <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-base">
                                     <FolderTree className="w-5 h-5 text-brand-orange" />
@@ -77,7 +77,7 @@ export default async function ContentCreatorGuidePage() {
                     </Link>
 
                     <Link href="/guide/metadata">
-                        <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full">
+                        <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-base">
                                     <Settings className="w-5 h-5 text-brand-orange" />
@@ -93,7 +93,7 @@ export default async function ContentCreatorGuidePage() {
                     </Link>
 
                     <Link href="/guide/markdown">
-                        <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full">
+                        <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-base">
                                     <FileText className="w-5 h-5 text-brand-orange" />
@@ -109,7 +109,7 @@ export default async function ContentCreatorGuidePage() {
                     </Link>
 
                     <Link href="/guide/icons">
-                        <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full">
+                        <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-base">
                                     <Tag className="w-5 h-5 text-brand-orange" />
@@ -125,7 +125,7 @@ export default async function ContentCreatorGuidePage() {
                     </Link>
 
                     <Link href="/guide/publishing">
-                        <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full">
+                        <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-base">
                                     <Download className="w-5 h-5 text-brand-orange" />
@@ -143,7 +143,7 @@ export default async function ContentCreatorGuidePage() {
 
                 <div className="space-y-6">
                     {/* Quick Overview */}
-                    <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+                    <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
                         <CardHeader>
                             <CardTitle>What is NextDocs?</CardTitle>
                             <CardDescription>Understanding the platform</CardDescription>
@@ -184,7 +184,7 @@ export default async function ContentCreatorGuidePage() {
                     </Card>
 
                     {/* Workflow */}
-                    <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+                    <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
                         <CardHeader>
                             <CardTitle>Typical Workflow</CardTitle>
                             <CardDescription>How to create and publish documentation</CardDescription>

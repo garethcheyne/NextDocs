@@ -141,7 +141,7 @@ export function NotificationsTab({ userId }: NotificationsTabProps) {
     if (loading) {
         return (
             <div className="space-y-6">
-                <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+                <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
                     <CardContent className="p-6">
                         <div className="animate-pulse space-y-4">
                             <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
@@ -159,7 +159,7 @@ export function NotificationsTab({ userId }: NotificationsTabProps) {
     return (
         <div className="space-y-6">
             {/* Email Notifications */}
-            <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+            <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Globe className="w-5 h-5" />
@@ -513,7 +513,7 @@ export function NotificationsTab({ userId }: NotificationsTabProps) {
             </Card>
 
             {/* Notification Frequency */}
-            <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+            <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Clock className="w-5 h-5" />

@@ -112,7 +112,7 @@ export function ActivityTab({ userId }: ActivityTabProps) {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+        <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
           <CardContent className="p-6">
             <div className="text-center">
               <div className="animate-pulse space-y-4">
@@ -131,7 +131,7 @@ export function ActivityTab({ userId }: ActivityTabProps) {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+      <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
         <CardHeader>
           <CardTitle>Your Activity</CardTitle>
           <CardDescription>

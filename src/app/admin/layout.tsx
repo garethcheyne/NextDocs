@@ -1,7 +1,7 @@
 import { auth } from '@/lib/auth/auth'
 import { redirect } from 'next/navigation'
 import { SidebarProvider } from '@/components/ui/sidebar'
-import { AppSidebar } from '@/components/layout/app-sidebar'
+import { DynamicAdminSidebar } from '@/components/layout/dynamic-admin-sidebar'
 
 export default async function AdminLayout({
   children,
@@ -21,7 +21,7 @@ export default async function AdminLayout({
   return (
     <SidebarProvider>
       <div className="flex min-h-screen max-h-screen w-full overflow-hidden">
-        <AppSidebar user={session.user} currentPath="/admin" />
+        <DynamicAdminSidebar user={session.user} />
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden">

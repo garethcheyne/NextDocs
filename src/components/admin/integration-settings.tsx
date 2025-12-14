@@ -149,7 +149,7 @@ export default function IntegrationSettings({ category }: IntegrationSettingsPro
         </TabsList>
 
         <TabsContent value="github" className="space-y-4">
-          <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+          <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
             <CardHeader>
               <CardTitle>GitHub Integration</CardTitle>
               <CardDescription>
@@ -225,7 +225,7 @@ export default function IntegrationSettings({ category }: IntegrationSettingsPro
         </TabsContent>
 
         <TabsContent value="azure-devops" className="space-y-4">
-          <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+          <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
             <CardHeader>
               <CardTitle>Azure DevOps Integration</CardTitle>
               <CardDescription>
@@ -311,7 +311,7 @@ export default function IntegrationSettings({ category }: IntegrationSettingsPro
         </TabsContent>
       </Tabs>
 
-      <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+      <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
         <CardHeader>
           <CardTitle>Sync Settings</CardTitle>
           <CardDescription>Configure how features sync with the external system</CardDescription>

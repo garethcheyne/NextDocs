@@ -14,13 +14,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
-import { 
-  Plus, 
-  Key, 
-  Copy, 
-  Eye, 
-  EyeOff, 
-  Trash2, 
+import {
+  Plus,
+  Key,
+  Copy,
+  Eye,
+  EyeOff,
+  Trash2,
   RefreshCw,
   Calendar,
   Shield,
@@ -92,7 +92,7 @@ export function APIKeyManagement({ userId }: APIKeyManagementProps) {
     }
 
     try {
-      const expiryDate = formData.expiryOption === 'custom' 
+      const expiryDate = formData.expiryOption === 'custom'
         ? formData.customExpiry
         : expiryOptions.find(opt => opt.label === formData.expiryOption)?.value
 
@@ -181,7 +181,7 @@ export function APIKeyManagement({ userId }: APIKeyManagementProps) {
 
   const getStatusBadge = (key: APIKey) => {
     const expired = isAPIKeyExpired(new Date(key.expiresAt))
-    
+
     if (expired) {
       return <Badge variant="destructive">Expired</Badge>
     }
@@ -247,8 +247,8 @@ export function APIKeyManagement({ userId }: APIKeyManagementProps) {
               </div>
               <div className="space-y-2">
                 <Label>Permissions</Label>
-                <Select 
-                  value={formData.permissions} 
+                <Select
+                  value={formData.permissions}
                   onValueChange={(value) => setFormData({ ...formData, permissions: value })}
                 >
                   <SelectTrigger>
@@ -262,8 +262,8 @@ export function APIKeyManagement({ userId }: APIKeyManagementProps) {
               </div>
               <div className="space-y-2">
                 <Label>Expires In</Label>
-                <Select 
-                  value={formData.expiryOption} 
+                <Select
+                  value={formData.expiryOption}
                   onValueChange={(value) => setFormData({ ...formData, expiryOption: value })}
                 >
                   <SelectTrigger>
@@ -345,7 +345,7 @@ export function APIKeyManagement({ userId }: APIKeyManagementProps) {
       {/* API Keys List */}
       <div className="grid gap-4">
         {apiKeys.length === 0 ? (
-          <Card>
+          <Card className='bg-gray-900/40 border-gray-800/50 backdrop-blur-xl'>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Key className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">No API Keys</h3>
@@ -360,7 +360,7 @@ export function APIKeyManagement({ userId }: APIKeyManagementProps) {
           </Card>
         ) : (
           apiKeys.map((key) => (
-            <Card key={key.id}>
+            <Card key={key.id} className='bg-gray-900/40 border-gray-800/50 backdrop-blur-xl'>
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div>
@@ -400,16 +400,16 @@ export function APIKeyManagement({ userId }: APIKeyManagementProps) {
                         Last Used
                       </div>
                       <p>
-                        {key.lastUsedAt 
+                        {key.lastUsedAt
                           ? format(new Date(key.lastUsedAt), 'MMM d, yyyy')
                           : 'Never'
                         }
                       </p>
                     </div>
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
@@ -421,7 +421,7 @@ export function APIKeyManagement({ userId }: APIKeyManagementProps) {
                         />
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -434,13 +434,13 @@ export function APIKeyManagement({ userId }: APIKeyManagementProps) {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Delete API Key</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Are you sure you want to delete the API key "{key.name}"? 
+                              Are you sure you want to delete the API key "{key.name}"?
                               This action cannot be undone and will immediately revoke access.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction 
+                            <AlertDialogAction
                               onClick={() => handleDeleteKey(key.id)}
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >

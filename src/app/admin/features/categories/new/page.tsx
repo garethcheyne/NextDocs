@@ -101,7 +101,7 @@ export default function NewCategoryPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
-        <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+        <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
           <CardHeader>
             <CardTitle>Basic Information</CardTitle>
             <CardDescription>General details about the category</CardDescription>

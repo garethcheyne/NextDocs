@@ -289,7 +289,7 @@ export default function RepositoriesClient({ initialRepositories }: { initialRep
       </div>
 
       {/* Search and Filters */}
-      <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+      <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
         <CardContent className="pt-6">
           <div className="flex gap-4">
             <div className="relative flex-1">
@@ -318,7 +318,7 @@ export default function RepositoriesClient({ initialRepositories }: { initialRep
       {/* Repository Grid */}
       <div className="grid gap-4">
         {repositories.length === 0 ? (
-          <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+          <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
             <CardContent className="pt-6">
               <div className="text-center py-12">
                 <GitBranch className="w-12 h-12 text-gray-600 mx-auto mb-4" />
@@ -362,7 +362,7 @@ export default function RepositoriesClient({ initialRepositories }: { initialRep
             return (
               <Card
                 key={repo.id}
-                className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl hover:border-brand-orange/50 transition-colors"
+                className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl hover:border-brand-orange/50 transition-colors"
               >
                 <CardHeader>
                   <div className="flex items-start justify-between">
@@ -602,7 +602,7 @@ export default function RepositoriesClient({ initialRepositories }: { initialRep
       {/* Stats Summary */}
       {repositories.length > 0 && (
         <div className="grid md:grid-cols-4 gap-4">
-          <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+          <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-gray-400">
                 Active Repositories

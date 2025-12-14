@@ -384,5 +384,45 @@
     animation: pulse 2s ease-in-out infinite;
     animation-delay: var(--glow-delay, 1s);
   }
+
+  /* Override prose styles for UI components */
+  .prose .not-prose img,
+  .prose [class*="badge"] img,
+  .prose [class*="circle"] img,
+  .prose [class*="avatar"] img,
+  .prose [class*="icon"] img,
+  .prose .card img,
+  .prose .rounded-full img,
+  .prose [class*="logo"] img,
+  .prose [data-category-badge] img,
+  .prose [data-ui-component] img {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Specific override for category badges */
+  .prose :where(.category-badge img, 
+                .category-icon img,
+                .rounded-lg > img,
+                .bg-brand-orange img,
+                .p-2 img,
+                [class*="w-5"] img,
+                [class*="h-5"] img):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Override for all small UI icons in prose content */
+  .prose :where(img[class*="w-"]):not(:where([class~="not-prose"], [class~="not-prose"] *)),
+  .prose :where(img[class*="h-"]):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Preserve prose margins only for content images (larger than icons) */
+  .prose :where(img:not([class*="w-"], [class*="h-"])):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+    margin-top: 2em;
+    margin-bottom: 2em;
+  }
 }
 

@@ -20,7 +20,7 @@ const monthNames = [
 export function BlogFilters({ categories, tags, dateGroups }: BlogFiltersProps) {
     const router = useRouter()
     const searchParams = useSearchParams()
-    
+
     const currentCategory = searchParams.get('category')
     const currentYear = searchParams.get('year')
     const currentMonth = searchParams.get('month')
@@ -28,7 +28,7 @@ export function BlogFilters({ categories, tags, dateGroups }: BlogFiltersProps) 
 
     const updateFilters = (updates: Record<string, string | null>) => {
         const params = new URLSearchParams(searchParams.toString())
-        
+
         Object.entries(updates).forEach(([key, value]) => {
             if (value === null) {
                 params.delete(key)
@@ -50,17 +50,17 @@ export function BlogFilters({ categories, tags, dateGroups }: BlogFiltersProps) 
         const newTags = currentTags.includes(tag)
             ? currentTags.filter(t => t !== tag)
             : [...currentTags, tag]
-        
+
         updateFilters({
             tags: newTags.length > 0 ? newTags.join(',') : null
         })
     }
 
     return (
-        <div className="space-y-4 sticky top-20">
+        <div className="space-y-4 lg:sticky lg:top-20">
             {/* Active Filters */}
             {hasActiveFilters && (
-                <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+                <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
                     <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                             <CardTitle className="text-sm font-medium">Active Filters</CardTitle>
@@ -88,7 +88,7 @@ export function BlogFilters({ categories, tags, dateGroups }: BlogFiltersProps) 
                         {currentYear && (
                             <Badge variant="secondary" className="gap-1">
                                 <Calendar className="w-3 h-3" />
-                                {currentMonth !== null 
+                                {currentMonth !== null
                                     ? `${monthNames[parseInt(currentMonth)]} ${currentYear}`
                                     : currentYear
                                 }
@@ -114,7 +114,7 @@ export function BlogFilters({ categories, tags, dateGroups }: BlogFiltersProps) 
 
             {/* Date Filter */}
             {dateGroups.length > 0 && (
-                <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+                <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
                     <CardHeader>
                         <CardTitle className="text-sm font-medium flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
@@ -145,16 +145,16 @@ export function BlogFilters({ categories, tags, dateGroups }: BlogFiltersProps) 
                                         <Button
                                             key={monthData.month}
                                             variant={
-                                                currentYear === yearGroup.year.toString() && 
-                                                currentMonth === monthData.month.toString()
+                                                currentYear === yearGroup.year.toString() &&
+                                                    currentMonth === monthData.month.toString()
                                                     ? "default"
                                                     : "ghost"
                                             }
                                             size="sm"
                                             className="w-full justify-between text-xs"
-                                            onClick={() => updateFilters({ 
-                                                year: yearGroup.year.toString(), 
-                                                month: monthData.month.toString() 
+                                            onClick={() => updateFilters({
+                                                year: yearGroup.year.toString(),
+                                                month: monthData.month.toString()
                                             })}
                                         >
                                             <span>{monthNames[monthData.month]}</span>
@@ -170,7 +170,7 @@ export function BlogFilters({ categories, tags, dateGroups }: BlogFiltersProps) 
 
             {/* Category Filter */}
             {categories.length > 0 && (
-                <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+                <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
                     <CardHeader>
                         <CardTitle className="text-sm font-medium flex items-center gap-2">
                             <FolderOpen className="w-4 h-4" />
@@ -204,7 +204,7 @@ export function BlogFilters({ categories, tags, dateGroups }: BlogFiltersProps) 
 
             {/* Tag Filter */}
             {tags.length > 0 && (
-                <Card>
+                <Card className='bg-gray-900/40 border-gray-800/50 backdrop-blur-xl'>
                     <CardHeader>
                         <CardTitle className="text-sm font-medium flex items-center gap-2">
                             <Tag className="w-4 h-4" />

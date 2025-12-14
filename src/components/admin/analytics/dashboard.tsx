@@ -78,7 +78,7 @@ export function AnalyticsDashboard() {
         console.error('Failed to fetch realtime events:', error)
       }
     }
-    
+
     fetchRealtime()
     const interval = setInterval(fetchRealtime, 5000) // Poll every 5 seconds
     return () => clearInterval(interval)
@@ -86,14 +86,14 @@ export function AnalyticsDashboard() {
 
   const parseUserAgent = (ua: string | null) => {
     if (!ua) return { browser: 'Unknown', os: 'Unknown', device: 'desktop' as const }
-    
+
     // Detect browser
     let browser = 'Unknown'
     if (ua.includes('Chrome') && !ua.includes('Edg')) browser = 'Chrome'
     else if (ua.includes('Edg')) browser = 'Edge'
     else if (ua.includes('Firefox')) browser = 'Firefox'
     else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Safari'
-    
+
     // Detect OS
     let os = 'Unknown'
     if (ua.includes('Windows')) os = 'Windows'
@@ -101,12 +101,12 @@ export function AnalyticsDashboard() {
     else if (ua.includes('Linux')) os = 'Linux'
     else if (ua.includes('Android')) os = 'Android'
     else if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS'
-    
+
     // Detect device type
     let device: 'desktop' | 'mobile' | 'tablet' = 'desktop'
     if (ua.includes('Mobile') || ua.includes('iPhone')) device = 'mobile'
     else if (ua.includes('iPad') || ua.includes('Tablet')) device = 'tablet'
-    
+
     return { browser, os, device }
   }
 
@@ -148,7 +148,7 @@ export function AnalyticsDashboard() {
             <p className="text-xs text-gray-400 mt-1">Last 30 days</p>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20 hover:border-green-500/40 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium text-green-400">Unique Users</CardTitle>
@@ -159,7 +159,7 @@ export function AnalyticsDashboard() {
             <p className="text-xs text-gray-400 mt-1">Authenticated users</p>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20 hover:border-purple-500/40 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium text-purple-400">Sessions</CardTitle>
@@ -170,7 +170,7 @@ export function AnalyticsDashboard() {
             <p className="text-xs text-gray-400 mt-1">Total sessions</p>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-orange-500/20 hover:border-orange-500/40 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium text-orange-400">Document Reads</CardTitle>
@@ -186,7 +186,7 @@ export function AnalyticsDashboard() {
       {/* Content Grid */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Activity Timeline */}
-        <Card className="md:col-span-2">
+        <Card className="md:col-span-2 bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
           <CardHeader>
             <CardTitle>Activity Timeline</CardTitle>
             <CardDescription>Daily page views, sessions, and users over the last 30 days</CardDescription>
@@ -247,7 +247,7 @@ export function AnalyticsDashboard() {
         </Card>
 
         {/* Top Pages */}
-        <Card>
+        <Card className='bg-gray-900/40 border-gray-800/50 backdrop-blur-xl'>
           <CardHeader>
             <CardTitle>Top Pages</CardTitle>
             <CardDescription>Most viewed pages</CardDescription>
@@ -271,7 +271,7 @@ export function AnalyticsDashboard() {
         </Card>
 
         {/* Top Documents */}
-        <Card>
+        <Card className='bg-gray-900/40 border-gray-800/50 backdrop-blur-xl'>
           <CardHeader>
             <CardTitle>Top Documents</CardTitle>
             <CardDescription>Most read documentation</CardDescription>
@@ -303,7 +303,7 @@ export function AnalyticsDashboard() {
       </div>
 
       {/* Realtime Events */}
-      <Card>
+      <Card className='bg-gray-900/40 border-gray-800/50 backdrop-blur-xl'>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
@@ -328,7 +328,7 @@ export function AnalyticsDashboard() {
                       {formatRelativeTime(event.createdAt)}
                     </span>
                   </div>
-                  
+
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     {event.user && (
                       <div className="flex items-center gap-1">
@@ -344,7 +344,7 @@ export function AnalyticsDashboard() {
                       <span>{browser} on {os}</span>
                     </div>
                   </div>
-                  
+
                   {event.referrer && (
                     <div className="text-xs text-muted-foreground truncate">
                       From: {event.referrer}
@@ -362,7 +362,7 @@ export function AnalyticsDashboard() {
 
       {/* Login Stats */}
       {(metrics.summary.loginSuccess > 0 || metrics.summary.loginFailure > 0) && (
-        <Card>
+        <Card className='bg-gray-900/40 border-gray-800/50 backdrop-blur-xl'>
           <CardHeader>
             <CardTitle>Authentication</CardTitle>
             <CardDescription>Login attempts</CardDescription>
@@ -408,7 +408,7 @@ function formatRelativeTime(dateString: string): string {
   const date = new Date(dateString)
   const now = new Date()
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-  
+
   if (seconds < 60) return `${seconds}s ago`
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
   return `${Math.floor(seconds / 3600)}h ago`

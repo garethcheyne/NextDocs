@@ -88,7 +88,7 @@ export default async function FeatureRequestPage({
                 ]}
                 showTOC={false}
             >
-                <RestrictedAccess 
+                <RestrictedAccess
                     title="Feature Access Restricted"
                     message={accessCheck.reason || "You don't have permission to view this feature request."}
                 />

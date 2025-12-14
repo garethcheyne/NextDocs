@@ -92,7 +92,7 @@ function LoginForm() {
             <p className="text-sm text-gray-400 mt-1">Commercial Apps Documentation</p>
           </div>
 
-          <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl shadow-2xl">
+          <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl shadow-2xl">
             <CardHeader className="space-y-1">
               <CardTitle className="text-2xl font-bold text-white">
                 Sign In

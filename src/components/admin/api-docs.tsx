@@ -129,7 +129,7 @@ export function APIDocs({ isAdmin }: APIDocsProps) {
     return (
         <div className="w-full space-y-6">
             {/* Header */}
-            <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+            <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <div>
@@ -180,7 +180,7 @@ export function APIDocs({ isAdmin }: APIDocsProps) {
                 </TabsList>
 
                 <TabsContent value="interactive" className="mt-6">
-                    <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+                    <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
                         <CardContent className="p-0">
                             {swaggerSpec && (
                                 <SwaggerUI
@@ -210,7 +210,7 @@ export function APIDocs({ isAdmin }: APIDocsProps) {
                 </TabsContent>
 
                 <TabsContent value="markdown" className="mt-6">
-                    <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+                    <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
                         <CardContent className="p-6">
                             <div className="prose prose-slate dark:prose-invert max-w-none">
                                 <h2>API Keys Documentation</h2>

@@ -100,8 +100,8 @@ export default async function DocsPage() {
             <div className="space-y-6">
                 <div className='px-12 py-6'>
                     {categoriesWithMeta.length === 0 ? (
-                        <Card className=\"bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl\">
-                            <CardContent className=\"pt-6\">
+                        <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+                            <CardContent className="pt-6">
                                 <div className="text-center py-12">
                                     <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                                     <h3 className="text-lg font-semibold mb-2">
@@ -136,7 +136,7 @@ export default async function DocsPage() {
                                                             {category.title}
                                                         </CardTitle>
                                                     </div>
-                                                    <div className="p-2 rounded-lg bg-brand-orange/10 group-hover:bg-brand-orange/20 group-hover:scale-110 transition-all duration-300">
+                                                    <div className="not-prose p-2 rounded-lg bg-brand-orange/10 group-hover:bg-brand-orange/20 group-hover:scale-110 transition-all duration-300" data-ui-component="category-badge">
                                                         <BookOpen className="w-5 h-5 text-brand-orange" />
                                                     </div>
                                                 </div>
@@ -168,6 +168,6 @@ export default async function DocsPage() {
                     )}
                 </div>
             </div>
-        </ContentDetailLayout>
+        </ContentDetailLayout >
     )
 }

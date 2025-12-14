@@ -343,7 +343,7 @@ export default function RepositoryDetailPage({
             {/* Repository Configuration */}
 
 
-            <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+            <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
 
 
               <CardHeader>
@@ -440,7 +440,7 @@ export default function RepositoryDetailPage({
               }
 
               return (
-                <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+                <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div>
@@ -536,7 +536,7 @@ export default function RepositoryDetailPage({
             })()}
 
             {/* Sync History */}
-            <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+            <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="w-5 h-5" />
@@ -601,7 +601,7 @@ export default function RepositoryDetailPage({
           {/* Right Column - Stats & Info */}
           <div className="space-y-6">
             {/* Stats */}
-            <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+            <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
               <CardHeader>
                 <CardTitle>Statistics</CardTitle>
               </CardHeader>
@@ -751,7 +751,7 @@ export default function RepositoryDetailPage({
             </Card>
 
             {/* Metadata */}
-            <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+            <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calendar className="w-5 h-5" />
