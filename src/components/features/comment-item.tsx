@@ -207,7 +207,7 @@ export function CommentItem({ comment }: CommentItemProps) {
                     </span>
                     {isEdited && <span className="text-xs italic text-foreground/60">(edited)</span>}
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                     <span className="text-xs text-foreground/60">
                         {new Date(comment.createdAt).toLocaleDateString('en-US', {

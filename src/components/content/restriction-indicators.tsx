@@ -11,11 +11,11 @@ interface RestrictionBadgeProps {
   variant?: 'page' | 'section' | 'list'
 }
 
-export function RestrictionBadge({ 
-  isRestricted, 
-  roles, 
+export function RestrictionBadge({
+  isRestricted,
+  roles,
   className,
-  variant = 'section' 
+  variant = 'section'
 }: RestrictionBadgeProps) {
   if (!isRestricted || roles.length === 0) {
     return null

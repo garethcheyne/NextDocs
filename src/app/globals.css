@@ -346,5 +346,43 @@
     animation-delay: 2s;
     animation-duration: 4.5s;
   }
+
+  /* Animated Icon Arc Component Styles */
+  .icon-arc-item {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    transition: all 0.3s;
+    z-index: 20;
+    left: calc(50% + var(--icon-x, 0px));
+    top: calc(50% + var(--icon-y, 0px));
+    animation-delay: var(--icon-delay, 0s);
+  }
+
+  .icon-arc-item:hover {
+    transform: translate(-50%, -50%) scale(1.25);
+  }
+
+  .glow-effect-primary {
+    position: absolute;
+    inset: 0;
+    width: 600px;
+    height: 600px;
+    background: linear-gradient(to bottom right, rgba(249, 115, 22, 0.2), rgba(249, 115, 22, 0.2));
+    filter: blur(48px);
+    z-index: -10;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .glow-effect-secondary {
+    position: absolute;
+    inset: 0;
+    width: 600px;
+    height: 600px;
+    background: linear-gradient(to bottom right, rgba(249, 115, 22, 0.1), rgba(249, 115, 22, 0.1));
+    filter: blur(100px);
+    z-index: -20;
+    animation: pulse 2s ease-in-out infinite;
+    animation-delay: var(--glow-delay, 1s);
+  }
 }
 

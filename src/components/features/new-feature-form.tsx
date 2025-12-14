@@ -144,7 +144,7 @@ export function NewFeatureForm({ categories: initialCategories }: NewFeatureForm
 
             {/* Form */}
             <form onSubmit={handleSubmit}>
-                <Card className=\"bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl\">
+                <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
                     <CardHeader>
                         <CardTitle>Feature Details</CardTitle>
                         <CardDescription>
@@ -186,11 +186,10 @@ export function NewFeatureForm({ categories: initialCategories }: NewFeatureForm
                                     <button
                                         type="button"
                                         onClick={() => setShowPreview(false)}
-                                        className={`px-3 py-1 rounded transition-colors ${
-                                            !showPreview
-                                                ? 'bg-muted text-foreground'
-                                                : 'text-muted-foreground hover:text-foreground'
-                                        }`}
+                                        className={`px-3 py-1 rounded transition-colors ${!showPreview
+                                            ? 'bg-muted text-foreground'
+                                            : 'text-muted-foreground hover:text-foreground'
+                                            }`}
                                         disabled={isLoading}
                                     >
                                         Write
@@ -198,11 +197,10 @@ export function NewFeatureForm({ categories: initialCategories }: NewFeatureForm
                                     <button
                                         type="button"
                                         onClick={() => setShowPreview(true)}
-                                        className={`px-3 py-1 rounded transition-colors ${
-                                            showPreview
-                                                ? 'bg-muted text-foreground'
-                                                : 'text-muted-foreground hover:text-foreground'
-                                        }`}
+                                        className={`px-3 py-1 rounded transition-colors ${showPreview
+                                            ? 'bg-muted text-foreground'
+                                            : 'text-muted-foreground hover:text-foreground'
+                                            }`}
                                         disabled={isLoading}
                                     >
                                         Preview

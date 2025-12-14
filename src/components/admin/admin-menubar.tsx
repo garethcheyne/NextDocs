@@ -282,7 +282,7 @@ export function AdminMenubar({
                             <FileText className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
                             <span>Tools</span>
                             {internalNotes.length > 0 && (
-                                <span className="ml-1 px-1 px-1 py-0.5 text-xs bg-muted rounded flex-shrink-0">
+                                <span className="ml-1 px-1  py-0.5 text-xs bg-muted rounded flex-shrink-0">
                                     {internalNotes.length}
                                 </span>
                             )}

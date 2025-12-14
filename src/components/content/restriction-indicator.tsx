@@ -10,12 +10,12 @@ interface RestrictionIndicatorProps {
   className?: string
 }
 
-export function RestrictionIndicator({ 
-  isRestricted, 
-  restrictedRoles, 
+export function RestrictionIndicator({
+  isRestricted,
+  restrictedRoles,
   hasVariantRestrictions,
   restrictedVariants = [],
-  className 
+  className
 }: RestrictionIndicatorProps) {
   const hasAnyRestrictions = isRestricted || hasVariantRestrictions
 
@@ -26,17 +26,17 @@ export function RestrictionIndicator({
   return (
     <div className={cn('flex flex-wrap items-center gap-2', className)}>
       {isRestricted && (
-        <Badge 
-          variant="secondary" 
+        <Badge
+          variant="secondary"
           className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800"
         >
           <Shield className="w-3 h-3 mr-1" />
           Restricted Document
         </Badge>
       )}
-      
+
       {hasVariantRestrictions && (
-        <Badge 
+        <Badge
           variant="secondary"
           className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800"
         >
@@ -44,14 +44,14 @@ export function RestrictionIndicator({
           Has Role Variants
         </Badge>
       )}
-      
+
       {isRestricted && restrictedRoles.length > 0 && (
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <Users className="w-3 h-3" />
           <span>Access: {restrictedRoles.join(', ')}</span>
         </div>
       )}
-      
+
       {restrictedVariants.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {restrictedVariants.map((variant, index) => (
@@ -60,7 +60,7 @@ export function RestrictionIndicator({
               variant="outline"
               className={cn(
                 'text-xs',
-                variant.hasAccess 
+                variant.hasAccess
                   ? 'bg-green-50 text-green-700 border-green-300 dark:bg-green-950 dark:text-green-300 dark:border-green-700'
                   : 'bg-red-50 text-red-700 border-red-300 dark:bg-red-950 dark:text-red-300 dark:border-red-700'
               )}
@@ -87,7 +87,7 @@ export function SectionVariantIndicator({ role, hasAccess, className }: SectionV
         variant="outline"
         className={cn(
           'text-xs font-mono',
-          hasAccess 
+          hasAccess
             ? 'bg-green-50 text-green-700 border-green-300 dark:bg-green-950 dark:text-green-300 dark:border-green-700'
             : 'bg-red-50 text-red-700 border-red-300 dark:bg-red-950 dark:text-red-300 dark:border-red-700'
         )}

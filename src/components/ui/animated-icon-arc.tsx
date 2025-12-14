@@ -51,12 +51,12 @@ export function AnimatedIconArc() {
         return (
           <div
             key={icon.name}
-            className="absolute transform -translate-x-1/2 -translate-y-1/2 hover:scale-125 transition-all duration-300 z-20"
+            className="icon-arc-item"
             style={{
-              left: `calc(50% + ${x}px)`,
-              top: `calc(50% + ${y}px)`,
-              animationDelay: `${index * 0.2}s`,
-            }}
+              '--icon-x': `${x}px`,
+              '--icon-y': `${y}px`,
+              '--icon-delay': `${index * 0.2}s`,
+            } as React.CSSProperties}
           >
             <div className="animate-float">
               <Image
@@ -72,7 +72,7 @@ export function AnimatedIconArc() {
         )
       })}
       */}
-      
+
       {/* Center logo - 600px prominent with orange glow and animations */}
       <div className="relative flex items-center justify-center z-30">
         <div className="relative animate-float">
@@ -81,13 +81,13 @@ export function AnimatedIconArc() {
             alt="Documentation Platform"
             className="w-[600px] h-[600px] object-contain hover:scale-105 transition-all duration-300 drop-shadow-2xl"
           />
-          
+
           {/* Orange glow effect behind the tiger */}
-          <div className="absolute inset-0 w-[600px] h-[600px] bg-gradient-to-br from-brand-orange/20 to-orange-500/20 blur-3xl -z-10 animate-pulse"></div>
-          <div className="absolute inset-0 w-[600px] h-[600px] bg-gradient-to-br from-brand-orange/10 to-orange-500/10 blur-[100px] -z-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
+          <div className="glow-effect-primary"></div>
+          <div className="glow-effect-secondary" style={{ '--glow-delay': '1s' } as React.CSSProperties}></div>
         </div>
       </div>
-      
+
       {/* 
       // COMMENTED OUT - Arc guide path temporarily disabled
       <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20 z-10">

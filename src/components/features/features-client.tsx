@@ -325,8 +325,8 @@ export function FeaturesClient({ features, categories, params }: FeaturesClientP
                     })}
 
                     {features.length === 0 && (
-                        <Card className=\"bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl\">
-                            <CardContent className=\"py-12\">
+                        <Card className="bg-gray-50/40 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+                            <CardContent className="py-12">
                                 <div className="flex flex-col items-center justify-center text-center">
                                     <Lightbulb className="w-12 h-12 text-muted-foreground/50 mb-4" />
                                     <p className="text-foreground/70">
@@ -336,28 +336,32 @@ export function FeaturesClient({ features, categories, params }: FeaturesClientP
                             </CardContent>
                         </Card>
                     )}
-                </div>
+                </div >
 
                 {/* Reclassify Dialog */}
-                {reclassifyDialog.open && reclassifyDialog.feature && (
-                    <ReclassifyDialog
-                        feature={reclassifyDialog.feature}
-                        categories={categories}
-                        open={reclassifyDialog.open}
-                        onOpenChange={(open) => setReclassifyDialog({ open, feature: null })}
-                    />
-                )}
+                {
+                    reclassifyDialog.open && reclassifyDialog.feature && (
+                        <ReclassifyDialog
+                            feature={reclassifyDialog.feature}
+                            categories={categories}
+                            open={reclassifyDialog.open}
+                            onOpenChange={(open) => setReclassifyDialog({ open, feature: null })}
+                        />
+                    )
+                }
 
                 {/* Merge Dialog */}
-                {mergeDialog.open && mergeDialog.feature && (
-                    <MergeDialog
-                        sourceFeature={mergeDialog.feature}
-                        availableFeatures={features}
-                        open={mergeDialog.open}
-                        onOpenChange={(open) => setMergeDialog({ open, feature: null })}
-                    />
-                )}
-            </div>
+                {
+                    mergeDialog.open && mergeDialog.feature && (
+                        <MergeDialog
+                            sourceFeature={mergeDialog.feature}
+                            availableFeatures={features}
+                            open={mergeDialog.open}
+                            onOpenChange={(open) => setMergeDialog({ open, feature: null })}
+                        />
+                    )
+                }
+            </div >
         </>
     )
 }

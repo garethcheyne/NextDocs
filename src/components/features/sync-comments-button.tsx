@@ -69,11 +69,10 @@ export function SyncCommentsButton({ featureId }: SyncCommentsButtonProps) {
       </Button>
       {message && (
         <p
-          className={`text-xs ${
-            message.type === 'success'
+          className={`text-xs ${message.type === 'success'
               ? 'text-green-600 dark:text-green-400'
               : 'text-red-600 dark:text-red-400'
-          }`}
+            }`}
         >
           {message.text}
         </p>
