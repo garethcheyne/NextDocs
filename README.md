@@ -57,20 +57,17 @@ Access at: http://localhost:8101
 
 ## Project Structure
 
+The project follows a clean, organized structure. See [`PROJECT-STRUCTURE.md`](PROJECT-STRUCTURE.md) for detailed documentation.
+
 ```
-├── src/
-│   ├── app/              # Next.js app router pages
-│   ├── components/       # React components
-│   ├── lib/             # Utilities and helpers
-│   └── types/           # TypeScript definitions
-├── prisma/
-│   ├── schema.prisma    # Database schema
-│   └── seed-*.js        # Database seeders
-├── public/              # Static assets
-├── scripts/             # Utility scripts
-├── docker-compose.prod.yml   # Production Docker config
-├── docker-compose.dev.yml    # Development Docker config
-└── Dockerfile           # Production container image
+├── src/                 # Application source code
+├── scripts/             # Organized operational scripts (6 categories)
+├── docs/                # Comprehensive documentation
+├── prisma/              # Database schema and migrations
+├── public/              # Static assets  
+├── backups/             # Database backups (automated)
+├── docker-compose.*.yml # Docker configurations
+└── [config files]      # TypeScript, Next.js, Tailwind, etc.
 ```
 
 ## Environment Setup

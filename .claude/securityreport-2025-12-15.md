@@ -30,6 +30,9 @@ The NextDocs application demonstrates a **strong security posture** following co
 | Sensitive Data Exposure | PASS | N/A | `.env`, `.git/config` not accessible (404) |
 | Security Headers | PASS | N/A | All recommended headers present |
 | CSRF Protection | PASS | N/A | Valid tokens required for state-changing operations |
+| RBAC Enforcement | PASS | N/A | User/Admin roles properly separated |
+| Mass Assignment | PASS | N/A | Injected fields ignored, server-side validation |
+| Privilege Escalation | PASS | N/A | Admin actions blocked for regular users (403) |
 
 ---
 
@@ -270,6 +273,103 @@ upgrade-insecure-requests;
 1. Implement security event logging for failed auth attempts
 2. Set up alerts for rate limit triggers
 3. Monitor Cloudflare WAF logs for attack patterns
+
+---
+
+## Authenticated Testing Results
+
+### Test Session Information
+
+| Role | User | Provider |
+|------|------|----------|
+| Regular User | Kermit Pethica | Azure AD (Microsoft Entra ID) |
+| Admin | Gareth Cheyne | Azure AD (Microsoft Entra ID) |
+
+**Cookie Name:** `__Secure-authjs.session-token` (NextAuth v5 secure cookie format)
+
+---
+
+### 9. Role-Based Access Control (RBAC) Testing
+
+**Status:** PASS
+
+**Method:** API endpoint access with different role tokens
+
+**User Token Tests:**
+| Endpoint | Expected | Actual | Status |
+|----------|----------|--------|--------|
+| `GET /api/features` | 200 OK | 200 OK | PASS |
+| `GET /api/search?q=test` | 200 OK | 200 OK | PASS |
+| `GET /api/features/[id]/comments` | 200 OK | 200 OK | PASS |
+| `GET /api/admin/analytics/metrics` | 403 Forbidden | 403 Forbidden | PASS |
+| `POST /api/admin/features/[id]/status` | 403 Forbidden | 403 Forbidden | PASS |
+
+**Admin Token Tests:**
+| Endpoint | Expected | Actual | Status |
+|----------|----------|--------|--------|
+| `GET /api/admin/analytics/metrics` | 200 OK | 200 OK | PASS |
+| `GET /api/admin/features/categories` | 200 OK | 200 OK | PASS |
+| `GET /api/repositories` | 200 OK | 200 OK | PASS |
+| `POST /api/admin/features/[id]/status` | 200 OK | 200 OK | PASS |
+
+**Findings:**
+- Regular users cannot access admin-only endpoints (403)
+- Admin users have full access to admin functionality
+- Role enforcement is correctly implemented at API level
+
+---
+
+### 10. Mass Assignment Protection Testing
+
+**Status:** PASS
+
+**Method:** POST with injected privileged fields
+
+**Test Payload:**
+```json
+{
+  "title": "Test Mass Assignment",
+  "description": "Testing",
+  "role": "admin",
+  "isAdmin": true,
+  "userId": "malicious-user-id"
+}
+```
+
+**Findings:**
+- Feature was created successfully
+- `createdBy` field correctly set to authenticated user (Kermit Pethica), NOT the injected `userId`
+- No `role` or `isAdmin` fields were persisted
+- Mass assignment protection working as expected
+
+**Evidence:**
+```json
+{
+  "feature": {
+    "createdBy": "24cd64c6-9add-45e3-9f6c-080fb3135b28",
+    "createdByName": "Pethica, Kermit",
+    "createdByEmail": "kermit.pethica@au.harveynorman.com"
+  }
+}
+```
+
+---
+
+### 11. Privilege Escalation Testing
+
+**Status:** PASS
+
+**Method:** Attempt admin actions with user token
+
+**Tests Performed:**
+- User attempting to change feature status -> 403 Forbidden
+- User attempting to access admin analytics -> 403 Forbidden
+- User attempting to manage categories -> 403 Forbidden
+
+**Findings:**
+- All privilege escalation attempts properly blocked
+- Consistent 403 responses for unauthorized admin actions
+- No bypass methods discovered
 
 ---
 
