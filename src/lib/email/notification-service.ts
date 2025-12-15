@@ -45,13 +45,8 @@ export async function notifyFeatureStatusChange(
       changedByName = changedByUser?.name || changedByUser?.email
     }
 
-    // Get list of users to notify
+    // Get list of users to notify - only followers get notifications
     const followers = feature.followers.map((f) => f.user)
-    
-    // Add feature creator if not already in followers
-    if (feature.creator && !followers.find((f) => f.id === feature.creator!.id)) {
-      followers.push(feature.creator)
-    }
 
     // Filter users who want status change notifications
     const usersToNotify = followers.filter(
@@ -137,13 +132,8 @@ export async function notifyNewComment(
       return
     }
 
-    // Get list of users to notify
+    // Get list of users to notify - only followers get notifications
     const followers = feature.followers.map((f) => f.user)
-    
-    // Add feature creator if not already in followers
-    if (feature.creator && !followers.find((f) => f.id === feature.creator!.id)) {
-      followers.push(feature.creator)
-    }
 
     // Filter users who want comment notifications
     const usersToNotify = followers.filter(
@@ -201,12 +191,17 @@ export async function notifyNewFeature(featureId: string) {
       return
     }
 
-    // Get users who want new feature notifications
+    // For new features, notify:
+    // 1. Users who have explicitly opted in globally (notifyOnNewFeature: true)
+    // 2. All admin users (they should know about new features)
     const usersToNotify = await prisma.user.findMany({
       where: {
         emailNotifications: true,
-        notifyOnNewFeature: true,
         id: { not: feature.createdBy }, // Don't notify creator
+        OR: [
+          { notifyOnNewFeature: true },
+          { role: 'admin' }
+        ],
       },
     })
 
@@ -226,18 +221,194 @@ export async function notifyNewFeature(featureId: string) {
     }
 
     const recipients = usersToNotify.map((u) => u.email)
+    
+    try {
+      await emailClient.sendEmail({
+        to: recipients,
+        subject: `New Feature Request: ${feature.title}`,
+        body: emailBody,
+        isHtml: true,
+      })
+
+      console.log(
+        `✅ Sent new feature notification to ${recipients.length} users`
+      )
+    } catch (emailError) {
+      // Log detailed email error but don't fail the whole process
+      console.error('Email delivery failed:', {
+        error: emailError instanceof Error ? emailError.message : emailError,
+        featureId: feature.id,
+        featureTitle: feature.title,
+        recipientCount: recipients.length,
+        timestamp: new Date().toISOString()
+      })
+      
+      // Optionally store failed email attempts for retry later
+      try {
+        await prisma.analyticsEvent.create({
+          data: {
+            sessionId: `email-fail-${Date.now()}`,
+            eventType: 'email_delivery_failed',
+            path: '/api/features',
+            resourceType: 'feature',
+            resourceId: feature.id,
+            eventData: {
+              featureId: feature.id,
+              featureTitle: feature.title,
+              recipientCount: recipients.length,
+              error: emailError instanceof Error ? emailError.message : String(emailError)
+            }
+          }
+        })
+      } catch (logError) {
+        console.error('Failed to log email error to analytics:', logError)
+      }
+      
+      throw emailError
+    }
+  } catch (error) {
+    console.error('Failed to send new feature notification:', error)
+    throw error
+  }
+}
+
+/**
+ * Extract mentions from comment content and send notifications
+ */
+export async function notifyMentions(
+  featureId: string,
+  commentId: string,
+  content: string
+) {
+  try {
+    // Extract mentions from content (@username or @email)
+    const mentionRegex = /@([a-zA-Z0-9._-]+(?:@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})?)/g
+    const mentions = Array.from(content.matchAll(mentionRegex), match => match[1])
+
+    if (mentions.length === 0) {
+      return
+    }
+
+    // Get feature with details
+    const feature = await prisma.featureRequest.findUnique({
+      where: { id: featureId },
+      include: {
+        creator: true,
+        category: true,
+      },
+    })
+
+    if (!feature) {
+      console.error('Feature not found:', featureId)
+      return
+    }
+
+    // Get comment with user
+    const comment = await prisma.featureComment.findUnique({
+      where: { id: commentId },
+      include: {
+        user: true,
+      },
+    })
+
+    if (!comment) {
+      console.error('Comment not found:', commentId)
+      return
+    }
+
+    // Find mentioned users by username or email
+    const mentionedUsers = await prisma.user.findMany({
+      where: {
+        OR: [
+          { email: { in: mentions } },
+          { name: { in: mentions } },
+        ],
+        emailNotifications: true,
+        id: { not: comment.userId }, // Don't notify the commenter
+      },
+    })
+
+    if (mentionedUsers.length === 0) {
+      console.log('No valid mentioned users found')
+      return
+    }
+
+    // Filter users who want mention notifications
+    const usersToNotify = mentionedUsers.filter(user => {
+      // Check if user has mention notifications enabled
+      return true // For now, notify all mentioned users who have email enabled
+    })
+
+    if (usersToNotify.length === 0) {
+      console.log('No users want mention notifications')
+      return
+    }
+
+    // Auto-follow the feature for mentioned users who aren't already following
+    for (const user of usersToNotify) {
+      await prisma.featureFollower.upsert({
+        where: {
+          featureId_userId: {
+            featureId: featureId,
+            userId: user.id,
+          },
+        },
+        update: {}, // No update needed if already following
+        create: {
+          featureId: featureId,
+          userId: user.id,
+        },
+      })
+    }
+
+    // Build email content for mentions
+    const commenterName = comment.user.name || comment.user.email
+    const emailBody = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>You were mentioned in a comment</h2>
+        <p><strong>${commenterName}</strong> mentioned you in a comment on:</p>
+        <h3><a href="${process.env.NEXT_PUBLIC_URL}/features/${feature.slug || feature.id}" style="color: #0066cc; text-decoration: none;">${feature.title}</a></h3>
+        
+        <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p><strong>Comment:</strong></p>
+          <p style="margin: 0;">${comment.content}</p>
+        </div>
+        
+        <p>
+          <a href="${process.env.NEXT_PUBLIC_URL}/features/${feature.slug || feature.id}#comment-${comment.id}" 
+             style="background: #0066cc; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+            View Comment
+          </a>
+        </p>
+        
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
+        <p style="color: #666; font-size: 12px;">
+          You're receiving this email because you were mentioned in a comment. 
+          You are now following this feature request and will receive future updates.
+        </p>
+      </div>
+    `
+
+    // Send emails
+    const emailClient = getRestEmailClient()
+    if (!emailClient.isReady()) {
+      console.warn('REST email client not ready. Skipping mention notifications.')
+      return
+    }
+
+    const recipients = usersToNotify.map((u) => u.email)
     await emailClient.sendEmail({
       to: recipients,
-      subject: `New Feature Request: ${feature.title}`,
+      subject: `You were mentioned in: ${feature.title}`,
       body: emailBody,
       isHtml: true,
     })
 
     console.log(
-      `✅ Sent new feature notification to ${recipients.length} users`
+      `✅ Sent mention notifications to ${recipients.length} users`
     )
   } catch (error) {
-    console.error('Failed to send new feature notification:', error)
+    console.error('Failed to send mention notifications:', error)
   }
 }
 

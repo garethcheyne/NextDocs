@@ -70,7 +70,13 @@ export async function syncRepository(repositoryId: string, ipAddress?: string) {
 
     // Separate metadata files, author files, and content files
     const metaFiles = documents.filter(d => d.path.endsWith('_meta.json'))
-    const authorFiles = documents.filter(d => d.path.includes('/authors/') && d.path.endsWith('.json') && !d.path.endsWith('_meta.json'))
+    // Only process files that are specifically in an authors directory and are individual author JSON files
+    const authorFiles = documents.filter(d => 
+      d.path.includes('/authors/') && 
+      d.path.endsWith('.json') && 
+      !d.path.endsWith('_meta.json') &&
+      !d.path.includes('/authors/index.json') // Exclude index files
+    )
     const contentFiles = documents.filter(d => !d.path.endsWith('_meta.json') && !authorFiles.includes(d))
 
     console.log('\n📦 FETCHED FILES BREAKDOWN:')
@@ -104,6 +110,8 @@ export async function syncRepository(repositoryId: string, ipAddress?: string) {
       console.log('👤 Processing author files...')
       authorResult = await storeAuthors(authorFiles)
       console.log(`✅ Authors: ${authorResult.authorsAdded} added, ${authorResult.authorsUpdated} updated\n`)
+    } else {
+      console.log('👤 No author files to process\n')
     }
 
     // Store documents in database
@@ -111,9 +119,12 @@ export async function syncRepository(repositoryId: string, ipAddress?: string) {
     const storageResult = await storeDocuments(repository.id, syncLog.id, contentFiles)
 
     // Store API specs in database
-    let apiSpecResult = { totalAdded: 0, totalUpdated: 0 }
+    let apiSpecResult = { totalAdded: 0, totalUpdated: 0, totalDeleted: 0 }
     if (apiSpecs.length > 0) {
+      console.log('📋 Processing API specifications...')
       apiSpecResult = await storeApiSpecs(repository.id, apiSpecs)
+    } else {
+      console.log('📋 No API specs to process')
     }
 
     // Sync images from repository
@@ -175,12 +186,15 @@ export async function syncRepository(repositoryId: string, ipAddress?: string) {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     console.log(`⏱️  Duration: ${(duration / 1000).toFixed(2)}s\n`)
     console.log('📊 RESULTS SUMMARY:')
-    console.log(`   📄 Documents: ${storageResult.totalAdded} added, ${storageResult.totalUpdated} updated, ${storageResult.totalDeleted} deleted`)
-    if (authorResult.totalProcessed > 0) {
+    console.log(`   📄 Documents: ${storageResult.docsAdded} added, ${storageResult.docsUpdated} updated, ${storageResult.docsDeleted} deleted`)
+    if (storageResult.blogsAdded > 0 || storageResult.blogsUpdated > 0 || storageResult.blogsDeleted > 0) {
+      console.log(`   📝 Blog Posts: ${storageResult.blogsAdded} added, ${storageResult.blogsUpdated} updated, ${storageResult.blogsDeleted} deleted`)
+    }
+    if (authorResult.authorsAdded > 0 || authorResult.authorsUpdated > 0) {
       console.log(`   👤 Authors: ${authorResult.authorsAdded} added, ${authorResult.authorsUpdated} updated`)
     }
-    if (apiSpecs.length > 0) {
-      console.log(`   📋 API Specs: ${apiSpecResult.totalAdded} added, ${apiSpecResult.totalUpdated} updated`)
+    if (apiSpecResult.totalAdded > 0 || apiSpecResult.totalUpdated > 0 || apiSpecResult.totalDeleted > 0) {
+      console.log(`   📋 API Specs: ${apiSpecResult.totalAdded} added, ${apiSpecResult.totalUpdated} updated, ${apiSpecResult.totalDeleted} deleted`)
     }
     if (imageResult.synced > 0 || imageResult.updated > 0 || imageResult.deleted > 0) {
       console.log(`   🖼️  Images: ${imageResult.synced} added, ${imageResult.updated} updated, ${imageResult.deleted} deleted, ${imageResult.skipped} unchanged`)

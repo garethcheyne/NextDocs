@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { formatDate } from '@/lib/utils/date-format'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { GitBranch, Plus, Search, RefreshCw, CheckCircle2, XCircle, FileText, BookOpen, Users, FolderTree } from 'lucide-react'
@@ -29,7 +30,7 @@ function formatTimeAgo(date: string | null): string {
   if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`
   if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`
   if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`
-  return new Date(date).toLocaleDateString()
+  return formatDate(date)
 }
 
 function formatSyncSchedule(frequency: number): string {

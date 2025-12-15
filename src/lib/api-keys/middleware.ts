@@ -25,7 +25,7 @@ export function withAuth<T extends any[]>(
     try {
       // Try API key authentication first
       let authResult = await authenticateRequest(request)
-      
+
       // If API key auth failed, try session authentication
       if (!authResult.success) {
         authResult = await getUserFromSession()
@@ -101,7 +101,15 @@ export function withWriteAuth<T extends any[]>(
 export function withAdminAuth<T extends any[]>(
   handler: (request: AuthenticatedRequest, ...args: T) => Promise<NextResponse>
 ) {
-  return withAuth(handler, { adminOnly: true, permissions: 'write' })
+  return async (request: NextRequest, ...args: T): Promise<NextResponse> => {
+    console.log(`🔐 [MIDDLEWARE] Admin auth check for ${request.method} ${request.url}`)
+
+    const wrappedHandler = withAuth(handler, { adminOnly: true, permissions: 'write' })
+    const result = await wrappedHandler(request, ...args)
+
+    console.log(`🔐 [MIDDLEWARE] Admin auth result: ${result.status}`)
+    return result
+  }
 }
 
 /**
@@ -110,11 +118,11 @@ export function withAdminAuth<T extends any[]>(
 export async function getAuthInfo(request: NextRequest): Promise<APIAuthResult> {
   // Try API key authentication first
   let authResult = await authenticateRequest(request)
-  
+
   // If API key auth failed, try session authentication
   if (!authResult.success) {
     authResult = await getUserFromSession()
   }
-  
+
   return authResult
 }

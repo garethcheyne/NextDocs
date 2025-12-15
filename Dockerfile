@@ -43,7 +43,7 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/scripts/docker-entrypoint.sh ./docker-entrypoint.sh
+COPY --from=builder /app/scripts ./scripts
 
 # Copy source code and config for development mode support
 COPY --from=builder /app/src ./src
@@ -55,7 +55,7 @@ COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY --from=builder /app/postcss.config.js ./postcss.config.js
 
 # Set correct permissions
-RUN chmod +x /app/docker-entrypoint.sh
+RUN chmod +x /app/scripts/docker-entrypoint.sh
 RUN chown -R nextjs:nodejs /app
 
 USER nextjs
@@ -65,4 +65,4 @@ EXPOSE 8100
 ENV PORT=8100
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["/app/docker-entrypoint.sh"]
+CMD ["/app/scripts/docker-entrypoint.sh"]

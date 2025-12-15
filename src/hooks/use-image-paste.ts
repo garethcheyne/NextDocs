@@ -48,7 +48,7 @@ export function useImagePaste(
                         console.log('Upload result:', result)
 
                         // Generate markdown with timestamp as alt text
-                        const altText = `Pasted image ${new Date().toLocaleTimeString()}`
+                        const altText = `Pasted image ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`
                         const markdownText = `![${altText}](${result.url})`
                         
                         onImagePaste(markdownText)

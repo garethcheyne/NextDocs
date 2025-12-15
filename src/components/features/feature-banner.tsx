@@ -4,9 +4,11 @@ import Link from 'next/link'
 import { Lightbulb, Plus, Calendar, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { VoteButton } from '@/components/features/vote-button'
+import { FollowButton } from '@/components/features/follow-button'
 import { StatusBadge } from './status-badge'
 import { PriorityBadge } from './priority-badge'
 import { CategoryBadge } from './category-badge'
+import { formatDate } from '@/lib/utils/date-format'
 
 interface FeatureBannerProps {
     totalRequests?: number
@@ -24,6 +26,7 @@ interface FeatureBannerProps {
     downvotes?: number
     featureId?: string
     userVoteType?: 'upvote' | 'downvote' | null
+    isFollowing?: boolean
 }
 
 export function FeatureBanner({
@@ -40,7 +43,8 @@ export function FeatureBanner({
     upvotes = 0,
     downvotes = 0,
     featureId,
-    userVoteType = null
+    userVoteType = null,
+    isFollowing = false
 }: FeatureBannerProps) {
     // Detail page view
     if (title) {
@@ -77,19 +81,19 @@ export function FeatureBanner({
                                     {createdAt && (
                                         <div className="flex items-center gap-1">
                                             <Calendar className="w-4 h-4" />
-                                            {new Date(createdAt).toLocaleDateString('en-US', {
-                                                year: 'numeric',
-                                                month: '2-digit',
-                                                day: '2-digit'
-                                            })}
+                                            {formatDate(createdAt)}
                                         </div>
                                     )}
                                 </div>
                             </div>
 
-                            {/* Vote Button */}
+                            {/* Action Buttons */}
                             {featureId && (
-                                <div className="w-full lg:w-auto flex justify-center lg:justify-end">
+                                <div className="w-full lg:w-auto flex flex-col sm:flex-row gap-3 justify-center lg:justify-end">
+                                    <FollowButton
+                                        featureId={featureId}
+                                        isFollowing={isFollowing}
+                                    />
                                     <VoteButton
                                         featureId={featureId}
                                         initialVote={userVoteType}

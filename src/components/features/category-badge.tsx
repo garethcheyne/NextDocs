@@ -60,7 +60,7 @@ export function CategoryBadge({ category, className }: CategoryBadgeProps) {
                         <img
                             src={category.iconBase64.startsWith('data:') ? category.iconBase64 : `data:image/png;base64,${category.iconBase64}`}
                             alt=""
-                            className="w-full h-full object-contain"
+                            className="w-full h-full object-contain my-0"
                         />
                     ) : (
                         <div className="w-4 h-4 rounded-full bg-gray-300 m-1" />

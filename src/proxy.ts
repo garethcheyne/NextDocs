@@ -42,7 +42,26 @@ export default auth((req: NextRequest & { auth: any }) => {
     return NextResponse.redirect(loginUrl)
   }
   
-  // Let authenticated users through - pages will handle authorization
+  // Admin API routes require admin role
+  if (pathname.startsWith('/api/admin/')) {
+    const userRole = req.auth?.user?.role?.toLowerCase()
+    if (userRole !== 'admin') {
+      return NextResponse.json(
+        { error: 'Forbidden: Admin access required' }, 
+        { status: 403 }
+      )
+    }
+  }
+  
+  // Admin pages require admin role
+  if (pathname.startsWith('/admin')) {
+    const userRole = req.auth?.user?.role?.toLowerCase()
+    if (userRole !== 'admin') {
+      return NextResponse.redirect(new URL('/docs', req.url))
+    }
+  }
+  
+  // Let authenticated users through - pages will handle further authorization
   return NextResponse.next()
 })
 

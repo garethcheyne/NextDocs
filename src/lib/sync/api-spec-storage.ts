@@ -90,29 +90,35 @@ export async function storeApiSpecs(
       processedPaths.push(specPath)
 
       if (existingSpec) {
-        // Update existing spec version
-        await prisma.aPISpec.update({
-          where: { 
-            slug_version: {
-              slug,
-              version,
-            }
-          },
-          data: {
-            name: apiName,
-            description,
-            specPath,
-            specContent,
-            category,
-            lastSyncAt: new Date(),
-          },
-        })
-        
-        // Update search vector
-        await updateApiSpecSearchVector(existingSpec.id)
-        
-        console.log(`   ✏️  Updated: ${apiName} v${version} (${category})`)
-        results.totalUpdated++
+        // Check if content has actually changed by comparing content
+        if (existingSpec.specContent !== specContent || existingSpec.specPath !== specPath) {
+          // Update existing spec version
+          await prisma.aPISpec.update({
+            where: { 
+              slug_version: {
+                slug,
+                version,
+              }
+            },
+            data: {
+              name: apiName,
+              description,
+              specPath,
+              specContent,
+              category,
+              lastSyncAt: new Date(),
+            },
+          })
+          
+          // Update search vector
+          await updateApiSpecSearchVector(existingSpec.id)
+          
+          console.log(`   ✏️  Updated: ${apiName} v${version} (${category})`)
+          results.totalUpdated++
+        } else {
+          console.log(`   ➖ Unchanged: ${apiName} v${version} (${category})`)
+          results.totalSkipped++
+        }
       } else {
         // Get repository info for createdBy
         const repository = await prisma.repository.findUnique({

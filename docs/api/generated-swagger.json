@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "NextDocs API",
-    "description": "Auto-generated API documentation for NextDocs\n\nGenerated on: 2025-12-14T09:55:29.626Z",
+    "description": "Auto-generated API documentation for NextDocs\n\nGenerated on: 2025-12-14T23:01:35.281Z",
     "version": "1.0.0-20251214",
     "contact": {
       "name": "NextDocs Team"
@@ -2353,6 +2353,109 @@
         ],
         "summary": "GET /features/{id}/export",
         "description": "Auto-generated documentation for GET /features/{id}/export",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Success"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id parameter"
+          }
+        ]
+      }
+    },
+    "/features/{id}/follow": {
+      "post": {
+        "tags": [
+          "Features"
+        ],
+        "summary": "POST /features/{id}/follow",
+        "description": "Auto-generated documentation for POST /features/{id}/follow",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Success"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id parameter"
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Features"
+        ],
+        "summary": "DELETE /features/{id}/follow",
+        "description": "Auto-generated documentation for DELETE /features/{id}/follow",
         "responses": {
           "200": {
             "description": "Success",

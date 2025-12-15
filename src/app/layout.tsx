@@ -10,15 +10,15 @@ import { Toaster } from '@/components/ui/sonner'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Enterprise Documentation Platform',
-  description: 'Enterprise Solutions Hub for Microsoft Technologies & Business Applications',
+  title: 'NextDocs - Enterprise Documentation Platform',
+  description: '🎃 Frighteningly Fast Enterprise Solutions Hub for Microsoft Technologies & Business Applications',
   icons: {
     icon: [
-      { url: '/icon.png', sizes: '192x192', type: 'image/png' },
+      { url: '/img/cat_logo.png', sizes: '192x192', type: 'image/png' },
       { url: '/favicon.ico', sizes: '32x32' },
     ],
     apple: [
-      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: '/img/cat_logo.png', sizes: '180x180', type: 'image/png' },
     ],
   },
   manifest: '/manifest.json',
@@ -47,14 +47,13 @@ export default function RootLayout({
         >
           <AuthProvider>
             <AnalyticsProvider>
-              {/* Particles Background - Site-wide */}
               <ParticlesBackground />
 
-              {/* Radial gradient overlay for depth - more subtle in light mode */}
-              <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-primary/5 dark:from-primary/10 via-transparent to-transparent z-[2] pointer-events-none" />
-
-              {/* Subtle grid pattern - lighter in light mode */}
-              <div className="fixed inset-0 bg-[linear-gradient(hsl(var(--primary)/0.015)_1px,transparent_1px),linear-gradient(90deg,hsl(var(--primary)/0.015)_1px,transparent_1px)] dark:bg-[linear-gradient(hsl(var(--primary)/0.03)_1px,transparent_1px),linear-gradient(90deg,hsl(var(--primary)/0.03)_1px,transparent_1px)] bg-[size:50px_50px] z-[2] pointer-events-none" />
+              {/* Subtle radial gradient overlay */}
+              <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent z-[2] pointer-events-none" />
+              
+              {/* Subtle grid pattern */}
+              <div className="fixed inset-0 bg-[linear-gradient(rgba(255,107,53,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,107,53,0.02)_1px,transparent_1px)] bg-[size:50px_50px] z-[2] pointer-events-none" />
 
               {/* Main Content */}
               <div className="relative z-10">

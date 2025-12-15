@@ -12,6 +12,9 @@ import { AuthorHoverCard } from '@/components/author-hover-card'
 import { ContentEngagement } from '@/components/content-engagement'
 import { processContentForUser } from '@/lib/content-access'
 import { RestrictionBadge, RestrictionSummary } from '@/components/content/restriction-indicators'
+import { formatDate } from '@/lib/utils/date-format'
+import { resolveAuthor } from '@/lib/utils/author-resolver'
+import { AuthorDisplay } from '@/components/ui/author-display'
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string[] }> }) {
     const session = await auth()
@@ -77,12 +80,17 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
     // Fetch author data if available
     let authorData = null
+    let resolvedAuthor = null
     let authorContent: {
         documents: Awaited<ReturnType<typeof getAuthorDocuments>>
         blogPosts: Awaited<ReturnType<typeof getAuthorBlogPosts>>
     } = { documents: [], blogPosts: [] }
-    
+
     if (blogPost.author) {
+        // Resolve author using author slug
+        resolvedAuthor = await resolveAuthor(blogPost.author)
+        
+        // Also try to get author data from the author system (for legacy author slugs)
         authorData = await getAuthorBySlug(blogPost.author)
         if (authorData) {
             const [documents, blogPosts] = await Promise.all([
@@ -125,101 +133,96 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             content={blogPost.content}
             blogCategories={categoryData}
         >
-                                {/* Blog Post Read Tracking */}
-                                <DocumentTracker slug={fullSlug} title={blogPost.title} />
-                                
-                                {/* Blog Post Header */}
-                                <div className="mb-8">
-                                    {blogPost.featuredImage && (
-                                        <div className="w-full h-96 relative mb-6 rounded-lg overflow-hidden">
-                                            <Image
-                                                src={blogPost.featuredImage}
-                                                alt={blogPost.title}
-                                                fill
-                                                className="object-cover"
-                                            />
-                                        </div>
-                                    )}
-                                    
-                                    <h1 className="text-4xl font-bold mb-4">{blogPost.title}</h1>
-                                    
-                                    {blogPost.excerpt && (
-                                        <p className="text-xl text-muted-foreground mb-6">
-                                            {blogPost.excerpt}
-                                        </p>
-                                    )}
+            {/* Blog Post Read Tracking */}
+            <DocumentTracker slug={fullSlug} title={blogPost.title} />
 
-                                    <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground pb-6 border-b">
-                                        {blogPost.publishedAt && (
-                                            <div className="flex items-center gap-2">
-                                                <Calendar className="w-4 h-4" />
-                                                <span>{new Date(blogPost.publishedAt).toLocaleDateString('en-US', { 
-                                                    year: 'numeric', 
-                                                    month: 'long', 
-                                                    day: 'numeric' 
-                                                })}</span>
-                                            </div>
-                                        )}
-                                        
-                                        {blogPost.author && (
-                                            <div className="flex items-center gap-2">
-                                                <User className="w-4 h-4" />
-                                                {authorData ? (
-                                                    <AuthorHoverCard author={authorData} content={authorContent}>
-                                                        <span className="cursor-pointer hover:text-brand-orange transition-colors">
-                                                            {authorData.name}
-                                                        </span>
-                                                    </AuthorHoverCard>
-                                                ) : (
-                                                    <span>{blogPost.author}</span>
-                                                )}
-                                            </div>
-                                        )}
+            {/* Blog Post Header */}
+            <div className="mb-8">
+                {blogPost.featuredImage && (
+                    <div className="w-full h-96 relative mb-6 rounded-lg overflow-hidden">
+                        <Image
+                            src={blogPost.featuredImage}
+                            alt={blogPost.title}
+                            fill
+                            className="object-cover"
+                        />
+                    </div>
+                )}
 
-                                        <div className="flex items-center gap-2">
-                                            <Clock className="w-4 h-4" />
-                                            <span>Updated {new Date(blogPost.updatedAt).toLocaleDateString()}</span>
-                                        </div>
+                <h1 className="text-4xl font-bold mb-4">{blogPost.title}</h1>
+
+                {blogPost.excerpt && (
+                    <p className="text-xl text-muted-foreground mb-6">
+                        {blogPost.excerpt}
+                    </p>
+                )}
+
+                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground pb-6 border-b">
+                    {blogPost.publishedAt && (
+                        <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            <span>{formatDate(blogPost.publishedAt)}</span>
+                        </div>
+                    )}
+
+                    {blogPost.author && resolvedAuthor && (
+                        <div>
+                            {authorData ? (
+                                <AuthorHoverCard author={authorData} content={authorContent}>
+                                    <div className="cursor-pointer hover:text-brand-orange transition-colors">
+                                        <AuthorDisplay author={resolvedAuthor} />
                                     </div>
+                                </AuthorHoverCard>
+                            ) : (
+                                <AuthorDisplay author={resolvedAuthor} />
+                            )}
+                        </div>
+                    )}
 
-                                    {/* Tags and Category */}
-                                    {(blogPost.category || blogPost.tags.length > 0) && (
-                                        <div className="flex flex-wrap items-center gap-2 mt-6">
-                                            {blogPost.category && (
-                                                <Badge variant="default" className="text-sm">
-                                                    {blogPost.category}
-                                                </Badge>
-                                            )}
-                                            {blogPost.tags.map((tag) => (
-                                                <Badge key={tag} variant="secondary" className="text-sm">
-                                                    <Tag className="w-3 h-3 mr-1" />
-                                                    {tag}
-                                                </Badge>
-                                            ))}
-                                        </div>
-                                    )}
+                    <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4" />
+                        <span>Updated {formatDate(blogPost.updatedAt)}</span>
+                    </div>
+                </div>
 
-                                    {/* Restriction Information for Admins */}
-                                    {processedContent.hasRestrictions && processedContent.restrictionInfo && (
-                                        <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-                                            <RestrictionSummary 
-                                                isRestricted={processedContent.restrictionInfo.isRestricted}
-                                                documentRoles={processedContent.restrictionInfo.documentRoles}
-                                                variants={processedContent.restrictionInfo.restrictedVariants}
-                                            />
-                                        </div>
-                                    )}
-                                </div>
+                {/* Tags and Category */}
+                {(blogPost.category || blogPost.tags.length > 0) && (
+                    <div className="flex flex-wrap items-center gap-2 mt-6">
+                        {blogPost.category && (
+                            <Badge variant="default" className="text-sm">
+                                {blogPost.category}
+                            </Badge>
+                        )}
+                        {blogPost.tags.map((tag) => (
+                            <Badge key={tag} variant="secondary" className="text-sm">
+                                <Tag className="w-3 h-3 mr-1" />
+                                {tag}
+                            </Badge>
+                        ))}
+                    </div>
+                )}
 
-                                {/* Engagement Actions */}
-                                <ContentEngagement 
-                                    contentType="blogpost" 
-                                    contentId={blogPost.id}
-                                    contentTitle={blogPost.title}
-                                />
+                {/* Restriction Information for Admins */}
+                {processedContent.hasRestrictions && processedContent.restrictionInfo && (
+                    <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                        <RestrictionSummary
+                            isRestricted={processedContent.restrictionInfo.isRestricted}
+                            documentRoles={processedContent.restrictionInfo.documentRoles}
+                            variants={processedContent.restrictionInfo.restrictedVariants}
+                        />
+                    </div>
+                )}
+            </div>
 
-                                {/* Blog Post Content */}
-                                <div className="prose prose-slate dark:prose-invert max-w-none 
+            {/* Engagement Actions */}
+            <ContentEngagement
+                contentType="blogpost"
+                contentId={blogPost.id}
+                contentTitle={blogPost.title}
+            />
+
+            {/* Blog Post Content */}
+            <div className="prose prose-slate dark:prose-invert max-w-none 
                                     prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-foreground prose-headings:scroll-mt-20
                                     prose-h1:text-3xl prose-h1:mb-4 prose-h1:mt-8
                                     prose-h2:text-2xl prose-h2:mb-3 prose-h2:mt-6 prose-h2:border-b prose-h2:pb-2 dark:prose-h2:border-border
@@ -243,29 +246,29 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                                     dark:prose-li:text-slate-300
                                     dark:prose-strong:text-slate-100
                                     dark:prose-code:bg-slate-800 dark:prose-code:text-slate-100">
-                                    <MarkdownWithMermaid
-                                        repositorySlug={blogPost.repository.slug}
-                                        documentPath={`blog/${fullSlug}`}
-                                    >
-                                        {processedContent.content}
-                                    </MarkdownWithMermaid>
-                                </div>
+                <MarkdownWithMermaid
+                    repositorySlug={blogPost.repository.slug}
+                    documentPath={`blog/${fullSlug}`}
+                >
+                    {processedContent.content}
+                </MarkdownWithMermaid>
+            </div>
 
-                                {/* Footer */}
-                                <div className="mt-12 pt-6 border-t">
-                                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                                        <div>
-                                            <span>Repository: </span>
-                                            <span className="font-medium">{blogPost.repository.name}</span>
-                                        </div>
-                                        <div>
-                                            <span>Last updated: </span>
-                                            <span className="font-medium">
-                                                {new Date(blogPost.updatedAt).toLocaleDateString()}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
+            {/* Footer */}
+            <div className="mt-12 pt-6 border-t">
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <div>
+                        <span>Repository: </span>
+                        <span className="font-medium">{blogPost.repository.name}</span>
+                    </div>
+                    <div>
+                        <span>Last updated: </span>
+                        <span className="font-medium">
+                            {formatDate(blogPost.updatedAt)}
+                        </span>
+                    </div>
+                </div>
+            </div>
         </ContentDetailLayout>
     )
 }

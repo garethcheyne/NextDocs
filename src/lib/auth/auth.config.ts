@@ -2,40 +2,80 @@ import type { NextAuthConfig } from 'next-auth'
 import MicrosoftEntraID from 'next-auth/providers/microsoft-entra-id'
 import { prisma } from '../db/prisma'
 
-// Track OAuth token requests
-const originalFetch = global.fetch
-let requestCounter = 0
+// Track OAuth token requests (only in development or when explicitly enabled)
+const shouldLogOAuth = process.env.NODE_ENV === 'development' || process.env.OAUTH_DEBUG === 'true'
 
-global.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-  const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
-  const requestId = ++requestCounter
+if (shouldLogOAuth) {
+  const originalFetch = global.fetch
+  let requestCounter = 0
+  const recentRequests = new Map<string, { count: number, lastSeen: number }>()
 
-  // Only log Microsoft/OAuth related requests
-  if (url.includes('microsoft') || url.includes('oauth') || url.includes('token')) {
-    console.log(`🌐 [${requestId}] Fetch Request:`, {
-      url,
-      method: init?.method || 'GET',
-      headers: init?.headers ? Object.fromEntries(Object.entries(init.headers as any).filter(([k]) => !k.toLowerCase().includes('secret') && !k.toLowerCase().includes('authorization'))) : undefined,
-    })
-  }
+  global.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+    const requestId = ++requestCounter
 
-  try {
-    const response = await originalFetch(input, init)
-
+    // Only log Microsoft/OAuth related requests
     if (url.includes('microsoft') || url.includes('oauth') || url.includes('token')) {
-      console.log(`✅ [${requestId}] Fetch Response:`, {
-        url,
-        status: response.status,
-        statusText: response.statusText,
-      })
+      const now = Date.now()
+      const urlKey = `${init?.method || 'GET'}:${url}`
+      const recent = recentRequests.get(urlKey)
+      
+      // Only log if this URL hasn't been seen recently or if it's a different type of request
+      if (!recent || now - recent.lastSeen > 5000) { // 5 second cooldown
+        console.log(`🌐 [${requestId}] OAuth Request:`, {
+          url: url.replace(/\/[a-f0-9-]{36}\//g, '/{tenant-id}/'), // Anonymize tenant ID
+          method: init?.method || 'GET',
+        })
+        recentRequests.set(urlKey, { count: 1, lastSeen: now })
+      } else {
+        recent.count++
+        recent.lastSeen = now
+        if (recent.count <= 3) { // Only log first few duplicates
+          console.log(`🔄 [${requestId}] OAuth Request (${recent.count}x):`, url.split('/').pop())
+        }
+      }
+      
+      // Clean up old entries
+      if (recentRequests.size > 50) {
+        const cutoff = now - 30000 // 30 seconds
+        for (const [key, value] of recentRequests.entries()) {
+          if (value.lastSeen < cutoff) {
+            recentRequests.delete(key)
+          }
+        }
+      }
     }
 
-    return response
-  } catch (error) {
-    if (url.includes('microsoft') || url.includes('oauth') || url.includes('token')) {
-      console.error(`❌ [${requestId}] Fetch Error:`, { url, error })
+    try {
+      const response = await originalFetch(input, init)
+
+      // Only log errors or important auth responses, not every successful request
+      if (url.includes('microsoft') || url.includes('oauth') || url.includes('token')) {
+        if (!response.ok) {
+          console.error(`❌ [${requestId}] OAuth Error:`, {
+            url: url.replace(/\/[a-f0-9-]{36}\//g, '/{tenant-id}/'),
+            status: response.status,
+            statusText: response.statusText,
+          })
+        } else if (url.includes('token') && !url.includes('well-known')) {
+          // Only log actual token exchanges, not configuration fetches
+          console.log(`✅ [${requestId}] OAuth Token:`, {
+            status: response.status,
+            type: url.includes('oauth2') ? 'token-exchange' : 'unknown'
+          })
+        }
+      }
+
+      return response
+    } catch (error) {
+      if (url.includes('microsoft') || url.includes('oauth') || url.includes('token')) {
+        console.error(`❌ [${requestId}] OAuth Network Error:`, { 
+          url: url.replace(/\/[a-f0-9-]{36}\//g, '/{tenant-id}/'), 
+          error: error instanceof Error ? error.message : error 
+        })
+      }
+      throw error
     }
-    throw error
   }
 }
 
@@ -153,6 +193,43 @@ export const authConfig = {
 
         console.log('🔐 Entra ID sign-in:', { oid, email: user.email, firstName, lastName, hasAvatar: !!avatarUrl })
 
+        // Helper function to check if a group matches a pattern (supports wildcards)
+        const groupMatches = (userGroup: any, pattern: any): boolean => {
+          if (pattern === userGroup) return true // Exact match
+          if (pattern.includes('*')) {
+            // Wildcard pattern support (e.g., "SGRP_CRM_Access_*")
+            const regexPattern = pattern
+              .replace(/[.+^${}()|[\]\\]/g, '\\$&') // Escape regex special chars
+              .replace(/\*/g, '.*') // Convert * to .*
+            return new RegExp(`^${regexPattern}$`).test(userGroup)
+          }
+          return false
+        }
+
+        // Check if user should be assigned admin role based on Azure AD groups
+        const adminGroups = process.env.ADMIN_AD_GROUPS?.split(',').map(g => g.trim()).filter(Boolean) || []
+        const userGroups = (profile as any)?.groups || []
+        let assignedRole = 'user'
+
+        if (adminGroups.length > 0 && userGroups.length > 0) {
+          console.log('🔍 Checking admin role assignment...')
+          console.log('👥 User groups:', userGroups)
+          console.log('🔑 Admin groups required:', adminGroups)
+          
+          const isAdmin = adminGroups.some(adminGroup =>
+            userGroups.some((userGroup: any) => groupMatches(userGroup, adminGroup))
+          )
+          
+          if (isAdmin) {
+            assignedRole = 'admin'
+            console.log('🛡️ User assigned admin role based on Azure AD group membership')
+          } else {
+            console.log('👤 User assigned default user role - no admin group match')
+          }
+        } else {
+          console.log('⚠️ No admin groups configured or user has no groups')
+        }
+
         // Ensure user exists in database
         try {
           const existingUser = await prisma.user.findUnique({
@@ -160,8 +237,8 @@ export const authConfig = {
           })
 
           if (!existingUser) {
-            // Create new user
-            await prisma.user.create({
+            // Create new user with the NextAuth user ID
+            const newUser = await prisma.user.create({
               data: {
                 id: user.id,
                 email: user.email,
@@ -169,28 +246,51 @@ export const authConfig = {
                 firstName: firstName || null,
                 lastName: lastName || null,
                 image: avatarUrl || null,
-                role: 'user',
+                role: assignedRole,
                 provider: 'microsoft-entra-id',
               }
             })
-            console.log('✅ Created new SSO user:', user.email)
+            console.log('✅ Created new SSO user:', user.email, 'with ID:', newUser.id, 'role:', assignedRole)
           } else {
-            // Update existing user with latest profile data
+            // Update existing user with latest profile data and role if needed
+            const updateData: any = {
+              name: fullName,
+              firstName: firstName || existingUser.firstName,
+              lastName: lastName || existingUser.lastName,
+              image: avatarUrl || existingUser.image,
+            }
+
+            // Update role if it should change based on current group membership
+            if (assignedRole !== existingUser.role) {
+              updateData.role = assignedRole
+              console.log('🔄 Role change for user:', user.email, 'from', existingUser.role, 'to', assignedRole)
+            }
+
             await prisma.user.update({
               where: { email: user.email },
-              data: {
-                name: fullName,
-                firstName: firstName || existingUser.firstName,
-                lastName: lastName || existingUser.lastName,
-                image: avatarUrl || existingUser.image,
-              }
+              data: updateData
             })
 
+            // Always use the existing user's ID to maintain consistency
             if (existingUser.id !== user.id) {
+              console.log('🔄 Updating user ID from', user.id, 'to existing', existingUser.id)
               user.id = existingUser.id
             }
-            console.log('🔄 Updated existing SSO user:', user.email)
+            console.log('🔄 Updated existing SSO user:', user.email, 'with ID:', existingUser.id, 'role:', assignedRole)
           }
+          
+          // Double-check that the user now exists with the correct ID
+          const verifyUser = await prisma.user.findUnique({
+            where: { id: user.id }
+          })
+          
+          if (!verifyUser) {
+            console.error('❌ User verification failed after creation/update. ID:', user.id, 'Email:', user.email)
+            return false
+          }
+          
+          console.log('✅ User verified in database:', verifyUser.email, 'ID:', verifyUser.id)
+          
         } catch (error) {
           console.error('❌ Error ensuring user exists:', error)
           return false

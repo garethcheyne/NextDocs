@@ -1,5 +1,6 @@
 import { notFound, redirect } from 'next/navigation'
 import { auth } from '@/lib/auth/auth'
+import { formatDate } from '@/lib/utils/date-format'
 import { prisma } from '@/lib/db/prisma'
 import { ArrowLeft, Calendar, MessageSquare, ThumbsUp, ThumbsDown, User } from 'lucide-react'
 import Link from 'next/link'
@@ -59,6 +60,19 @@ export default async function FeatureRequestPage({
             creator: {
                 select: { id: true, name: true, email: true, image: true },
             },
+            followers: {
+                select: {
+                    userId: true,
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            email: true,
+                            image: true,
+                        },
+                    },
+                },
+            },
             internalNotes: {
                 include: {
                     creator: {
@@ -103,6 +117,7 @@ export default async function FeatureRequestPage({
     const upvotes = feature.votes.filter((v) => v.voteType === 1).length
     const downvotes = feature.votes.filter((v) => v.voteType === -1).length
     const userVoteType = userVote ? (userVote.voteType === 1 ? 'upvote' : 'downvote') : null
+    const isFollowing = feature.followers.some(f => f.userId === session?.user?.id)
 
     const statusColors: Record<string, string> = {
         PENDING: 'bg-yellow-500',
@@ -146,6 +161,7 @@ export default async function FeatureRequestPage({
                 downvotes={downvotes}
                 featureId={feature.id}
                 userVoteType={userVoteType}
+                isFollowing={isFollowing}
             />
 
             {/* Main Container  */}
@@ -295,6 +311,40 @@ export default async function FeatureRequestPage({
                             </Card>
                         )}
 
+                        {/* Followers */}
+                        {feature.followers.length > 0 && (
+                            <Card>
+                                <CardHeader>
+                                    <h3 className="font-semibold">Followers ({feature.followers.length})</h3>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="space-y-2">
+                                        {feature.followers.map((follower) => (
+                                            <div
+                                                key={follower.userId}
+                                                className="flex items-center gap-2"
+                                            >
+                                                {follower.user?.image ? (
+                                                    <img
+                                                        src={follower.user.image}
+                                                        alt={follower.user.name || 'Anonymous'}
+                                                        className="w-6 h-6 rounded-full object-cover border border-border"
+                                                    />
+                                                ) : (
+                                                    <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
+                                                        <User className="w-3 h-3 text-muted-foreground" />
+                                                    </div>
+                                                )}
+                                                <span className="text-sm text-foreground/70">
+                                                    {follower.user?.name || 'Anonymous'}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
                         {/* Voter List */}
                         {(upvotes > 0 || downvotes > 0) && (
                             <Card>
@@ -404,7 +454,7 @@ export default async function FeatureRequestPage({
                                                             </Badge>
                                                         </div>
                                                         <div className="text-xs text-foreground/60 mt-1">
-                                                            {new Date(history.createdAt).toLocaleDateString()}
+                                                            {formatDate(history.createdAt)}
                                                         </div>
                                                         {history.reason && (
                                                             <p className="text-sm mt-1">{history.reason}</p>
@@ -431,7 +481,7 @@ export default async function FeatureRequestPage({
                                     <p className="text-2xl font-bold">{feature.targetVersion}</p>
                                     {feature.expectedDate && (
                                         <p className="text-sm text-foreground/70 mt-1">
-                                            Expected: {new Date(feature.expectedDate).toLocaleDateString()}
+                                            Expected: {formatDate(feature.expectedDate)}
                                         </p>
                                     )}
                                 </CardContent>

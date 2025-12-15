@@ -105,3 +105,6 @@ backups/pre-restore-*.sql
 # Documentation - Generated/Temporary
 DOCKER-CHANGES.md
 DOCKER-QUICKREF.md
+
+# Security Testing - Session Tokens (DO NOT COMMIT)
+.claude/session-token-*.txt

@@ -37,17 +37,17 @@ function CodeBlock({ language, children }: { language: string; children: string 
     useEffect(() => {
         // Check if dark mode is enabled
         setIsDark(document.documentElement.classList.contains('dark'))
-        
+
         // Watch for theme changes
         const observer = new MutationObserver(() => {
             setIsDark(document.documentElement.classList.contains('dark'))
         })
-        
+
         observer.observe(document.documentElement, {
             attributes: true,
             attributeFilter: ['class']
         })
-        
+
         return () => observer.disconnect()
     }, [])
 
@@ -105,7 +105,7 @@ function CodeBlock({ language, children }: { language: string; children: string 
                     )}
                 </Button>
             </div>
-            
+
             {/* Code content with syntax highlighting */}
             <div className="overflow-x-auto">
                 <SyntaxHighlighter
@@ -261,7 +261,7 @@ function MermaidDiagram({ chart }: { chart: string }) {
 function getLucideIcon(iconName: string) {
     // Try direct match first (PascalCase)
     let Icon = (LucideIcons as any)[iconName]
-    
+
     // If not found, try converting kebab-case to PascalCase
     if (!Icon) {
         // Convert kebab-case to PascalCase (e.g., "file-spreadsheet" -> "FileSpreadsheet")
@@ -271,7 +271,7 @@ function getLucideIcon(iconName: string) {
             .join('')
         Icon = (LucideIcons as any)[pascalCase]
     }
-    
+
     return Icon || null
 }
 
@@ -280,12 +280,12 @@ function getFluentIcon(iconName: string) {
     // FluentUI icons are named like: Add20Regular, Delete24Filled
     // Try direct match first
     let Icon = (FluentIcons as any)[iconName]
-    
+
     // If not found and no size/variant specified, try with default 20Regular
     if (!Icon && !iconName.match(/\d+(Regular|Filled)$/)) {
         Icon = (FluentIcons as any)[`${iconName}20Regular`]
     }
-    
+
     return Icon || null
 }
 
@@ -304,24 +304,24 @@ function processTextWithIcons(text: string | React.ReactNode): React.ReactNode {
         }
         return text
     }
-    
+
     // Match :icon-name: or :#fluentui icon-name: pattern
     // Supports: :Settings:, :file-spreadsheet:, :#fluentui Add:, :#fluentui Delete20Filled:
     const iconPattern = /:(#fluentui\s+)?([a-zA-Z0-9-]+):/g
     const parts: React.ReactNode[] = []
     let lastIndex = 0
     let match
-    
+
     while ((match = iconPattern.exec(text)) !== null) {
         // Add text before the icon
         if (match.index > lastIndex) {
             parts.push(text.substring(lastIndex, match.index))
         }
-        
+
         // Check if it's a FluentUI icon (has #fluentui prefix)
         const isFluentUI = !!match[1]
         const iconName = match[2]
-        
+
         let IconComponent
         if (isFluentUI) {
             // Get FluentUI icon
@@ -330,13 +330,13 @@ function processTextWithIcons(text: string | React.ReactNode): React.ReactNode {
             // Get Lucide icon (default)
             IconComponent = getLucideIcon(iconName)
         }
-        
+
         if (IconComponent) {
             // Render the icon
             parts.push(
-                <IconComponent 
-                    key={`icon-${match.index}`} 
-                    className="inline-block w-4 h-4 mx-0.5 align-text-bottom" 
+                <IconComponent
+                    key={`icon-${match.index}`}
+                    className="inline-block w-4 h-4 mx-0.5 align-text-bottom"
                     aria-label={iconName}
                 />
             )
@@ -344,15 +344,15 @@ function processTextWithIcons(text: string | React.ReactNode): React.ReactNode {
             // If icon not found, keep the original text
             parts.push(match[0])
         }
-        
+
         lastIndex = match.index + match[0].length
     }
-    
+
     // Add remaining text
     if (lastIndex < text.length) {
         parts.push(text.substring(lastIndex))
     }
-    
+
     return parts.length > 0 ? <>{parts}</> : text
 }
 
@@ -398,16 +398,16 @@ export function MarkdownWithMermaid({ children, className, repositorySlug, docum
         },
         a({ href, children }: any) {
             const isExternal = href?.startsWith('http')
-            
+
             // Transform .md links to proper relative paths
             let transformedHref = href
             if (href && !isExternal && href.endsWith('.md')) {
                 // Remove .md extension
                 transformedHref = href.replace(/\.md$/, '')
-                
+
                 // Remove ./ prefix if present (indicates same directory)
                 transformedHref = transformedHref.replace(/^\.\//, '')
-                
+
                 // If it's a relative link (doesn't start with /), make it relative to current document path
                 if (!transformedHref.startsWith('/') && documentPath) {
                     // Get the directory of the current document
@@ -416,7 +416,7 @@ export function MarkdownWithMermaid({ children, className, repositorySlug, docum
                     const pathParts = documentPath.split('/')
                     pathParts.pop() // Remove the current file/page name (e.g., "best-practices")
                     const currentDir = pathParts.join('/')
-                    
+
                     // Combine current directory with the relative link
                     // Result: "/docs/dynamics-365-ce-aus/product-import-wizard/getting-started"
                     transformedHref = `/${currentDir}/${transformedHref}`
@@ -424,7 +424,7 @@ export function MarkdownWithMermaid({ children, className, repositorySlug, docum
                     transformedHref = transformedHref.replace(/\/+/g, '/')
                 }
             }
-            
+
             return (
                 <a
                     href={transformedHref}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { formatDate } from '@/lib/utils/date-format'
 import { useRouter } from 'next/navigation'
 import { FileText, Plus, Eye } from 'lucide-react'
 import {
@@ -172,8 +173,8 @@ export function InternalNotesDialog({
                                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                                 <span>{note.creator.name || note.creator.email}</span>
                                                 <span>•</span>
-                                                <span>{new Date(note.createdAt).toLocaleDateString()}</span>
-                                                <span>{new Date(note.createdAt).toLocaleTimeString()}</span>
+                                                <span>{formatDate(note.createdAt)}</span>
+                                                <span>{new Date(note.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
                                             </div>
                                         </div>
                                     </CardHeader>

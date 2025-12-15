@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { formatDate } from '@/lib/utils/date-format'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -103,7 +104,7 @@ export function ActivityTab({ userId }: ActivityTabProps) {
         </div>
         <span className="flex items-center gap-1">
           <Calendar className="h-3 w-3" />
-          {new Date(feature.createdAt).toLocaleDateString()}
+          {formatDate(feature.createdAt)}
         </span>
       </div>
     </div>

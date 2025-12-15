@@ -347,6 +347,75 @@
     animation-duration: 4.5s;
   }
 
+  /* Scary floating animation for logos */
+  @keyframes float-scary {
+    0% {
+      transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
+      opacity: 0.3;
+    }
+    15% {
+      transform: translateY(-20px) translateX(10px) rotate(5deg) scale(1.1);
+      opacity: 0.6;
+    }
+    30% {
+      transform: translateY(-10px) translateX(-15px) rotate(-3deg) scale(0.9);
+      opacity: 0.4;
+    }
+    45% {
+      transform: translateY(5px) translateX(8px) rotate(7deg) scale(1.05);
+      opacity: 0.7;
+    }
+    60% {
+      transform: translateY(-25px) translateX(-5px) rotate(-2deg) scale(0.95);
+      opacity: 0.3;
+    }
+    75% {
+      transform: translateY(8px) translateX(12px) rotate(4deg) scale(1.08);
+      opacity: 0.8;
+    }
+    90% {
+      transform: translateY(-15px) translateX(-8px) rotate(-6deg) scale(1.02);
+      opacity: 0.5;
+    }
+    100% {
+      transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
+      opacity: 0.3;
+    }
+  }
+
+  .animate-float-scary {
+    animation: float-scary 20s ease-in-out infinite;
+  }
+
+  /* Radial gradient utility */
+  .bg-gradient-radial {
+    background: radial-gradient(var(--tw-gradient-stops));
+  }
+
+  /* Scary hover effects for buttons */
+  .scary-hover:hover {
+    animation: scary-shake 0.5s ease-in-out;
+    box-shadow: 0 0 20px rgba(255, 107, 53, 0.6);
+  }
+
+  @keyframes scary-shake {
+    0%, 100% { transform: translateX(0); }
+    10% { transform: translateX(-2px) rotate(0.5deg); }
+    20% { transform: translateX(2px) rotate(-0.5deg); }
+    30% { transform: translateX(-2px) rotate(0.5deg); }
+    40% { transform: translateX(2px) rotate(-0.5deg); }
+    50% { transform: translateX(-1px) rotate(0.5deg); }
+    60% { transform: translateX(1px) rotate(-0.5deg); }
+    70% { transform: translateX(-1px) rotate(0.5deg); }
+    80% { transform: translateX(1px) rotate(-0.5deg); }
+    90% { transform: translateX(-1px) rotate(0.5deg); }
+  }
+
+  /* Spooky cursor */
+  body {
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="8" fill="%23ff6b35" opacity="0.8"/></svg>') 16 16, auto;
+  }
+
   /* Animated Icon Arc Component Styles */
   .icon-arc-item {
     position: absolute;

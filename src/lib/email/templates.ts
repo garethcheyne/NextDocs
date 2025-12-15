@@ -1,4 +1,5 @@
 import { FeatureRequest, User } from '@prisma/client'
+import { formatDateTime } from '@/lib/utils/date-format'
 
 const baseStyles = `
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -231,7 +232,7 @@ export function buildNewCommentEmail(
               ${comment.content}
             </p>
             <p style="margin: 15px 0 0 0; color: #999; font-size: 12px;">
-              ${new Date(comment.createdAt).toLocaleString()}
+              ${formatDateTime(comment.createdAt)}
             </p>
           </div>
 

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
+import { formatDate } from '@/lib/utils/date-format'
 import { ArrowUp, MessageSquare, Filter, Lightbulb, Calendar, User, Settings, GitBranch } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -263,11 +264,7 @@ export function FeaturesClient({ features, categories, params }: FeaturesClientP
 
                                                     <span className="text-foreground/70 dark:text-foreground/80 flex items-center gap-1">
                                                         <Calendar className="w-3 h-3" />
-                                                        {new Date(feature.createdAt).toLocaleDateString('en-US', {
-                                                            year: 'numeric',
-                                                            month: '2-digit',
-                                                            day: '2-digit'
-                                                        })}
+                                                        {formatDate(feature.createdAt)}
                                                     </span>
 
                                                     <span className="flex items-center gap-1 text-xs">

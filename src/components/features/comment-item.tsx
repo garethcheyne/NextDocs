@@ -10,6 +10,7 @@ import { MarkdownToolbar } from '@/components/ui/markdown-toolbar'
 import { useMarkdownEditor } from '@/hooks/use-markdown-editor'
 import { EnhancedMarkdown } from '@/components/ui/enhanced-markdown'
 import ReactMarkdown from 'react-markdown'
+import { formatDate, formatTime } from '@/lib/utils/date-format'
 
 interface CommentItemProps {
     comment: {
@@ -210,12 +211,7 @@ export function CommentItem({ comment }: CommentItemProps) {
 
                 <div className="flex items-center gap-2">
                     <span className="text-xs text-foreground/60">
-                        {new Date(comment.createdAt).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit'
-                        })} at{' '}
-                        {new Date(comment.createdAt).toLocaleTimeString()}
+                        {formatDate(comment.createdAt)} at {formatTime(comment.createdAt)}
                     </span>
                     {canEdit && !isEditing && (
                         <div className="flex gap-1">

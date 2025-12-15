@@ -59,6 +59,7 @@ export async function storeDocuments(
                 restrictedRoles: parsed.restrictedRoles,
                 sourceHash: parsed.sourceHash,
                 lastSyncedAt: new Date(),
+                updatedAt: new Date(),
               },
             })
             // Update search index
@@ -134,6 +135,7 @@ export async function storeDocuments(
                 restrictedRoles: parsed.restrictedRoles,
                 sourceHash: parsed.sourceHash,
                 lastSyncedAt: new Date(),
+                updatedAt: new Date(),
               },
             })
             // Update search index

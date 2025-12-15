@@ -14,7 +14,10 @@
       "Bash(npm install:*)",
       "Bash(npm audit:*)",
       "Bash(npm run build:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(for i in {1..8})",
+      "Bash(do curl -s -o /dev/null -w \"%{http_code}\\n\" -X POST \"https://docs.err403.com/api/auth/callback/credentials\" -H \"Content-Type: application/x-www-form-urlencoded\" -d \"email=test@test.com&password=wrong\")",
+      "Bash(done)"
     ]
   }
 }

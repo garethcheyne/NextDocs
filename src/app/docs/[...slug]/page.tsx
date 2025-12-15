@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth/auth'
 import { redirect, notFound } from 'next/navigation'
+import { formatDate, formatDateTime } from '@/lib/utils/date-format'
 import { prisma } from '@/lib/db/prisma'
 import { ContentDetailLayout } from '@/components/layout/content-detail-layout'
 import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
@@ -14,6 +15,8 @@ import { ContentEngagement } from '@/components/content-engagement'
 import { processContentForUser } from '@/lib/content-access'
 import { RestrictionBadge, RestrictionSummary } from '@/components/content/restriction-indicators'
 import { RestrictedAccess } from '@/components/auth/restricted-access'
+import { resolveAuthor } from '@/lib/utils/author-resolver'
+import { AuthorDisplay } from '@/components/ui/author-display'
 
 export default async function DocPage({ params }: { params: Promise<{ slug: string[] }> }) {
     const session = await auth()
@@ -77,12 +80,17 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
 
     // Fetch author data if available
     let authorData = null
+    let resolvedAuthor = null
     let authorContent: {
         documents: Awaited<ReturnType<typeof getAuthorDocuments>>
         blogPosts: Awaited<ReturnType<typeof getAuthorBlogPosts>>
     } = { documents: [], blogPosts: [] }
 
     if (document.author) {
+        // Resolve author (check if email exists as system user)
+        resolvedAuthor = await resolveAuthor(document.author)
+
+        // Also try to get author data from the author system
         authorData = await getAuthorBySlug(document.author)
         if (authorData) {
             const [documents, blogPosts] = await Promise.all([
@@ -200,16 +208,16 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
                         const matchingFeatureCategory = featureCategories.find(
                             fc => fc.slug === document.category
                         )
-                        
+
                         if (matchingFeatureCategory) {
                             return (
-                                <CategoryBadge 
+                                <CategoryBadge
                                     category={matchingFeatureCategory}
-                                    className="-ml-3" 
+                                    className="-ml-3"
                                 />
                             )
                         }
-                        
+
                         // Fallback to generic badge
                         return (
                             <Badge variant="secondary" className="capitalize">
@@ -219,17 +227,16 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
                     })()}
 
 
-                    {document.author && (
-                        <div className="flex items-center gap-1">
-                            <User className="w-4 h-4" />
+                    {document.author && resolvedAuthor && (
+                        <div>
                             {authorData ? (
                                 <AuthorHoverCard author={authorData} content={authorContent}>
-                                    <span className="cursor-pointer hover:text-brand-orange transition-colors">
-                                        {authorData.name}
-                                    </span>
+                                    <div className="cursor-pointer hover:text-brand-orange transition-colors">
+                                        <AuthorDisplay author={resolvedAuthor} />
+                                    </div>
                                 </AuthorHoverCard>
                             ) : (
-                                <span>{document.author}</span>
+                                <AuthorDisplay author={resolvedAuthor} />
                             )}
                         </div>
                     )}
@@ -238,7 +245,7 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
                     {document.updatedAt && (
                         <div className="flex items-center gap-1">
                             <Clock className="w-4 h-4" />
-                            <span>Updated {new Date(document.updatedAt).toLocaleDateString()}</span>
+                            <span>Updated {formatDateTime(document.updatedAt)}</span>
                         </div>
                     )}
                 </div>
@@ -257,7 +264,7 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
                 {/* Restriction Information for Admins */}
                 {processedContent.hasRestrictions && processedContent.restrictionInfo && (
                     <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-                        <RestrictionSummary 
+                        <RestrictionSummary
                             isRestricted={processedContent.restrictionInfo.isRestricted}
                             documentRoles={processedContent.restrictionInfo.documentRoles}
                             variants={processedContent.restrictionInfo.restrictedVariants}
@@ -267,8 +274,8 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
             </div>
 
             {/* Engagement Actions */}
-            <ContentEngagement 
-                contentType="document" 
+            <ContentEngagement
+                contentType="document"
                 contentId={document.id}
                 contentTitle={document.title}
             />
@@ -308,7 +315,7 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
             <div className="mt-12 pt-8 border-t">
                 <p className="text-sm text-muted-foreground">
                     Last updated on{' '}
-                    {new Date(document.updatedAt).toLocaleString()}
+                    {formatDateTime(document.updatedAt)}
                 </p>
             </div>
         </ContentDetailLayout>

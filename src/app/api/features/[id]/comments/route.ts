@@ -76,6 +76,21 @@ export async function POST(
       },
     })
 
+    // Auto-follow the feature when user comments
+    await prisma.featureFollower.upsert({
+      where: {
+        featureId_userId: {
+          featureId: id,
+          userId: session.user.id,
+        },
+      },
+      update: {}, // No update needed if already following
+      create: {
+        featureId: id,
+        userId: session.user.id,
+      },
+    })
+
     // Update feature request comment count and last activity
     const featureRequest = await prisma.featureRequest.update({
       where: { id },
@@ -111,6 +126,13 @@ export async function POST(
     notifyNewComment(id, comment.id).catch((error) => {
       console.error('Failed to send comment notifications:', error)
       // Don't fail the request if email fails
+    })
+
+    // Check for mentions and notify mentioned users
+    const { notifyMentions } = await import('@/lib/email/notification-service')
+    notifyMentions(id, comment.id, content.trim()).catch((error) => {
+      console.error('Failed to send mention notifications:', error)
+      // Don't fail the request if mention notifications fail
     })
 
     return NextResponse.json({ comment })

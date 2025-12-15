@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db/prisma'
+import { formatDateTime } from '@/lib/utils/date-format'
 
 interface ContentUpdateNotification {
   contentType: 'document' | 'blogpost'
@@ -122,13 +123,7 @@ function generateContentUpdateEmail({
     <div style="background: white; border-left: 4px solid #f97316; padding: 20px; margin: 20px 0; border-radius: 4px;">
       <h2 style="margin: 0 0 10px 0; font-size: 18px; color: #f97316;">${contentTitle}</h2>
       <p style="margin: 0; color: #666; font-size: 14px;">
-        Updated on ${updatedAt.toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        })}
+        Updated on ${formatDateTime(updatedAt)}
       </p>
     </div>
     

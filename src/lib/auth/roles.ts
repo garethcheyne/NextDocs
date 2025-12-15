@@ -162,10 +162,24 @@ export function filterContentByRoles(
   restrictedVariants: Array<{ role: string; hasAccess: boolean }>
 } {
   if (isAdmin) {
-    // Admins see everything, but we still parse to show restrictions
+    // Admins see everything with visual indicators for variant sections
     const variants = parseVariants(content)
+    let adminContent = content
+    
+    // Process variants from last to first to maintain string positions
+    variants.reverse().forEach(variant => {
+      // Replace variant markers with visual indicators
+      const startMarker = `!variant!\\s*#\\s*${variant.role.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`
+      const startRegex = new RegExp(startMarker, 'g')
+      
+      adminContent = adminContent.replace(startRegex, 
+        `> **🔒 RESTRICTED CONTENT - ${variant.role}**\n>\n`)
+      adminContent = adminContent.replace(/!endvariant!/g, 
+        `>\n> **END RESTRICTED SECTION**\n`)
+    })
+    
     return {
-      filteredContent: content,
+      filteredContent: adminContent,
       hasRestrictions: variants.length > 0,
       restrictedVariants: variants.map(v => ({ role: v.role, hasAccess: true }))
     }

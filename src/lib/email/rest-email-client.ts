@@ -89,26 +89,86 @@ export class RestEmailClient {
                 debugMode: this.debugMode
             })
 
-            // Send email via REST API
-            const response = await fetch(this.apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
-            })
-
-            if (!response.ok) {
-                const errorText = await response.text()
-                throw new Error(`Email API returned ${response.status}: ${errorText}`)
-            }
-
-            console.log(`✅ Email sent successfully to ${recipients.length} recipient(s)`)
+            // Send email via REST API with retry logic
+            await this.sendWithRetry(payload, recipients.length)
 
         } catch (error) {
             console.error('❌ Failed to send email via REST API:', error)
             throw error
         }
+    }
+
+    private async sendWithRetry(payload: any, recipientCount: number, maxRetries: number = 3): Promise<void> {
+        let lastError: Error | null = null
+
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                console.log(`📧 Email send attempt ${attempt}/${maxRetries}`)
+
+                // Add timeout to prevent hanging requests
+                const controller = new AbortController()
+                const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
+
+                const response = await fetch(this.apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                    signal: controller.signal
+                })
+
+                clearTimeout(timeoutId)
+
+                if (!response.ok) {
+                    const errorText = await response.text()
+                    const error = new Error(`Email API returned ${response.status}: ${errorText}`)
+                    
+                    // Don't retry on certain status codes
+                    if (response.status === 400 || response.status === 401 || response.status === 403) {
+                        throw error
+                    }
+                    
+                    lastError = error
+                    
+                    // Wait before retry (exponential backoff)
+                    if (attempt < maxRetries) {
+                        const delay = Math.pow(2, attempt - 1) * 1000 // 1s, 2s, 4s...
+                        console.log(`⏳ Waiting ${delay}ms before retry...`)
+                        await new Promise(resolve => setTimeout(resolve, delay))
+                        continue
+                    }
+                    
+                    throw error
+                }
+
+                console.log(`✅ Email sent successfully to ${recipientCount} recipient(s) on attempt ${attempt}`)
+                return
+
+            } catch (error) {
+                lastError = error as Error
+                
+                // Handle specific errors
+                if (error instanceof Error && error.name === 'AbortError') {
+                    console.warn(`⏰ Request timeout on attempt ${attempt}`)
+                } else if (error instanceof Error && error.message.includes('400')) {
+                    // Don't retry client errors
+                    throw error
+                } else {
+                    console.warn(`⚠️ Attempt ${attempt} failed:`, error instanceof Error ? error.message : error)
+                }
+                
+                if (attempt < maxRetries) {
+                    const delay = Math.pow(2, attempt - 1) * 1000
+                    console.log(`⏳ Waiting ${delay}ms before retry...`)
+                    await new Promise(resolve => setTimeout(resolve, delay))
+                } else {
+                    throw lastError
+                }
+            }
+        }
+
+        throw lastError || new Error('All retry attempts failed')
     }
 }
 

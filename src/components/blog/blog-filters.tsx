@@ -10,6 +10,10 @@ interface BlogFiltersProps {
     categories: { category: string; count: number }[]
     tags: { tag: string; count: number }[]
     dateGroups: { year: number; months: { month: number; count: number }[] }[]
+    currentCategory?: string
+    currentYear?: string
+    currentMonth?: string
+    currentTags?: string
 }
 
 const monthNames = [
@@ -17,14 +21,15 @@ const monthNames = [
     'July', 'August', 'September', 'October', 'November', 'December'
 ]
 
-export function BlogFilters({ categories, tags, dateGroups }: BlogFiltersProps) {
+export function BlogFilters({ categories, tags, dateGroups, currentCategory, currentYear, currentMonth, currentTags: currentTagsParam }: BlogFiltersProps) {
     const router = useRouter()
     const searchParams = useSearchParams()
 
-    const currentCategory = searchParams.get('category')
-    const currentYear = searchParams.get('year')
-    const currentMonth = searchParams.get('month')
-    const currentTags = searchParams.get('tags')?.split(',').filter(Boolean) || []
+    // Use passed props or fallback to searchParams
+    const activeCategory = currentCategory || searchParams.get('category')
+    const activeYear = currentYear || searchParams.get('year')
+    const activeMonth = currentMonth || searchParams.get('month')
+    const activeTags = currentTagsParam?.split(',').filter(Boolean) || searchParams.get('tags')?.split(',').filter(Boolean) || []
 
     const updateFilters = (updates: Record<string, string | null>) => {
         const params = new URLSearchParams(searchParams.toString())
@@ -44,12 +49,12 @@ export function BlogFilters({ categories, tags, dateGroups }: BlogFiltersProps) 
         router.push('/blog')
     }
 
-    const hasActiveFilters = currentCategory || currentYear || currentMonth || currentTags.length > 0
+    const hasActiveFilters = activeCategory || activeYear || activeMonth || activeTags.length > 0
 
     const toggleTag = (tag: string) => {
-        const newTags = currentTags.includes(tag)
-            ? currentTags.filter(t => t !== tag)
-            : [...currentTags, tag]
+        const newTags = activeTags.includes(tag)
+            ? activeTags.filter(t => t !== tag)
+            : [...activeTags, tag]
 
         updateFilters({
             tags: newTags.length > 0 ? newTags.join(',') : null
@@ -75,22 +80,22 @@ export function BlogFilters({ categories, tags, dateGroups }: BlogFiltersProps) 
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                        {currentCategory && (
+                        {activeCategory && (
                             <Badge variant="secondary" className="gap-1">
                                 <FolderOpen className="w-3 h-3" />
-                                {currentCategory}
+                                {activeCategory}
                                 <X
                                     className="w-3 h-3 cursor-pointer"
                                     onClick={() => updateFilters({ category: null })}
                                 />
                             </Badge>
                         )}
-                        {currentYear && (
+                        {activeYear && (
                             <Badge variant="secondary" className="gap-1">
                                 <Calendar className="w-3 h-3" />
-                                {currentMonth !== null
-                                    ? `${monthNames[parseInt(currentMonth)]} ${currentYear}`
-                                    : currentYear
+                                {activeMonth !== null
+                                    ? `${monthNames[parseInt(activeMonth)]} ${activeYear}`
+                                    : activeYear
                                 }
                                 <X
                                     className="w-3 h-3 cursor-pointer"
@@ -98,7 +103,7 @@ export function BlogFilters({ categories, tags, dateGroups }: BlogFiltersProps) 
                                 />
                             </Badge>
                         )}
-                        {currentTags.map(tag => (
+                        {activeTags.map(tag => (
                             <Badge key={tag} variant="secondary" className="gap-1">
                                 <Tag className="w-3 h-3" />
                                 {tag}
@@ -123,7 +128,7 @@ export function BlogFilters({ categories, tags, dateGroups }: BlogFiltersProps) 
                     </CardHeader>
                     <CardContent className="space-y-2">
                         <Button
-                            variant={!currentYear ? "default" : "ghost"}
+                            variant={!activeYear ? "default" : "ghost"}
                             size="sm"
                             className="w-full justify-start text-xs"
                             onClick={() => updateFilters({ year: null, month: null })}
@@ -133,7 +138,7 @@ export function BlogFilters({ categories, tags, dateGroups }: BlogFiltersProps) 
                         {dateGroups.map(yearGroup => (
                             <div key={yearGroup.year} className="space-y-1">
                                 <Button
-                                    variant={currentYear === yearGroup.year.toString() && !currentMonth ? "default" : "ghost"}
+                                    variant={activeYear === yearGroup.year.toString() && !activeMonth ? "default" : "ghost"}
                                     size="sm"
                                     className="w-full justify-start text-xs font-semibold"
                                     onClick={() => updateFilters({ year: yearGroup.year.toString(), month: null })}
@@ -145,8 +150,8 @@ export function BlogFilters({ categories, tags, dateGroups }: BlogFiltersProps) 
                                         <Button
                                             key={monthData.month}
                                             variant={
-                                                currentYear === yearGroup.year.toString() &&
-                                                    currentMonth === monthData.month.toString()
+                                                activeYear === yearGroup.year.toString() &&
+                                                    activeMonth === monthData.month.toString()
                                                     ? "default"
                                                     : "ghost"
                                             }
@@ -179,7 +184,7 @@ export function BlogFilters({ categories, tags, dateGroups }: BlogFiltersProps) 
                     </CardHeader>
                     <CardContent className="space-y-1">
                         <Button
-                            variant={!currentCategory ? "default" : "ghost"}
+                            variant={!activeCategory ? "default" : "ghost"}
                             size="sm"
                             className="w-full justify-start text-xs"
                             onClick={() => updateFilters({ category: null })}
@@ -189,7 +194,7 @@ export function BlogFilters({ categories, tags, dateGroups }: BlogFiltersProps) 
                         {categories.map(({ category, count }) => (
                             <Button
                                 key={category}
-                                variant={currentCategory === category ? "default" : "ghost"}
+                                variant={activeCategory === category ? "default" : "ghost"}
                                 size="sm"
                                 className="w-full justify-between text-xs"
                                 onClick={() => updateFilters({ category })}
@@ -216,7 +221,7 @@ export function BlogFilters({ categories, tags, dateGroups }: BlogFiltersProps) 
                             {tags.map(({ tag, count }) => (
                                 <Badge
                                     key={tag}
-                                    variant={currentTags.includes(tag) ? "default" : "outline"}
+                                    variant={activeTags.includes(tag) ? "default" : "outline"}
                                     className="cursor-pointer text-xs"
                                     onClick={() => toggleTag(tag)}
                                 >

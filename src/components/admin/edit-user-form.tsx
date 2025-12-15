@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { formatDate } from '@/lib/utils/date-format'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -118,7 +119,7 @@ export default function EditUserForm({ user }: { user: User }) {
                             <div>
                                 <Label className="text-muted-foreground">Joined</Label>
                                 <p className="mt-1 text-sm">
-                                    {new Date(user.createdAt).toLocaleDateString()}
+                                    {formatDate(user.createdAt)}
                                 </p>
                             </div>
                         </div>

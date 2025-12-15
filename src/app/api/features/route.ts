@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db/prisma'
 import { updateFeatureRequestSearchVector } from '@/lib/search/indexer'
 import { notifyNewFeature } from '@/lib/email/notification-service'
 import { withReadAuth, withWriteAuth } from '@/lib/api-keys/middleware'
+import { ensureUserExists } from '@/lib/auth/ensure-user'
 
 // GET /api/features - List all feature requests with filters
 export const GET = withReadAuth(async (request) => {
@@ -114,6 +115,20 @@ export const POST = withWriteAuth(async (request) => {
 
         // Use provided slug or generate one
         const finalSlug = slug || `${Date.now()}`
+
+        // Ensure user exists in database before creating feature request
+        const userExists = await ensureUserExists({
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            provider: (user as any).provider
+        })
+
+        if (!userExists) {
+            return NextResponse.json({ 
+                error: 'Unable to verify user account. Please try logging out and logging in again.' 
+            }, { status: 500 })
+        }
 
         // Create feature request
         const feature = await prisma.featureRequest.create({

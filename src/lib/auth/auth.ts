@@ -12,6 +12,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   pages: authConfig.pages,
   callbacks: authConfig.callbacks,
+  trustHost: true, // Fix CSRF issues in production
+  useSecureCookies: process.env.NODE_ENV === 'production', // Use secure cookies in production
   events: {
     async signIn({ user, account, profile, isNewUser }) {
       if (process.env.NODE_ENV === 'development') {

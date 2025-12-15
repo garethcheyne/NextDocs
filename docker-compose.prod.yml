@@ -20,10 +20,14 @@ services:
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
       - NEXTAUTH_URL=${NEXTAUTH_URL:-https://docs.harveynorman.com}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - AUTH_TRUST_HOST=${AUTH_TRUST_HOST:-true}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - AZURE_AD_CLIENT_ID=${AZURE_AD_CLIENT_ID}
       - AZURE_AD_CLIENT_SECRET=${AZURE_AD_CLIENT_SECRET}
       - AZURE_AD_TENANT_ID=${AZURE_AD_TENANT_ID}
+      - BACKUP_DIR=/backups
+    volumes:
+      - ./backups:/backups:rw
     depends_on:
       postgres:
         condition: service_healthy
@@ -110,32 +114,54 @@ services:
         reservations:
           memory: 128M
 
-  # Automated database backup service
-  db-backup:
-    image: postgres:16-alpine
-    container_name: nextdocs-backup-service
+  # Unified scheduled tasks service (backups + maintenance)
+  cron-tasks:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    image: nextdocs-app:latest
+    container_name: nextdocs-cron-tasks
     environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/nextdocs
       - POSTGRES_HOST=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=nextdocs
-      - BACKUP_RETENTION_DAYS=7
+      - BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-7}
+      - BACKUP_HOURLY_RETENTION_HOURS=${BACKUP_HOURLY_RETENTION_HOURS:-24}
     volumes:
       - ./backups:/backups
-      - ./scripts/backup-cron.sh:/backup-cron.sh:ro
+      - ./scripts/cron-tasks:/cron-tasks:ro
     networks:
       - nextdocs-network
     depends_on:
       postgres:
         condition: service_healthy
     restart: unless-stopped
-    # Run backup daily at 2 AM
-    entrypoint: >
-      sh -c "
-      echo '0 2 * * * /backup-cron.sh >> /var/log/backup.log 2>&1' > /etc/crontabs/root &&
-      echo 'Backup service started. Daily backups at 2 AM.' &&
-      crond -f -l 2
-      "
+    user: root
+    command: >
+      sh -c '
+      echo "Setting up unified cron tasks service..." &&
+      apk add --no-cache postgresql-client &&
+      mkdir -p /var/log /usr/local/bin &&
+      cp /cron-tasks/*.sh /usr/local/bin/ &&
+      chmod +x /usr/local/bin/*.sh &&
+      echo "Running initial backup..." &&
+      /usr/local/bin/backup-cron.sh &&
+      echo "Starting scheduled tasks loop..." &&
+      while true; do
+        HOUR=$(date +%H);
+        echo "Running hourly tasks at $(date)" | tee -a /var/log/cron-tasks.log;
+        /usr/local/bin/backup-cron.sh >> /var/log/backup.log 2>&1;
+        if [ "$HOUR" = "03" ]; then
+          echo "Running daily maintenance at $(date)";
+          node scripts/clear-sessions.js >> /var/log/maintenance.log 2>&1;
+        fi;
+        sleep 3600;
+      done
+      '
     deploy:
       resources:
         limits:

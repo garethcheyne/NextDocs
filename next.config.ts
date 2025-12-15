@@ -3,11 +3,11 @@ import type { NextConfig } from 'next'
 // Content Security Policy configuration
 const ContentSecurityPolicy = `
   default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net;
+  script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net https://static.cloudflareinsights.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   img-src 'self' data: blob: https://graph.microsoft.com https://avatars.githubusercontent.com https://*.blob.core.windows.net;
   font-src 'self' https://fonts.gstatic.com data:;
-  connect-src 'self' https://graph.microsoft.com https://api.github.com https://dev.azure.com https://*.visualstudio.com;
+  connect-src 'self' https://graph.microsoft.com https://api.github.com https://dev.azure.com https://*.visualstudio.com https://cloudflareinsights.com;
   frame-src 'self';
   frame-ancestors 'self';
   form-action 'self';

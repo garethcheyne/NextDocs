@@ -148,7 +148,7 @@ export function ContentEngagement({ contentType, contentId, contentTitle }: Cont
 
   const handleShare = async () => {
     const url = window.location.href
-    
+
     if (navigator.share && contentTitle) {
       try {
         await navigator.share({
@@ -183,102 +183,102 @@ export function ContentEngagement({ contentType, contentId, contentTitle }: Cont
           </div>
         )}
         <div className="flex items-center gap-2 py-4 border-y border-border">
-        {/* Voting */}
-        <div className="flex items-center gap-1">
+          {/* Voting */}
+          <div className="flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleVote('up')}
+                  disabled={loading}
+                  className={`gap-1 transition-all ${userVote === 'up'
+                    ? 'bg-green-500 hover:bg-green-600 text-white border-green-500 dark:bg-green-600 dark:hover:bg-green-700 dark:border-green-600'
+                    : 'bg-green-100 hover:bg-green-200 text-green-700 border-green-300 dark:bg-green-900/40 dark:hover:bg-green-900/60 dark:text-green-400 dark:border-green-700'
+                    }`}
+                >
+                  <ThumbsUp className="w-4 h-4" />
+                  <span className="text-xs">{upvotes}</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{userVote === 'up' ? 'Remove upvote' : 'Helpful'}</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleVote('down')}
+                  disabled={loading}
+                  className={`gap-1 transition-all ${userVote === 'down'
+                    ? 'bg-red-500 hover:bg-red-600 text-white border-red-500 dark:bg-red-600 dark:hover:bg-red-700 dark:border-red-600'
+                    : 'bg-red-100 hover:bg-red-200 text-red-700 border-red-300 dark:bg-red-900/40 dark:hover:bg-red-900/60 dark:text-red-400 dark:border-red-700'
+                    }`}
+                >
+                  <ThumbsDown className="w-4 h-4" />
+                  <span className="text-xs">{downvotes}</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{userVote === 'down' ? 'Remove downvote' : 'Not helpful'}</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+
+          {/* Share */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={userVote === 'up' ? 'default' : 'outline'}
+                variant="outline"
                 size="sm"
-                onClick={() => handleVote('up')}
-                disabled={loading}
-                className={`gap-1 ${userVote === 'up' 
-                  ? 'bg-green-500 hover:bg-green-600 text-white border-green-500' 
-                  : 'border-border hover:bg-accent hover:text-accent-foreground'
-                }`}
+                onClick={handleShare}
+                className={`gap-2 transition-all ${copiedUrl
+                  ? 'bg-blue-500 hover:bg-blue-600 text-white border-blue-500 dark:bg-blue-600 dark:hover:bg-blue-700 dark:border-blue-600'
+                  : 'bg-blue-100 hover:bg-blue-200 text-blue-700 border-blue-300 dark:bg-blue-900/40 dark:hover:bg-blue-900/60 dark:text-blue-400 dark:border-blue-700'
+                  }`}
               >
-                <ThumbsUp className="w-4 h-4" />
-                <span className="text-xs">{upvotes}</span>
+                <Share2 className="w-4 h-4" />
+                <span className="text-xs">{copiedUrl ? 'Copied!' : 'Share'}</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>{userVote === 'up' ? 'Remove upvote' : 'Helpful'}</p>
+              <p>Share this page</p>
             </TooltipContent>
           </Tooltip>
 
+          {/* Follow */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={userVote === 'down' ? 'default' : 'outline'}
+                variant="outline"
                 size="sm"
-                onClick={() => handleVote('down')}
+                onClick={handleFollow}
                 disabled={loading}
-                className={`gap-1 ${userVote === 'down' 
-                  ? 'bg-red-500 hover:bg-red-600 text-white border-red-500' 
-                  : 'border-border hover:bg-accent hover:text-accent-foreground'
-                }`}
+                className={`gap-2 transition-all ${following
+                  ? 'bg-brand-orange hover:bg-orange-600 text-white border-brand-orange dark:bg-orange-600 dark:hover:bg-orange-700 dark:border-orange-600'
+                  : 'bg-orange-100 hover:bg-orange-200 text-orange-700 border-orange-300 dark:bg-orange-900/40 dark:hover:bg-orange-900/60 dark:text-orange-400 dark:border-orange-700'
+                  }`}
               >
-                <ThumbsDown className="w-4 h-4" />
-                <span className="text-xs">{downvotes}</span>
+                {following ? (
+                  <>
+                    <BellOff className="w-4 h-4" />
+                    <span className="text-xs">Unfollow</span>
+                  </>
+                ) : (
+                  <>
+                    <Bell className="w-4 h-4" />
+                    <span className="text-xs">Follow</span>
+                  </>
+                )}
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>{userVote === 'down' ? 'Remove downvote' : 'Not helpful'}</p>
+              <p>{following ? 'Stop receiving updates' : 'Get notified of updates'}</p>
             </TooltipContent>
           </Tooltip>
-        </div>
-
-        {/* Share */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleShare}
-              className={`gap-2 ${copiedUrl 
-                ? 'bg-blue-500 hover:bg-blue-600 text-white border-blue-500' 
-                : 'border-border hover:bg-accent hover:text-accent-foreground'
-              }`}
-            >
-              <Share2 className="w-4 h-4" />
-              <span className="text-xs">{copiedUrl ? 'Copied!' : 'Share'}</span>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Share this page</p>
-          </TooltipContent>
-        </Tooltip>
-
-        {/* Follow */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant={following ? 'default' : 'outline'}
-              size="sm"
-              onClick={handleFollow}
-              disabled={loading}
-              className={`gap-2 ${following 
-                ? 'bg-blue-500 hover:bg-blue-600 text-white border-blue-500' 
-                : 'border-border hover:bg-accent hover:text-accent-foreground'
-              }`}
-            >
-              {following ? (
-                <>
-                  <BellOff className="w-4 h-4" />
-                  <span className="text-xs">Unfollow</span>
-                </>
-              ) : (
-                <>
-                  <Bell className="w-4 h-4" />
-                  <span className="text-xs">Follow</span>
-                </>
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{following ? 'Stop receiving updates' : 'Get notified of updates'}</p>
-          </TooltipContent>
-        </Tooltip>
         </div>
       </div>
     </TooltipProvider>

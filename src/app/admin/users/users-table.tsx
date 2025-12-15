@@ -244,9 +244,9 @@ export function UsersTable({ users: initialUsers, currentUserId }: { users: User
                                     <td className="p-4">{user._count.repositories}</td>
                                     <td className="p-4 text-muted-foreground">
                                         {new Date(user.createdAt).toLocaleDateString('en-US', {
-                                            year: 'numeric',
+                                            day: '2-digit',
                                             month: '2-digit',
-                                            day: '2-digit'
+                                            year: 'numeric'
                                         })}
                                     </td>
                                     <td className="p-4 text-right">

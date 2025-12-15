@@ -43,11 +43,11 @@ const createRedisClient = () => {
   })
 
   client.on('error', (error) => {
-    console.error('Redis Client Error:', error)
+    console.error('❌ Redis connection failed:', error)
   })
 
   client.on('connect', () => {
-    console.log('✓ Redis connected')
+    console.log('🚀 Redis connection established successfully')
   })
 
   return client

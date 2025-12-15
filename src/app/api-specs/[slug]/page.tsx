@@ -1,11 +1,14 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import { FileText, Clock } from 'lucide-react'
+import { FileText, Clock, User } from 'lucide-react'
 import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/db/prisma'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { ContentDetailLayout } from '@/components/layout/content-detail-layout'
+import { formatDate } from '@/lib/utils/date-format'
+import { resolveAuthors } from '@/lib/utils/author-resolver'
+import { AuthorDisplay } from '@/components/ui/author-display'
 
 interface ApiSpecVersionsPageProps {
     params: Promise<{
@@ -29,6 +32,13 @@ export default async function ApiSpecVersionsPage({ params }: ApiSpecVersionsPag
         },
         include: {
             repository: true,
+            creator: {
+                select: {
+                    name: true,
+                    email: true,
+                    image: true,
+                },
+            },
         },
         orderBy: {
             version: 'desc', // Latest version first
@@ -58,6 +68,12 @@ export default async function ApiSpecVersionsPage({ params }: ApiSpecVersionsPag
         category: spec.category,
         version: spec.version,
     }))
+
+    // Resolve creators - check if their emails exist as system users for avatars
+    const creatorEmails = apiSpecs
+        .map(spec => spec.creator.email)
+        .filter(Boolean) as string[]
+    const resolvedCreators = await resolveAuthors(creatorEmails)
 
     return (
         <ContentDetailLayout
@@ -121,14 +137,25 @@ export default async function ApiSpecVersionsPage({ params }: ApiSpecVersionsPag
                                                 </Badge>
                                             </div>
 
-                                            {spec.updatedAt && (
-                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                    <Clock className="h-4 w-4" />
-                                                    <span>
-                                                        Updated {new Date(spec.updatedAt).toLocaleDateString()}
-                                                    </span>
-                                                </div>
-                                            )}
+                                            <div className="space-y-2">
+                                                {spec.updatedAt && (
+                                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                        <Clock className="h-4 w-4" />
+                                                        <span>
+                                                            Updated {formatDate(spec.updatedAt)}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                
+                                                {spec.creator?.email && resolvedCreators.get(spec.creator.email) && (
+                                                    <div className="text-sm text-muted-foreground">
+                                                        <AuthorDisplay 
+                                                            author={resolvedCreators.get(spec.creator.email)!} 
+                                                            showIcon={true}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
 
                                             {spec.repository && (
                                                 <div className="mt-4 pt-4 border-t text-xs text-muted-foreground">

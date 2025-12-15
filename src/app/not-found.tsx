@@ -11,10 +11,10 @@ export default function NotFound() {
       <div className="absolute inset-0 -z-10">
         <AnimatedIconArc />
       </div>
-      
+
       {/* Overlay to ensure text readability */}
       <div className="absolute inset-0 bg-background/80 backdrop-blur-sm -z-5"></div>
-      
+
       {/* Content */}
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
         <div className="text-center space-y-8 max-w-2xl mx-auto">
@@ -23,7 +23,7 @@ export default function NotFound() {
             <h1 className="text-8xl md:text-9xl font-black bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent animate-pulse">
               404
             </h1>
-            
+
             {/* Tiger Message */}
             <Card className="bg-card/95 backdrop-blur border-orange-200 dark:border-orange-800 shadow-2xl">
               <CardContent className="pt-6">
@@ -32,9 +32,9 @@ export default function NotFound() {
                     🐅 Grrrr! Did you get lost?
                   </h2>
                   <p className="text-lg text-muted-foreground leading-relaxed">
-                    It's a tiger's territory here! 
+                    It's a tiger's territory here!
                     <br className="hidden sm:block" />
-                    Wandering around too much and you might get eaten... 
+                    Wandering around too much and you might get eaten...
                   </p>
                   <p className="text-base text-muted-foreground opacity-80">
                     The page you're looking for has been hunted down by our documentation tiger.
@@ -45,7 +45,7 @@ export default function NotFound() {
               </CardContent>
             </Card>
           </div>
-          
+
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button asChild size="lg" className="bg-brand-orange hover:bg-orange-600 text-white px-8 py-3">
@@ -54,7 +54,7 @@ export default function NotFound() {
                 Back to Safety
               </Link>
             </Button>
-            
+
             <Button asChild variant="outline" size="lg" className="px-8 py-3 border-orange-200 hover:bg-orange-50 dark:border-orange-800 dark:hover:bg-orange-950">
               <Link href="/docs" className="flex items-center gap-2">
                 <ArrowLeft className="w-5 h-5" />
@@ -62,7 +62,7 @@ export default function NotFound() {
               </Link>
             </Button>
           </div>
-          
+
           {/* Fun Navigation Suggestions */}
           <div className="text-sm text-muted-foreground space-y-2 pt-8">
             <p className="font-medium">Looking for something specific? Try these tiger-approved paths:</p>
@@ -73,7 +73,7 @@ export default function NotFound() {
               <Link href="/admin" className="hover:underline">⚙️ Admin Panel</Link>
             </div>
           </div>
-          
+
           {/* Tiger Paw Prints */}
           <div className="opacity-20 text-2xl space-y-2 pt-8">
             <div className="animate-bounce" style={{ animationDelay: '0s' }}>🐾</div>
