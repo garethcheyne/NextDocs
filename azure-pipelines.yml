@@ -1,0 +1,245 @@
+# NextDocs CI/CD Pipeline
+# Deploys to UAT on main branch push, then to Production after manual approval
+
+trigger:
+  branches:
+    include:
+    - main
+  paths:
+    exclude:
+    - README.md
+    - docs/*
+    - .gitignore
+
+variables:
+  # Container Registry
+  containerRegistry: 'nextdocs-acr'
+  imageRepository: 'nextdocs'
+  dockerfilePath: 'Dockerfile'
+  tag: '$(Build.BuildId)'
+  
+  # Azure Resource Names
+  resourceGroupUAT: 'rg-nextdocs-uat'
+  resourceGroupProd: 'rg-nextdocs-prod'
+  appServiceUAT: 'nextdocs-uat'
+  appServiceProd: 'nextdocs-prod'
+  
+  # Build Agent
+  vmImageName: 'ubuntu-latest'
+
+stages:
+- stage: Build
+  displayName: 'Build and Push Docker Image'
+  jobs:
+  - job: Build
+    displayName: 'Build Docker Image'
+    pool:
+      vmImage: $(vmImageName)
+    
+    steps:
+    - checkout: self
+      fetchDepth: 0
+    
+    - task: Docker@2
+      displayName: 'Build Docker Image'
+      inputs:
+        command: 'build'
+        repository: '$(imageRepository)'
+        dockerfile: '$(dockerfilePath)'
+        tags: |
+          $(tag)
+          latest
+        arguments: '--target runner'
+    
+    - task: Docker@2
+      displayName: 'Push Docker Image to ACR'
+      inputs:
+        command: 'push'
+        repository: '$(imageRepository)'
+        containerRegistry: '$(containerRegistry)'
+        tags: |
+          $(tag)
+          latest
+
+- stage: DeployUAT
+  displayName: 'Deploy to UAT'
+  dependsOn: Build
+  condition: succeeded()
+  
+  variables:
+  - group: 'nextdocs-uat-vars'
+  
+  jobs:
+  - deployment: DeployUAT
+    displayName: 'Deploy to UAT Environment'
+    environment: 'nextdocs-uat'
+    pool:
+      vmImage: $(vmImageName)
+    
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: none
+          
+          - task: AzureRmWebAppDeployment@4
+            displayName: 'Deploy to Azure Web App - UAT'
+            inputs:
+              ConnectionType: 'AzureRM'
+              azureSubscription: 'nextdocs-service-connection'
+              appType: 'webAppContainer'
+              WebAppName: '$(appServiceUAT)'
+              resourceGroupName: '$(resourceGroupUAT)'
+              DockerNamespace: '$(containerRegistry).azurecr.io'
+              DockerRepository: '$(imageRepository)'
+              DockerImageTag: '$(tag)'
+          
+          - task: AzureAppServiceSettings@1
+            displayName: 'Configure App Settings - UAT'
+            inputs:
+              azureSubscription: 'nextdocs-service-connection'
+              appName: '$(appServiceUAT)'
+              resourceGroupName: '$(resourceGroupUAT)'
+              appSettings: |
+                NEXT_PUBLIC_URL="https://$(appServiceUAT).azurewebsites.net"
+                DATABASE_URL="$(UAT_DATABASE_URL)"
+                REDIS_URL="$(UAT_REDIS_URL)"
+                NEXTAUTH_URL="https://$(appServiceUAT).azurewebsites.net/"
+                NEXTAUTH_SECRET="$(NEXTAUTH_SECRET)"
+                AUTH_TRUST_HOST="true"
+                ENCRYPTION_KEY="$(ENCRYPTION_KEY)"
+                WORKER_SECRET="$(WORKER_SECRET)"
+                AZURE_AD_CLIENT_ID="$(AZURE_AD_CLIENT_ID)"
+                AZURE_AD_CLIENT_SECRET="$(AZURE_AD_CLIENT_SECRET)"
+                AZURE_AD_TENANT_ID="$(AZURE_AD_TENANT_ID)"
+                ALLOWED_AD_GROUPS="$(ALLOWED_AD_GROUPS)"
+                ADMIN_AD_GROUPS="$(ADMIN_AD_GROUPS)"
+                AZURE_GRAPH_CLIENT_ID="$(AZURE_GRAPH_CLIENT_ID)"
+                AZURE_GRAPH_CLIENT_SECRET="$(AZURE_GRAPH_CLIENT_SECRET)"
+                AZURE_GRAPH_TENANT_ID="$(AZURE_GRAPH_TENANT_ID)"
+                EMAIL_REST_API="$(EMAIL_REST_API)"
+                EMAIL_API_KEY="$(EMAIL_API_KEY)"
+                NODE_ENV="production"
+                POSTGRES_PASSWORD="$(UAT_POSTGRES_PASSWORD)"
+                REDIS_PASSWORD="$(UAT_REDIS_PASSWORD)"
+          
+          - task: AzureAppServiceManage@0
+            displayName: 'Restart App Service - UAT'
+            inputs:
+              azureSubscription: 'nextdocs-service-connection'
+              Action: 'Restart Azure App Service'
+              WebAppName: '$(appServiceUAT)'
+              ResourceGroupName: '$(resourceGroupUAT)'
+
+- stage: ApprovalGate
+  displayName: 'Manual Approval for Production'
+  dependsOn: DeployUAT
+  condition: succeeded()
+  
+  jobs:
+  - job: ManualValidation
+    displayName: 'Manual Approval Required'
+    pool: server
+    timeoutInMinutes: 4320 # 3 days
+    
+    steps:
+    - task: ManualValidation@0
+      displayName: 'Approve Production Deployment'
+      inputs:
+        notifyUsers: |
+          gareth.cheyne@nz.harveynorman.com
+        instructions: |
+          Please verify UAT deployment at https://$(appServiceUAT).azurewebsites.net
+          
+          Check:
+          - Application loads correctly
+          - Authentication works with Azure AD
+          - All features function as expected
+          - Database connectivity is working
+          
+          If everything looks good, approve this deployment to proceed to Production.
+
+- stage: DeployProduction
+  displayName: 'Deploy to Production'
+  dependsOn: ApprovalGate
+  condition: succeeded()
+  
+  variables:
+  - group: 'nextdocs-prod-vars'
+  
+  jobs:
+  - deployment: DeployProduction
+    displayName: 'Deploy to Production Environment'
+    environment: 'nextdocs-production'
+    pool:
+      vmImage: $(vmImageName)
+    
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: none
+          
+          - task: AzureRmWebAppDeployment@4
+            displayName: 'Deploy to Azure Web App - Production'
+            inputs:
+              ConnectionType: 'AzureRM'
+              azureSubscription: 'nextdocs-service-connection'
+              appType: 'webAppContainer'
+              WebAppName: '$(appServiceProd)'
+              resourceGroupName: '$(resourceGroupProd)'
+              DockerNamespace: '$(containerRegistry).azurecr.io'
+              DockerRepository: '$(imageRepository)'
+              DockerImageTag: '$(tag)'
+          
+          - task: AzureAppServiceSettings@1
+            displayName: 'Configure App Settings - Production'
+            inputs:
+              azureSubscription: 'nextdocs-service-connection'
+              appName: '$(appServiceProd)'
+              resourceGroupName: '$(resourceGroupProd)'
+              appSettings: |
+                NEXT_PUBLIC_URL="https://docs.err403.com"
+                DATABASE_URL="$(PROD_DATABASE_URL)"
+                REDIS_URL="$(PROD_REDIS_URL)"
+                NEXTAUTH_URL="https://docs.err403.com/"
+                NEXTAUTH_SECRET="$(NEXTAUTH_SECRET)"
+                AUTH_TRUST_HOST="true"
+                ENCRYPTION_KEY="$(ENCRYPTION_KEY)"
+                WORKER_SECRET="$(WORKER_SECRET)"
+                AZURE_AD_CLIENT_ID="$(AZURE_AD_CLIENT_ID)"
+                AZURE_AD_CLIENT_SECRET="$(AZURE_AD_CLIENT_SECRET)"
+                AZURE_AD_TENANT_ID="$(AZURE_AD_TENANT_ID)"
+                ALLOWED_AD_GROUPS="$(ALLOWED_AD_GROUPS)"
+                ADMIN_AD_GROUPS="$(ADMIN_AD_GROUPS)"
+                AZURE_GRAPH_CLIENT_ID="$(AZURE_GRAPH_CLIENT_ID)"
+                AZURE_GRAPH_CLIENT_SECRET="$(AZURE_GRAPH_CLIENT_SECRET)"
+                AZURE_GRAPH_TENANT_ID="$(AZURE_GRAPH_TENANT_ID)"
+                EMAIL_REST_API="$(EMAIL_REST_API)"
+                EMAIL_API_KEY="$(EMAIL_API_KEY)"
+                NODE_ENV="production"
+                POSTGRES_PASSWORD="$(PROD_POSTGRES_PASSWORD)"
+                REDIS_PASSWORD="$(PROD_REDIS_PASSWORD)"
+          
+          - task: AzureAppServiceManage@0
+            displayName: 'Restart App Service - Production'
+            inputs:
+              azureSubscription: 'nextdocs-service-connection'
+              Action: 'Restart Azure App Service'
+              WebAppName: '$(appServiceProd)'
+              ResourceGroupName: '$(resourceGroupProd)'
+          
+          - task: PowerShell@2
+            displayName: 'Post-Deployment Verification'
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "🚀 Production deployment completed successfully!"
+                Write-Host "📱 Application URL: https://docs.err403.com"
+                Write-Host "🔍 Build ID: $(Build.BuildId)"
+                Write-Host "📦 Image Tag: $(tag)"
+                Write-Host ""
+                Write-Host "✅ Next Steps:"
+                Write-Host "1. Verify application is running at https://docs.err403.com"
+                Write-Host "2. Test authentication and core functionality"
+                Write-Host "3. Monitor application logs for any issues"

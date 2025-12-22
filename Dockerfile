@@ -55,7 +55,7 @@ COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY --from=builder /app/postcss.config.js ./postcss.config.js
 
 # Set correct permissions
-RUN chmod +x /app/scripts/docker-entrypoint.sh
+RUN chmod +x /app/scripts/deployment/docker-entrypoint.sh
 RUN chown -R nextjs:nodejs /app
 
 USER nextjs
@@ -65,4 +65,4 @@ EXPOSE 8100
 ENV PORT=8100
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["/app/scripts/docker-entrypoint.sh"]
+CMD ["/app/scripts/deployment/docker-entrypoint.sh"]

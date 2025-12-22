@@ -15,7 +15,10 @@
     "dev:stop": "docker-compose -f docker-compose.dev.yml down && docker-compose -f docker-compose.prod.yml up -d app",
     "docs:generate": "node scripts/content/generate-api-docs.js",
     "backup": "docker-compose -f docker-compose.prod.yml exec cron-tasks /scripts/cron-tasks/backup-cron.sh",
-    "cleanup": "docker-compose -f docker-compose.prod.yml exec app node scripts/maintenance/clear-sessions.js"
+    "cleanup": "docker-compose -f docker-compose.prod.yml exec app node scripts/maintenance/clear-sessions.js",
+    "setadmin": "docker-compose -f docker-compose.prod.yml exec app node -e \"const {PrismaClient} = require('@prisma/client'); const prisma = new PrismaClient(); (async () => { const email = process.argv[1]; if (!email) { console.error('❌ Email required'); process.exit(1); } try { const user = await prisma.user.findUnique({where: {email: email.toLowerCase()}}); if (!user) { console.error('❌ User not found:', email); process.exit(1); } if (user.role === 'admin') { console.log('✅ User already admin:', email); process.exit(0); } await prisma.user.update({where: {id: user.id}, data: {role: 'admin'}}); console.log('✅ User promoted to admin:', email); } catch (error) { console.error('❌ Error:', error.message); process.exit(1); } finally { await prisma.\\$disconnect(); } })();\"",
+    "azure:setup": "pwsh scripts/deployment/setup-azure-resources.ps1",
+    "azure:config": "pwsh scripts/deployment/update-pipeline-config.ps1"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.6.0",
