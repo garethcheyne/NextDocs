@@ -58,7 +58,7 @@ project-root/
 
 - Use **lowercase with hyphens** for all directories: `user-guide/`, `api-reference/`, `getting-started/`
 - Each directory MUST contain an `index.md` file as the section homepage
-- Store section-specific images in an `img/` subdirectory within each section
+- Store section-specific images in an `_img/` subdirectory within each section
 
 ### 2. File Naming Conventions
 
@@ -79,14 +79,14 @@ docs/
 │   │   ├── index.md
 │   │   ├── installation.md
 │   │   ├── quick-start.md
-│   │   └── img/
+│   │   └── _img/
 │   │       └── setup-diagram.png
 │   └── user-guide/
 │       ├── _meta.json
 │       ├── index.md
 │       ├── basic-features.md
 │       ├── advanced-features.md
-│       └── img/
+│       └── _img/
 │           └── interface-screenshot.png
 └── another-project/   # Additional project
     ├── _meta.json
@@ -220,6 +220,42 @@ Provide practical examples...
 
 Explain configuration options...
 ```
+
+## 📄 Document Frontmatter (YAML)
+
+Every documentation Markdown file (project pages, guides, user manuals) should include a YAML frontmatter block at the top of the file to define metadata used by the site. This frontmatter controls title, description, author, category, page type, source, and access restrictions.
+
+Example frontmatter:
+
+```yaml
+---
+title: Accounts Payable Processes
+description: Comprehensive guide for accounts payable processes including approvals, vendor invoicing, returns, and item revaluation in Business Central
+author: gareth-cheyne
+category: dynamics-365-bc
+type: user-guide
+source: UG Accounts Payable - Finance Franchise Processes - BC v1.02.pdf
+restricted: true
+restrictedRoles:
+  - SGRP-CRM-Finance-Franchisee
+  - SGRP-CRM-*
+---
+```
+
+Notes and fields:
+
+- **title** (string) — Human-readable page title.
+- **description** (string) — Short summary for listings and SEO.
+- **author** (string) — Author id (must match an author file in `/authors/`).
+- **category** (string) — Project or product category (used for filtering/navigation).
+- **type** (string) — Page type (e.g., `user-guide`, `how-to`, `api-reference`).
+- **source** (string) — Optional original source (document name or reference).
+- **restricted** (boolean) — If `true`, the page is access-restricted.
+- **restrictedRoles** (array) — List of roles that may access the page (when `restricted: true`).
+
+Images referenced by documentation should be stored in the section's `_img/` subdirectory and referenced in Markdown as `![](_img/your-image.png)` or from frontmatter values when applicable. Keep filenames lowercase with hyphens.
+
+---
 
 ## � Creating API Specifications
 
@@ -388,7 +424,7 @@ authors/tech-team.json
 3. Add `index.md` as the section homepage
 4. Create the `_meta.json` file with navigation structure
 5. Add individual content files following naming conventions
-6. Create `img/` subdirectory for section-specific images
+6. Create `_img/` subdirectory for section-specific images
 
 ### For Blog Posts
 
@@ -432,7 +468,8 @@ authors/tech-team.json
 ### Technical Guidelines
 
 - Always validate JSON files for proper syntax
-- Use relative paths for internal links and images
+- **Internal links**: Use root-relative paths starting with `/` (omit the `.md` extension), e.g., `[Quick Start](/getting-started/quick-start)` — this ensures consistent links across the site
+- **Images**: Reference section images in the `_img/` subdirectory (relative to the doc file), e.g., `![](_img/setup-diagram.png)`
 - Test all code examples before publishing
 - Ensure all `_meta.json` files reference actual existing files
 
@@ -455,7 +492,7 @@ Before creating content, ensure:
 - [ ] All referenced files in `_meta.json` actually exist
 - [ ] Author profiles exist for all blog post authors
 - [ ] Blog post frontmatter includes all required fields
-- [ ] Images are stored in appropriate `img/` subdirectories
+- [ ] Images are stored in appropriate `_img/` subdirectories
 - [ ] File naming follows established conventions
 - [ ] Navigation structure remains logical and user-friendly
 
@@ -481,8 +518,8 @@ This guide ensures consistent, well-organized documentation that follows the est
 
 ### Link Formatting
 
-- **Internal Links**: Use relative paths from current file location
-- **Cross-Project**: Link to other projects using `/docs/other-project/section`
+- **Internal Links**: Use root-relative paths starting with `/` for documentation pages (omit the `.md` extension), e.g., `[Quick Start](/getting-started/quick-start)` — do not use relative paths from the current file location for page links
+- **Cross-Project**: Use root-level project paths, e.g., `/docs/other-project/section` (or `/project-name/section` depending on site routing)
 - **External Links**: Always use HTTPS when possible
 - **Anchors**: Use lowercase-hyphen format for heading anchors
 
