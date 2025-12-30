@@ -61,9 +61,13 @@ export default async function DocsPage() {
                 }))
         }
 
-        // Get root level categories (level 0, no parent)
+        // Get root level categories (level 0, no parent OR level 1 with 'docs' parent)
+        // This handles both docs/ and docs/docs/ folder structures
         const rootCategories = categoryMetadata
-            .filter(cat => cat.level === 0 && !cat.parentSlug)
+            .filter(cat => 
+                (cat.level === 0 && !cat.parentSlug) || 
+                (cat.level === 1 && cat.parentSlug === 'docs')
+            )
             .map(cat => ({
                 slug: cat.categorySlug,
                 title: cat.title,

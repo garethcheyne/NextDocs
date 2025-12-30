@@ -147,6 +147,10 @@ export function isBlogPost(filePath: string): boolean {
 }
 
 export function isDocument(filePath: string): boolean {
-  return filePath.toLowerCase().includes('/docs/') || 
-         filePath.toLowerCase().includes('/documentation/')
+  // Documents are markdown files that are not blog posts
+  // This includes /docs/, /documentation/, or any .md/.mdx file not in /blog/
+  const lower = filePath.toLowerCase()
+  return lower.includes('/docs/') || 
+         lower.includes('/documentation/') ||
+         (lower.endsWith('.md') || lower.endsWith('.mdx')) && !lower.includes('/blog/')
 }

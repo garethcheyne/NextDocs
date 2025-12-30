@@ -100,7 +100,7 @@ export async function syncRepository(repositoryId: string, ipAddress?: string) {
     // Process metadata files first
     if (metaFiles.length > 0) {
       console.log('⚙️  Processing metadata files...')
-      await parseAndStoreMeta(repository.id, metaFiles)
+      await parseAndStoreMeta(repository.id, metaFiles, repository.basePath)
       console.log(`✅ Metadata processed\n`)
     }
 
@@ -186,9 +186,9 @@ export async function syncRepository(repositoryId: string, ipAddress?: string) {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     console.log(`⏱️  Duration: ${(duration / 1000).toFixed(2)}s\n`)
     console.log('📊 RESULTS SUMMARY:')
-    console.log(`   📄 Documents: ${storageResult.docsAdded} added, ${storageResult.docsUpdated} updated, ${storageResult.docsDeleted} deleted`)
-    if (storageResult.blogsAdded > 0 || storageResult.blogsUpdated > 0 || storageResult.blogsDeleted > 0) {
-      console.log(`   📝 Blog Posts: ${storageResult.blogsAdded} added, ${storageResult.blogsUpdated} updated, ${storageResult.blogsDeleted} deleted`)
+    console.log(`   📄 Documents: ${storageResult.docsAdded} added, ${storageResult.docsUpdated} updated, ${storageResult.docsDeleted} deleted${storageResult.docsSkipped > 0 ? `, ${storageResult.docsSkipped} unchanged` : ''}`)
+    if (storageResult.blogsAdded > 0 || storageResult.blogsUpdated > 0 || storageResult.blogsDeleted > 0 || storageResult.blogsSkipped > 0) {
+      console.log(`   📝 Blog Posts: ${storageResult.blogsAdded} added, ${storageResult.blogsUpdated} updated, ${storageResult.blogsDeleted} deleted${storageResult.blogsSkipped > 0 ? `, ${storageResult.blogsSkipped} unchanged` : ''}`)
     }
     if (authorResult.authorsAdded > 0 || authorResult.authorsUpdated > 0) {
       console.log(`   👤 Authors: ${authorResult.authorsAdded} added, ${authorResult.authorsUpdated} updated`)

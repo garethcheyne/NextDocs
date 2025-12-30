@@ -18,8 +18,10 @@ export async function storeDocuments(
 ) {
   let docsAdded = 0
   let docsUpdated = 0
+  let docsSkipped = 0
   let blogsAdded = 0
   let blogsUpdated = 0
+  let blogsSkipped = 0
   const changes: Change[] = []
 
   console.log('💾 Storing documents in database...')
@@ -29,6 +31,7 @@ export async function storeDocuments(
       const parsed = parseMarkdownDocument(doc.path, doc.content)
 
       // Determine if it's a blog post or documentation
+      // Default to document unless explicitly a blog post
       if (isBlogPost(doc.path)) {
         // Store as blog post
         const existing = await prisma.blogPost.findUnique({
@@ -73,6 +76,8 @@ export async function storeDocuments(
               oldHash: existing.sourceHash,
               newHash: parsed.sourceHash,
             })
+          } else {
+            blogsSkipped++
           }
         } else {
           // Create new blog post
@@ -106,8 +111,8 @@ export async function storeDocuments(
             newHash: parsed.sourceHash,
           })
         }
-      } else if (isDocument(doc.path)) {
-        // Store as documentation
+      } else {
+        // Store as documentation (default for non-blog files)
         const existing = await prisma.document.findUnique({
           where: {
             repositoryId_filePath: {
@@ -149,6 +154,8 @@ export async function storeDocuments(
               oldHash: existing.sourceHash,
               newHash: parsed.sourceHash,
             })
+          } else {
+            docsSkipped++
           }
         } else {
           // Create new document
@@ -246,18 +253,21 @@ export async function storeDocuments(
   // This catches cases where entire folders are removed from the repository
   await cleanupOrphanedCategories(repositoryId)
 
-  console.log(`   📚 Documents: ${docsAdded} added, ${docsUpdated} updated, ${deletedDocs.length} deleted`)
-  console.log(`   📝 Blog Posts: ${blogsAdded} added, ${blogsUpdated} updated, ${deletedBlogs.length} deleted`)
+  console.log(`   📚 Documents: ${docsAdded} added, ${docsUpdated} updated, ${deletedDocs.length} deleted${docsSkipped > 0 ? `, ${docsSkipped} unchanged` : ''}`)
+  console.log(`   📝 Blog Posts: ${blogsAdded} added, ${blogsUpdated} updated, ${deletedBlogs.length} deleted${blogsSkipped > 0 ? `, ${blogsSkipped} unchanged` : ''}`)
 
   return {
     docsAdded,
     docsUpdated,
+    docsSkipped,
     docsDeleted: deletedDocs.length,
     blogsAdded,
     blogsUpdated,
+    blogsSkipped,
     blogsDeleted: deletedBlogs.length,
     totalAdded: docsAdded + blogsAdded,
     totalUpdated: docsUpdated + blogsUpdated,
+    totalSkipped: docsSkipped + blogsSkipped,
     totalDeleted: deletedDocs.length + deletedBlogs.length,
     changes,
   }

@@ -12,7 +12,8 @@ export interface MetaJson {
 
 export async function parseAndStoreMeta(
   repositoryId: string,
-  metaFiles: Array<{ path: string; content: string }>
+  metaFiles: Array<{ path: string; content: string }>,
+  basePath?: string
 ) {
   console.log(`📋 Processing ${metaFiles.length} _meta.json file(s)...`)
 
@@ -23,8 +24,17 @@ export async function parseAndStoreMeta(
     try {
       const meta: MetaJson = JSON.parse(metaFile.content)
       
-      // Extract directory from path (e.g., /docs/eway/_meta.json -> docs/eway)
-      const pathParts = metaFile.path.split('/').filter(Boolean)
+      // Strip base path if provided (e.g., /documentation/docs/... -> docs/...)
+      let normalizedPath = metaFile.path
+      if (basePath) {
+        const basePathClean = basePath.replace(/^\/+|\/+$/g, '') // Remove leading/trailing slashes
+        if (normalizedPath.startsWith(basePathClean + '/')) {
+          normalizedPath = normalizedPath.substring(basePathClean.length + 1)
+        }
+      }
+      
+      // Extract directory from path (e.g., docs/eway/_meta.json -> docs/eway)
+      const pathParts = normalizedPath.split('/').filter(Boolean)
       const dir = pathParts.slice(0, -1).join('/')
       
       // Determine hierarchy level based on path depth
