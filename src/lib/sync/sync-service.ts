@@ -79,36 +79,68 @@ export async function syncRepository(repositoryId: string, ipAddress?: string) {
     )
     const contentFiles = documents.filter(d => !d.path.endsWith('_meta.json') && !authorFiles.includes(d))
 
-    console.log('\n📦 FETCHED FILES BREAKDOWN:')
-    console.log(`   📄 Content files: ${contentFiles.length}`)
-    console.log(`   👤 Author files: ${authorFiles.length}`)
-    console.log(`   ⚙️  Metadata files: ${metaFiles.length}`)
-    if (apiSpecs.length > 0) {
-      console.log(`   📋 API specs: ${apiSpecs.length}`)
+    // Normalize paths by stripping basePath if present
+    const normalizeBasePath = (path: string): string => {
+      if (!repository.basePath || repository.basePath === '/') return path
+      const basePathClean = repository.basePath.replace(/^\/+|\/+$/g, '')
+      if (path.startsWith(basePathClean + '/')) {
+        return path.substring(basePathClean.length + 1)
+      }
+      return path
     }
-    console.log(`   📊 Total: ${documents.length} markdown + ${apiSpecs.length} API specs\n`)
+
+    // Apply normalization to all document paths
+    const normalizedDocuments = documents.map(d => ({
+      ...d,
+      path: normalizeBasePath(d.path)
+    }))
+    const normalizedMetaFiles = metaFiles.map(d => ({
+      ...d,
+      path: normalizeBasePath(d.path)
+    }))
+    const normalizedAuthorFiles = authorFiles.map(d => ({
+      ...d,
+      path: normalizeBasePath(d.path)
+    }))
+    const normalizedContentFiles = contentFiles.map(d => ({
+      ...d,
+      path: normalizeBasePath(d.path)
+    }))
+    const normalizedApiSpecs = apiSpecs.map(d => ({
+      ...d,
+      path: normalizeBasePath(d.path)
+    }))
+
+    console.log('\n📦 FETCHED FILES BREAKDOWN:')
+    console.log(`   📄 Content files: ${normalizedContentFiles.length}`)
+    console.log(`   👤 Author files: ${normalizedAuthorFiles.length}`)
+    console.log(`   ⚙️  Metadata files: ${normalizedMetaFiles.length}`)
+    if (normalizedApiSpecs.length > 0) {
+      console.log(`   📋 API specs: ${normalizedApiSpecs.length}`)
+    }
+    console.log(`   📊 Total: ${normalizedDocuments.length} markdown + ${normalizedApiSpecs.length} API specs\n`)
 
     // Log all content files
-    if (contentFiles.length > 0) {
+    if (normalizedContentFiles.length > 0) {
       console.log('📄 CONTENT FILES:')
-      contentFiles.forEach((doc, idx) => {
+      normalizedContentFiles.forEach((doc, idx) => {
         console.log(`   ${String(idx + 1).padStart(3)}. ${doc.path}`)
       })
       console.log('')
     }
 
     // Process metadata files first
-    if (metaFiles.length > 0) {
+    if (normalizedMetaFiles.length > 0) {
       console.log('⚙️  Processing metadata files...')
-      await parseAndStoreMeta(repository.id, metaFiles, repository.basePath)
+      await parseAndStoreMeta(repository.id, normalizedMetaFiles, repository.basePath)
       console.log(`✅ Metadata processed\n`)
     }
 
     // Process author files
     let authorResult = { authorsAdded: 0, authorsUpdated: 0, totalProcessed: 0 }
-    if (authorFiles.length > 0) {
+    if (normalizedAuthorFiles.length > 0) {
       console.log('👤 Processing author files...')
-      authorResult = await storeAuthors(authorFiles)
+      authorResult = await storeAuthors(normalizedAuthorFiles)
       console.log(`✅ Authors: ${authorResult.authorsAdded} added, ${authorResult.authorsUpdated} updated\n`)
     } else {
       console.log('👤 No author files to process\n')
@@ -116,13 +148,13 @@ export async function syncRepository(repositoryId: string, ipAddress?: string) {
 
     // Store documents in database
     console.log('💾 Storing documents...')
-    const storageResult = await storeDocuments(repository.id, syncLog.id, contentFiles)
+    const storageResult = await storeDocuments(repository.id, syncLog.id, normalizedContentFiles)
 
     // Store API specs in database
     let apiSpecResult = { totalAdded: 0, totalUpdated: 0, totalDeleted: 0 }
-    if (apiSpecs.length > 0) {
+    if (normalizedApiSpecs.length > 0) {
       console.log('📋 Processing API specifications...')
-      apiSpecResult = await storeApiSpecs(repository.id, apiSpecs)
+      apiSpecResult = await storeApiSpecs(repository.id, normalizedApiSpecs)
     } else {
       console.log('📋 No API specs to process')
     }

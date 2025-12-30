@@ -13,25 +13,21 @@ export interface MetaJson {
 export async function parseAndStoreMeta(
   repositoryId: string,
   metaFiles: Array<{ path: string; content: string }>,
-  basePath?: string
+  basePath?: string // Kept for backwards compatibility but paths should be pre-normalized
 ) {
   console.log(`📋 Processing ${metaFiles.length} _meta.json file(s)...`)
 
   const processedSlugs: string[] = []
+  
+  // Build Set of meta file paths (already normalized by caller)
   const metaFilePaths = new Set(metaFiles.map(f => f.path))
 
   for (const metaFile of metaFiles) {
     try {
       const meta: MetaJson = JSON.parse(metaFile.content)
       
-      // Strip base path if provided (e.g., /documentation/docs/... -> docs/...)
-      let normalizedPath = metaFile.path
-      if (basePath) {
-        const basePathClean = basePath.replace(/^\/+|\/+$/g, '') // Remove leading/trailing slashes
-        if (normalizedPath.startsWith(basePathClean + '/')) {
-          normalizedPath = normalizedPath.substring(basePathClean.length + 1)
-        }
-      }
+      // Paths are already normalized by sync service
+      const normalizedPath = metaFile.path
       
       // Extract directory from path (e.g., docs/eway/_meta.json -> docs/eway)
       const pathParts = normalizedPath.split('/').filter(Boolean)
