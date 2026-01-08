@@ -4,6 +4,7 @@ import {
   buildFeatureStatusChangeEmail,
   buildNewCommentEmail,
   buildNewFeatureEmail,
+  buildReleaseNotificationEmail,
 } from './templates'
 
 /**
@@ -566,5 +567,134 @@ export async function sendTestTemplateEmail(to: string, template: string): Promi
   } catch (error) {
     console.error('Failed to send test template email:', error)
     return false
+  }
+}
+
+/**
+ * Send email notifications for a release to subscribed team members
+ */
+export async function notifyReleaseSubscribers(options: {
+  releaseId?: string
+  teams: string[]
+  version: string
+  content: string
+  documentUrl?: string
+  documentTitle?: string
+}): Promise<{ sent: number }> {
+  const { releaseId, teams, version, content, documentUrl, documentTitle } = options
+
+  try {
+    // Get all teams by slug
+    const teamRecords = await prisma.team.findMany({
+      where: {
+        slug: { in: teams },
+        enabled: true,
+      },
+      include: {
+        memberships: {
+          where: {
+            subscribeToReleases: true,
+            notifyEmail: true,
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                name: true,
+                emailNotifications: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    if (teamRecords.length === 0) {
+      console.log('No teams found for slugs:', teams)
+      return { sent: 0 }
+    }
+
+    // Collect unique users who should be notified
+    const usersToNotify = new Map<
+      string,
+      { email: string; name: string | null; teamNames: string[] }
+    >()
+
+    for (const team of teamRecords) {
+      for (const membership of team.memberships) {
+        // Check master toggle
+        if (!membership.user.emailNotifications) continue
+
+        const existing = usersToNotify.get(membership.user.id)
+        if (existing) {
+          existing.teamNames.push(team.name)
+        } else {
+          usersToNotify.set(membership.user.id, {
+            email: membership.user.email,
+            name: membership.user.name,
+            teamNames: [team.name],
+          })
+        }
+      }
+    }
+
+    if (usersToNotify.size === 0) {
+      console.log('No users subscribed to release notifications for teams:', teams)
+      return { sent: 0 }
+    }
+
+    // Build email content
+    const emailBody = buildReleaseNotificationEmail({
+      version,
+      content,
+      teams: teamRecords.map((t) => t.name),
+      documentUrl,
+      documentTitle,
+    })
+
+    // Send emails
+    const emailClient = getRestEmailClient()
+    if (!emailClient.isReady()) {
+      console.warn('Email client not ready for release notifications')
+      return { sent: 0 }
+    }
+
+    const recipients = Array.from(usersToNotify.values()).map((u) => u.email)
+
+    await emailClient.sendEmail({
+      to: recipients,
+      subject: `Release Notes v${version}`,
+      body: emailBody,
+      isHtml: true,
+    })
+
+    // Log notification history if we have a release ID
+    if (releaseId) {
+      const notificationLogs = Array.from(usersToNotify.keys()).map((userId) => ({
+        releaseId,
+        userId,
+        teamId: teamRecords[0].id, // Primary team
+        channel: 'email',
+        status: 'sent',
+        sentAt: new Date(),
+      }))
+
+      await prisma.releaseNotificationLog.createMany({
+        data: notificationLogs,
+      })
+
+      // Update release notifiedAt
+      await prisma.release.update({
+        where: { id: releaseId },
+        data: { notifiedAt: new Date() },
+      })
+    }
+
+    console.log(`✅ Sent release notification v${version} to ${recipients.length} users`)
+    return { sent: recipients.length }
+  } catch (error) {
+    console.error('Failed to send release notifications:', error)
+    throw error
   }
 }

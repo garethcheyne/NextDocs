@@ -45,7 +45,7 @@
     /* Dark mode - navy/dark with orange accents */
     --background: 222 84% 3%; /* Deep dark navy #02060f */
     --foreground: 210 40% 98%;
-    --card: 217 60% 8%; /* Darker card background #0d1420 */
+    --card: 222 84% 3%; /* same as background for seamless look */
     --card-foreground: 210 40% 98%;
     --popover: 222 84% 3%;
     --popover-foreground: 210 40% 98%;

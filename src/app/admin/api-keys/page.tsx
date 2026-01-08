@@ -40,7 +40,7 @@ export default async function APIKeysPage() {
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">API Key Management</h1>
-                        <p className="text-gray-400 mt-2">
+                        <p className="text-gray-600 dark:text-gray-400 mt-2">
                             Create and manage API keys for programmatic access
                         </p>
                     </div>

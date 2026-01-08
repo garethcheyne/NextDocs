@@ -140,44 +140,44 @@ export function AnalyticsDashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 hover:border-blue-500/40 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium text-blue-400">Total Events</CardTitle>
-            <Activity className="h-4 w-4 text-blue-400" />
+            <CardTitle className="text-xs font-medium text-blue-600 dark:text-blue-400">Total Events</CardTitle>
+            <Activity className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-white">{metrics.summary.totalEvents.toLocaleString()}</div>
-            <p className="text-xs text-gray-400 mt-1">Last 30 days</p>
+            <div className="text-3xl font-bold">{metrics.summary.totalEvents.toLocaleString()}</div>
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Last 30 days</p>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20 hover:border-green-500/40 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium text-green-400">Unique Users</CardTitle>
-            <Users className="h-4 w-4 text-green-400" />
+            <CardTitle className="text-xs font-medium text-green-600 dark:text-green-400">Unique Users</CardTitle>
+            <Users className="h-4 w-4 text-green-600 dark:text-green-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-white">{metrics.summary.uniqueUsers.toLocaleString()}</div>
-            <p className="text-xs text-gray-400 mt-1">Authenticated users</p>
+            <div className="text-3xl font-bold">{metrics.summary.uniqueUsers.toLocaleString()}</div>
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Authenticated users</p>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20 hover:border-purple-500/40 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium text-purple-400">Sessions</CardTitle>
-            <TrendingUp className="h-4 w-4 text-purple-400" />
+            <CardTitle className="text-xs font-medium text-purple-600 dark:text-purple-400">Sessions</CardTitle>
+            <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-white">{metrics.summary.totalSessions.toLocaleString()}</div>
-            <p className="text-xs text-gray-400 mt-1">Total sessions</p>
+            <div className="text-3xl font-bold">{metrics.summary.totalSessions.toLocaleString()}</div>
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Total sessions</p>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-orange-500/20 hover:border-orange-500/40 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium text-orange-400">Document Reads</CardTitle>
-            <Eye className="h-4 w-4 text-orange-400" />
+            <CardTitle className="text-xs font-medium text-orange-600 dark:text-orange-400">Document Reads</CardTitle>
+            <Eye className="h-4 w-4 text-orange-600 dark:text-orange-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-white">{metrics.summary.documentReads.toLocaleString()}</div>
+            <div className="text-3xl font-bold">{metrics.summary.documentReads.toLocaleString()}</div>
             <p className="text-xs text-gray-400 mt-1">{metrics.summary.searches} searches</p>
           </CardContent>
         </Card>
@@ -186,7 +186,7 @@ export function AnalyticsDashboard() {
       {/* Content Grid */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Activity Timeline */}
-        <Card className="md:col-span-2 bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+        <Card >
           <CardHeader>
             <CardTitle>Activity Timeline</CardTitle>
             <CardDescription>Daily page views, sessions, and users over the last 30 days</CardDescription>
@@ -247,7 +247,7 @@ export function AnalyticsDashboard() {
         </Card>
 
         {/* Top Pages */}
-        <Card className='bg-gray-900/40 border-gray-800/50 backdrop-blur-xl'>
+        <Card>
           <CardHeader>
             <CardTitle>Top Pages</CardTitle>
             <CardDescription>Most viewed pages</CardDescription>
@@ -271,7 +271,7 @@ export function AnalyticsDashboard() {
         </Card>
 
         {/* Top Documents */}
-        <Card className='bg-gray-900/40 border-gray-800/50 backdrop-blur-xl'>
+        <Card >
           <CardHeader>
             <CardTitle>Top Documents</CardTitle>
             <CardDescription>Most read documentation</CardDescription>
@@ -303,7 +303,7 @@ export function AnalyticsDashboard() {
       </div>
 
       {/* Realtime Events */}
-      <Card className='bg-gray-900/40 border-gray-800/50 backdrop-blur-xl'>
+      <Card >
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
@@ -362,7 +362,7 @@ export function AnalyticsDashboard() {
 
       {/* Login Stats */}
       {(metrics.summary.loginSuccess > 0 || metrics.summary.loginFailure > 0) && (
-        <Card className='bg-gray-900/40 border-gray-800/50 backdrop-blur-xl'>
+        <Card >
           <CardHeader>
             <CardTitle>Authentication</CardTitle>
             <CardDescription>Login attempts</CardDescription>

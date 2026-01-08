@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/db/prisma'
 import { parseMarkdownDocument, isBlogPost, isDocument } from './document-parser'
 import { updateDocumentSearchVector, updateBlogPostSearchVector } from '@/lib/search/indexer'
+import { notifyReleaseSubscribers } from '@/lib/email/notification-service'
 
 interface Change {
   changeType: 'added' | 'modified' | 'deleted'
@@ -256,6 +257,114 @@ export async function storeDocuments(
   console.log(`   📚 Documents: ${docsAdded} added, ${docsUpdated} updated, ${deletedDocs.length} deleted${docsSkipped > 0 ? `, ${docsSkipped} unchanged` : ''}`)
   console.log(`   📝 Blog Posts: ${blogsAdded} added, ${blogsUpdated} updated, ${deletedBlogs.length} deleted${blogsSkipped > 0 ? `, ${blogsSkipped} unchanged` : ''}`)
 
+  // Process releases from documents
+  let releasesAdded = 0
+  let releasesUpdated = 0
+  let notificationsSent = 0
+
+  for (const doc of documents) {
+    try {
+      const parsed = parseMarkdownDocument(doc.path, doc.content)
+
+      if (parsed.releases && parsed.releases.length > 0) {
+        for (const release of parsed.releases) {
+          // Find teams by slug
+          const teams = await prisma.team.findMany({
+            where: {
+              slug: { in: release.teams.map(t => t.toLowerCase()) },
+              enabled: true,
+            },
+          })
+
+          if (teams.length === 0) {
+            console.warn(`   ⚠️  No valid teams found for release ${release.version} in ${doc.path}`)
+            continue
+          }
+
+          // Check if release already exists
+          const existingRelease = await prisma.release.findFirst({
+            where: {
+              version: release.version,
+              filePath: doc.path,
+              repositoryId,
+            },
+            include: { teams: true },
+          })
+
+          if (existingRelease) {
+            // Update if content changed
+            const contentChanged = existingRelease.content !== release.content
+            const teamsChanged = existingRelease.teams.map(t => t.id).sort().join(',') !==
+                                teams.map(t => t.id).sort().join(',')
+
+            if (contentChanged || teamsChanged) {
+              await prisma.release.update({
+                where: { id: existingRelease.id },
+                data: {
+                  content: release.content,
+                  teams: {
+                    set: teams.map(t => ({ id: t.id })),
+                  },
+                  updatedAt: new Date(),
+                },
+              })
+              releasesUpdated++
+              console.log(`   📦 Updated release ${release.version} for teams: ${teams.map(t => t.slug).join(', ')}`)
+            }
+          } else {
+            // Create new release
+            const newRelease = await prisma.release.create({
+              data: {
+                version: release.version,
+                content: release.content,
+                filePath: doc.path,
+                repositoryId,
+                teams: {
+                  connect: teams.map(t => ({ id: t.id })),
+                },
+              },
+            })
+            releasesAdded++
+            console.log(`   📦 Added release ${release.version} for teams: ${teams.map(t => t.slug).join(', ')}`)
+
+            // Send notifications for new releases
+            try {
+              // Get the document for the URL
+              const document = await prisma.document.findFirst({
+                where: { repositoryId, filePath: doc.path },
+                select: { slug: true, title: true },
+              })
+
+              const result = await notifyReleaseSubscribers({
+                releaseId: newRelease.id,
+                teams: teams.map(t => t.slug),
+                version: release.version,
+                content: release.content,
+                documentUrl: document ? `/docs/${document.slug}` : undefined,
+                documentTitle: document?.title || parsed.title,
+              })
+              notificationsSent += result.sent
+
+              // Mark release as notified
+              await prisma.release.update({
+                where: { id: newRelease.id },
+                data: { notifiedAt: new Date() },
+              })
+            } catch (notifyError) {
+              console.error(`   ❌ Failed to send notifications for release ${release.version}:`, notifyError)
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`   ❌ Failed to process releases for ${doc.path}:`, error)
+    }
+  }
+
+  if (releasesAdded > 0 || releasesUpdated > 0) {
+    console.log(`   📦 Releases: ${releasesAdded} added, ${releasesUpdated} updated${notificationsSent > 0 ? `, ${notificationsSent} notifications sent` : ''}`)
+  }
+
   return {
     docsAdded,
     docsUpdated,
@@ -265,6 +374,9 @@ export async function storeDocuments(
     blogsUpdated,
     blogsSkipped,
     blogsDeleted: deletedBlogs.length,
+    releasesAdded,
+    releasesUpdated,
+    notificationsSent,
     totalAdded: docsAdded + blogsAdded,
     totalUpdated: docsUpdated + blogsUpdated,
     totalSkipped: docsSkipped + blogsSkipped,

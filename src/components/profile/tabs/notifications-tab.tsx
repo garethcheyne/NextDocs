@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Mail, MessageSquare, Bell, Users, Smartphone, Globe, Settings, CheckCircle, AlertCircle, Clock } from 'lucide-react'
+import { Mail, MessageSquare, Bell, Users, Smartphone, Globe, Settings, CheckCircle, AlertCircle, Clock, Megaphone, BellRing, BellOff, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface NotificationsTabProps {
@@ -71,6 +71,17 @@ export function NotificationsTab({ userId }: NotificationsTabProps) {
     })
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+    const [teams, setTeams] = useState<Array<{
+        id: string
+        name: string
+        slug: string
+        color?: string
+        isSubscribed: boolean
+        notifyEmail: boolean
+        notifyInApp: boolean
+    }>>([])
+    const [loadingTeams, setLoadingTeams] = useState(true)
+    const [togglingTeam, setTogglingTeam] = useState<string | null>(null)
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -89,6 +100,55 @@ export function NotificationsTab({ userId }: NotificationsTabProps) {
 
         fetchSettings()
     }, [userId])
+
+    // Fetch available teams for release notifications
+    useEffect(() => {
+        const fetchTeams = async () => {
+            try {
+                const response = await fetch('/api/teams?includeSubscriptions=true')
+                if (response.ok) {
+                    const data = await response.json()
+                    setTeams(data.teams)
+                }
+            } catch (error) {
+                console.error('Error fetching teams:', error)
+            } finally {
+                setLoadingTeams(false)
+            }
+        }
+
+        fetchTeams()
+    }, [])
+
+    const handleTeamSubscriptionToggle = async (teamId: string, subscribe: boolean) => {
+        setTogglingTeam(teamId)
+        try {
+            const response = await fetch('/api/teams/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ teamId, subscribeToReleases: subscribe }),
+            })
+
+            if (response.ok) {
+                setTeams(prev =>
+                    prev.map(t =>
+                        t.id === teamId ? { ...t, isSubscribed: subscribe } : t
+                    )
+                )
+                toast.success(
+                    subscribe
+                        ? 'Subscribed to release notifications'
+                        : 'Unsubscribed from release notifications'
+                )
+            } else {
+                throw new Error('Failed to update subscription')
+            }
+        } catch (error) {
+            toast.error('Failed to update subscription')
+        } finally {
+            setTogglingTeam(null)
+        }
+    }
 
     const handleSave = async () => {
         setSaving(true)
@@ -141,7 +201,7 @@ export function NotificationsTab({ userId }: NotificationsTabProps) {
     if (loading) {
         return (
             <div className="space-y-6">
-                <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+                <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
                     <CardContent className="p-6">
                         <div className="animate-pulse space-y-4">
                             <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
@@ -159,7 +219,7 @@ export function NotificationsTab({ userId }: NotificationsTabProps) {
     return (
         <div className="space-y-6">
             {/* Email Notifications */}
-            <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+            <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Globe className="w-5 h-5" />
@@ -512,8 +572,87 @@ export function NotificationsTab({ userId }: NotificationsTabProps) {
                 </CardContent>
             </Card>
 
+            {/* Release Notifications */}
+            <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Megaphone className="w-5 h-5" />
+                        Release Notifications
+                    </CardTitle>
+                    <CardDescription>
+                        Subscribe to teams to receive release notes and updates
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {loadingTeams ? (
+                        <div className="flex items-center justify-center py-8">
+                            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                        </div>
+                    ) : teams.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                            <Megaphone className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                            <p>No teams available for subscription</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            <p className="text-sm text-muted-foreground">
+                                Toggle the bell icon to subscribe or unsubscribe from release notifications for each team.
+                            </p>
+                            {teams.map((team) => (
+                                <div
+                                    key={team.id}
+                                    className="flex items-center justify-between p-3 rounded-lg bg-gray-100/50 dark:bg-gray-800/50 border border-gray-300/50 dark:border-gray-700/50"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div
+                                            className="w-8 h-8 rounded-md flex items-center justify-center text-white text-sm font-bold"
+                                            style={{ backgroundColor: team.color || '#ff6b35' }}
+                                        >
+                                            {team.name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <div className="font-medium text-white">{team.name}</div>
+                                            <div className="text-xs text-muted-foreground">
+                                                Slug: {team.slug}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        variant={team.isSubscribed ? 'default' : 'outline'}
+                                        size="sm"
+                                        onClick={() =>
+                                            handleTeamSubscriptionToggle(team.id, !team.isSubscribed)
+                                        }
+                                        disabled={togglingTeam === team.id}
+                                        className={
+                                            team.isSubscribed
+                                                ? 'bg-brand-orange hover:bg-brand-orange/90'
+                                                : ''
+                                        }
+                                    >
+                                        {togglingTeam === team.id ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : team.isSubscribed ? (
+                                            <>
+                                                <BellRing className="w-4 h-4 mr-1" />
+                                                Subscribed
+                                            </>
+                                        ) : (
+                                            <>
+                                                <BellOff className="w-4 h-4 mr-1" />
+                                                Subscribe
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
             {/* Notification Frequency */}
-            <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+            <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Clock className="w-5 h-5" />

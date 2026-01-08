@@ -191,7 +191,7 @@ export default function EditRepositoryPage() {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Basic Information */}
-              <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+              <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
                 <CardHeader>
                   <CardTitle className="text-white">Basic Information</CardTitle>
                 </CardHeader>
@@ -213,7 +213,7 @@ export default function EditRepositoryPage() {
               </Card>
 
               {/* Source Information (Read-only) */}
-              <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+              <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
                 <CardHeader>
                   <CardTitle className="text-white">Source Configuration</CardTitle>
                   <CardDescription className="text-gray-400">
@@ -258,7 +258,7 @@ export default function EditRepositoryPage() {
               </Card>
 
               {/* Repository Settings */}
-              <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+              <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
                 <CardHeader>
                   <CardTitle className="text-white">Repository Settings</CardTitle>
                 </CardHeader>

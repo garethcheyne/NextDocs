@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { StatusBadge } from '@/components/features/status-badge'
 import { PriorityBadge } from '@/components/features/priority-badge'
+import { CategoryBadge } from '@/components/features/category-badge'
 // ScrollArea component not available, using regular div
 import { Heart, MessageSquare, Plus, Eye, Calendar, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
@@ -27,7 +28,10 @@ interface FeatureRequest {
   likesCount: number
   commentsCount: number
   category?: {
+    id: string
     name: string
+    color?: string | null
+    iconBase64?: string | null
   }
 }
 
@@ -86,9 +90,9 @@ export function ActivityTab({ userId }: ActivityTabProps) {
       </div>
       
       {feature.category && (
-        <Badge variant="outline" className="mb-2">
-          {feature.category.name}
-        </Badge>
+        <div className="mb-2">
+          <CategoryBadge category={feature.category} />
+        </div>
       )}
       
       <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
@@ -113,7 +117,7 @@ export function ActivityTab({ userId }: ActivityTabProps) {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+        <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
           <CardContent className="p-6">
             <div className="text-center">
               <div className="animate-pulse space-y-4">
@@ -132,7 +136,7 @@ export function ActivityTab({ userId }: ActivityTabProps) {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+      <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
         <CardHeader>
           <CardTitle>Your Activity</CardTitle>
           <CardDescription>

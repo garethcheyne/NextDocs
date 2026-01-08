@@ -65,7 +65,7 @@ export function BlogFilters({ categories, tags, dateGroups, currentCategory, cur
         <div className="space-y-4 lg:sticky lg:top-20">
             {/* Active Filters */}
             {hasActiveFilters && (
-                <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+                <Card>
                     <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                             <CardTitle className="text-sm font-medium">Active Filters</CardTitle>
@@ -119,7 +119,7 @@ export function BlogFilters({ categories, tags, dateGroups, currentCategory, cur
 
             {/* Date Filter */}
             {dateGroups.length > 0 && (
-                <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+                <Card >
                     <CardHeader>
                         <CardTitle className="text-sm font-medium flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
@@ -175,7 +175,7 @@ export function BlogFilters({ categories, tags, dateGroups, currentCategory, cur
 
             {/* Category Filter */}
             {categories.length > 0 && (
-                <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+                <Card >
                     <CardHeader>
                         <CardTitle className="text-sm font-medium flex items-center gap-2">
                             <FolderOpen className="w-4 h-4" />
@@ -209,7 +209,7 @@ export function BlogFilters({ categories, tags, dateGroups, currentCategory, cur
 
             {/* Tag Filter */}
             {tags.length > 0 && (
-                <Card className='bg-gray-900/40 border-gray-800/50 backdrop-blur-xl'>
+                <Card >
                     <CardHeader>
                         <CardTitle className="text-sm font-medium flex items-center gap-2">
                             <Tag className="w-4 h-4" />

@@ -35,6 +35,30 @@ export default async function UsersPage() {
                     repositories: true,
                 },
             },
+            teamMemberships: {
+                include: {
+                    team: {
+                        select: {
+                            id: true,
+                            name: true,
+                            slug: true,
+                            color: true,
+                        },
+                    },
+                },
+            },
+        },
+    })
+
+    // Fetch all teams for the manage teams dialog
+    const teams = await prisma.team.findMany({
+        where: { enabled: true },
+        orderBy: { name: 'asc' },
+        select: {
+            id: true,
+            name: true,
+            slug: true,
+            color: true,
         },
     })
 
@@ -66,7 +90,7 @@ export default async function UsersPage() {
                     </div>
                 </div>
 
-                <UsersTable users={users} currentUserId={session.user.id} />
+                <UsersTable users={users} currentUserId={session.user.id} allTeams={teams} />
 
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <p>Showing {users.length} user{users.length !== 1 ? 's' : ''}</p>

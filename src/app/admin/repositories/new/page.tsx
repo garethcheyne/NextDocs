@@ -275,7 +275,7 @@ export default function NewRepositoryPage() {
             </Card>
 
             {/* Repository URL */}
-            <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+            <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
               <CardHeader>
                 <CardTitle className="text-white">Repository URL</CardTitle>
                 <CardDescription className="text-gray-400">
@@ -303,7 +303,7 @@ export default function NewRepositoryPage() {
             </Card>
 
             {/* Basic Information */}
-            <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+            <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
               <CardHeader>
                 <CardTitle className="text-white">Source Configuration</CardTitle>
               </CardHeader>
@@ -330,7 +330,7 @@ export default function NewRepositoryPage() {
 
             {/* Azure DevOps Configuration */}
             {provider === 'AZURE_DEVOPS' && (
-              <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+              <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
                 <CardHeader>
                   <CardTitle className="text-white">Azure DevOps Settings</CardTitle>
                 </CardHeader>
@@ -411,7 +411,7 @@ export default function NewRepositoryPage() {
 
             {/* GitHub Configuration */}
             {provider === 'GITHUB' && (
-              <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+              <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
                 <CardHeader>
                   <CardTitle className="text-white">GitHub Settings</CardTitle>
                 </CardHeader>
@@ -474,7 +474,7 @@ export default function NewRepositoryPage() {
             )}
 
             {/* Repository Settings */}
-            <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+            <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
               <CardHeader>
                 <CardTitle className="text-white">Repository Settings</CardTitle>
               </CardHeader>
@@ -591,7 +591,7 @@ export default function NewRepositoryPage() {
         {/* Sync Progress Modal */}
         {showSyncModal && (
             <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <Card className="bg-gray-900 border-gray-800 max-w-lg w-full">
+          <Card className="bg-white/90 dark:bg-gray-900 border-gray-200 dark:border-gray-800 max-w-lg w-full">
             <CardHeader>
               <CardTitle className="text-white text-xl">
                 Setting Up Repository

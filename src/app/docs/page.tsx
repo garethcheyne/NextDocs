@@ -64,8 +64,8 @@ export default async function DocsPage() {
         // Get root level categories (level 0, no parent OR level 1 with 'docs' parent)
         // This handles both docs/ and docs/docs/ folder structures
         const rootCategories = categoryMetadata
-            .filter(cat => 
-                (cat.level === 0 && !cat.parentSlug) || 
+            .filter(cat =>
+                (cat.level === 0 && !cat.parentSlug) ||
                 (cat.level === 1 && cat.parentSlug === 'docs')
             )
             .map(cat => ({
@@ -104,7 +104,7 @@ export default async function DocsPage() {
             <div className="space-y-6">
                 <div className='px-12 py-6'>
                     {categoriesWithMeta.length === 0 ? (
-                        <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+                        <Card>
                             <CardContent className="pt-6">
                                 <div className="text-center py-12">
                                     <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
