@@ -25,8 +25,8 @@ export default function HomePage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (status === 'authenticated' && session?.user) {
-      // Redirect authenticated users to docs page
-      router.push('/docs')
+      // Redirect authenticated users to home dashboard
+      router.push('/home')
     }
   }, [status, session, router])
 
@@ -34,7 +34,7 @@ export default function HomePage() {
     setIsLoading(true)
     setError('')
     try {
-      await signIn('microsoft-entra-id', { callbackUrl: '/docs' })
+      await signIn('microsoft-entra-id', { callbackUrl: '/home' })
     } catch (error) {
       setError('Failed to sign in with Microsoft')
       setIsLoading(false)

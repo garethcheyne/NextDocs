@@ -1,5 +1,6 @@
 import crypto from 'crypto'
 import matter from 'gray-matter'
+import { extractReleaseBlocks, ExtractedRelease } from '@/lib/markdown/release-block-preprocessor'
 
 export interface ParsedDocument {
   filePath: string
@@ -16,6 +17,7 @@ export interface ParsedDocument {
   restricted: boolean
   restrictedRoles: string[]
   sourceHash: string
+  releases: ExtractedRelease[]
 }
 
 export function parseMarkdownDocument(
@@ -124,6 +126,9 @@ export function parseMarkdownDocument(
     }
   }
 
+  // Extract release blocks from content
+  const { releases } = extractReleaseBlocks(markdownContent)
+
   return {
     filePath,
     fileName,
@@ -139,6 +144,7 @@ export function parseMarkdownDocument(
     restricted,
     restrictedRoles,
     sourceHash,
+    releases,
   }
 }
 

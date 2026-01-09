@@ -142,11 +142,13 @@ export default async function FeaturesPage({
             showTOC={false}
             noPadding={true}
         >
+
             <FeaturesClient
                 features={featuresWithVoteCounts}
                 categories={categories}
                 params={params}
             />
+            
         </ContentDetailLayout>
     )
 }

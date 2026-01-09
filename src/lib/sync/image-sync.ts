@@ -112,9 +112,10 @@ export async function syncRepositoryImagesUnified(
         // Determine local path in /public/img/
         // Format: img/{repo-slug}/{original-path}
         // Example: img/nextdocs/docs/_img/screenshot.png
-        const localPath = path.join('img', repositorySlug, file.path)
-        const publicDir = path.resolve('./public')
-        const fullLocalPath = path.join(publicDir, localPath)
+        const localPath = ['img', repositorySlug, file.path].join(path.sep)
+        // Build path at runtime - Turbopack can't statically analyze string array joins
+        const publicDir = [process.cwd(), 'public'].join(path.sep)
+        const fullLocalPath = [publicDir, localPath].join(path.sep)
 
         // Check if image needs syncing
         if (existingImage && existingImage.sha === file.sha) {

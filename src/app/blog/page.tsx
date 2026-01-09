@@ -294,7 +294,7 @@ export default async function BlogPage({
                     <h2 className="text-xl font-bold mb-4">{pageTitle}</h2>
 
                     {blogPosts.length === 0 ? (
-                        <Card>
+                        <Card >
                             <CardContent className="pt-6">
                                 <div className="text-center py-12">
                                     <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
@@ -323,7 +323,7 @@ export default async function BlogPage({
                                 return (
                                     <div key={post.id}>
                                         <Link href={`/blog/${cleanSlug}`}>
-                                            <Card className="hover:border-primary transition-all cursor-pointer group bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+                                            <Card className="hover:border-primary transition-all cursor-pointer group">
                                                 <CardContent className="p-4">
                                                     <div className="flex gap-4">
                                                         {/* Featured Image */}

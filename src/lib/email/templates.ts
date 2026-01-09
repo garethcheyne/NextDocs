@@ -266,6 +266,109 @@ export function buildNewCommentEmail(
   `
 }
 
+export function buildReleaseNotificationEmail(options: {
+  version: string
+  content: string
+  teams: string[]
+  documentUrl?: string
+  documentTitle?: string
+}): string {
+  const { version, content, teams, documentUrl, documentTitle } = options
+  const teamsDisplay = teams.join(', ')
+
+  // Parse version date (yyyy.mm.dd.sub)
+  const versionParts = version.split('.')
+  let versionDateDisplay = version
+  if (versionParts.length >= 3) {
+    const date = new Date(
+      parseInt(versionParts[0]),
+      parseInt(versionParts[1]) - 1,
+      parseInt(versionParts[2])
+    )
+    versionDateDisplay = date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  }
+
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+      <meta name="x-apple-disable-message-reformatting">
+      <title>Release Notes v${version}</title>
+      <style>
+        @media only screen and (max-width: 480px) {
+          .container { width: 100% !important; margin: 0 !important; border-radius: 0 !important; }
+          .content { padding: 20px !important; }
+          .button { width: 100% !important; padding: 16px !important; }
+        }
+      </style>
+    </head>
+    <body style="${baseStyles} background-color: #f3f4f6; padding: 20px;">
+      <div style="${containerStyles}">
+        <!-- Header -->
+        <div style="${headerStyles}">
+          <div style="${logoStyles}">
+            <img src="${process.env.NEXT_PUBLIC_URL}/img/cat_logo.png" alt="CAT" style="max-height: 200px; height: auto; width: auto;" />
+          </div>
+          <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            🚀 Release Notes v${version}
+          </h1>
+        </div>
+
+        <!-- Content -->
+        <div style="${contentStyles}">
+          <div style="margin-bottom: 20px;">
+            <p style="margin: 0 0 10px 0; color: #666;">
+              <strong style="color: #1a2332;">Teams:</strong> ${teamsDisplay}
+            </p>
+            <p style="margin: 0; color: #666;">
+              <strong style="color: #1a2332;">Release Date:</strong> ${versionDateDisplay}
+            </p>
+            ${documentTitle ? `
+              <p style="margin: 10px 0 0 0; color: #666;">
+                <strong style="color: #1a2332;">Document:</strong> ${documentTitle}
+              </p>
+            ` : ''}
+          </div>
+
+          <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff6b35;">
+            <div style="color: #333; white-space: pre-wrap; line-height: 1.6;">
+              ${content.replace(/\n/g, '<br>')}
+            </div>
+          </div>
+
+          ${documentUrl ? `
+            <a href="${documentUrl}" style="${buttonStyles}">
+              View Full Documentation
+            </a>
+          ` : ''}
+        </div>
+
+        <!-- Footer -->
+        <div style="${footerStyles}">
+          <p style="margin: 0;">
+            You're receiving this email because you're subscribed to release notifications for: ${teamsDisplay}
+          </p>
+          <p style="margin: 10px 0 0 0;">
+            <a href="${process.env.NEXT_PUBLIC_URL}/profile" style="color: #ff6b35;">Manage Subscriptions</a> |
+            <a href="${process.env.NEXT_PUBLIC_URL}/docs" style="color: #ff6b35;">Documentation</a>
+          </p>
+          <p style="margin: 16px 0 0 0; color: #9ca3af; font-weight: 500;">
+            CAT - Enterprise Documentation Platform
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
 export function buildNewFeatureEmail(
   feature: FeatureWithAuthor,
   category?: { name: string }

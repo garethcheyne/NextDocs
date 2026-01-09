@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import { auth } from '@/lib/auth/auth'
 import { formatDate } from '@/lib/utils/date-format'
 import { prisma } from '@/lib/db/prisma'
-import { ArrowLeft, Calendar, MessageSquare, ThumbsUp, ThumbsDown, User } from 'lucide-react'
+import { ArrowLeft, Calendar, MessageSquare, ThumbsUp, ThumbsDown, User, Megaphone } from 'lucide-react'
 import Link from 'next/link'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
@@ -80,6 +80,15 @@ export default async function FeatureRequestPage({
                     },
                 },
                 orderBy: { createdAt: 'desc' },
+            },
+            releases: {
+                select: {
+                    id: true,
+                    version: true,
+                    title: true,
+                    publishedAt: true,
+                },
+                orderBy: { publishedAt: 'desc' },
             },
         },
     })
@@ -306,6 +315,43 @@ export default async function FeatureRequestPage({
                                                 <SyncCommentsButton featureId={feature.id} />
                                             </>
                                         )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* Linked Releases */}
+                        {feature.releases && feature.releases.length > 0 && (
+                            <Card className="border-green-500/50">
+                                <CardHeader>
+                                    <h3 className="font-semibold flex items-center gap-2">
+                                        <Megaphone className="w-4 h-4 text-green-500" />
+                                        Included in Releases
+                                    </h3>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="space-y-3">
+                                        {feature.releases.map((release) => (
+                                            <Link
+                                                key={release.id}
+                                                href={`/admin/releases`}
+                                                className="block p-2 rounded-md hover:bg-muted/50 transition-colors"
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <Badge variant="outline" className="font-mono text-green-500 border-green-500/50">
+                                                        v{release.version}
+                                                    </Badge>
+                                                </div>
+                                                {release.title && (
+                                                    <p className="text-sm text-muted-foreground mt-1">
+                                                        {release.title}
+                                                    </p>
+                                                )}
+                                                <p className="text-xs text-muted-foreground mt-1">
+                                                    {formatDate(release.publishedAt)}
+                                                </p>
+                                            </Link>
+                                        ))}
                                     </div>
                                 </CardContent>
                             </Card>

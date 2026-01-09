@@ -20,6 +20,8 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Input } from '@/components/ui/input'
 import DOMPurify from 'isomorphic-dompurify'
+import { extractReleaseBlocks, splitByReleasePlaceholders } from '@/lib/markdown/release-block-preprocessor'
+import { ReleaseNotificationBlock } from '@/components/markdown/release-notification-block'
 
 // Sanitize SVG content from Mermaid diagrams
 function sanitizeSvg(html: string): string {
@@ -364,6 +366,12 @@ interface MarkdownWithMermaidProps {
 }
 
 export function MarkdownWithMermaid({ children, className, repositorySlug, documentPath }: MarkdownWithMermaidProps) {
+    // Extract release blocks from markdown content
+    const { processedContent, releases } = extractReleaseBlocks(children)
+
+    // Split content by release placeholders for rendering
+    const contentParts = splitByReleasePlaceholders(processedContent)
+
     const components: Components = {
         code({ className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || '')
@@ -602,11 +610,47 @@ export function MarkdownWithMermaid({ children, className, repositorySlug, docum
         },
     }
 
+    // If no release blocks, render normally
+    if (releases.length === 0) {
+        return (
+            <div className={className}>
+                <ReactMarkdown components={components} remarkPlugins={[remarkGfm]}>
+                    {children}
+                </ReactMarkdown>
+            </div>
+        )
+    }
+
+    // Render content with release blocks interspersed
     return (
         <div className={className}>
-            <ReactMarkdown components={components} remarkPlugins={[remarkGfm]}>
-                {children}
-            </ReactMarkdown>
+            {contentParts.map((part, index) => {
+                if (part.type === 'release') {
+                    const release = releases[part.value as number]
+                    if (release) {
+                        return (
+                            <ReleaseNotificationBlock
+                                key={`release-${index}`}
+                                teams={release.teams}
+                                version={release.version}
+                                content={release.content}
+                            />
+                        )
+                    }
+                    return null
+                }
+
+                // Regular markdown content
+                return (
+                    <ReactMarkdown
+                        key={`content-${index}`}
+                        components={components}
+                        remarkPlugins={[remarkGfm]}
+                    >
+                        {part.value as string}
+                    </ReactMarkdown>
+                )
+            })}
         </div>
     )
 }

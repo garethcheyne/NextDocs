@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Home, BookOpen, FileText, Settings, LogOut, User, GitBranch, Activity, Users, ChevronsUpDown, ChevronRight, Code2, Lightbulb, BarChart3, Calendar, Tag, LucideIcon, PenTool, Key } from 'lucide-react'
+import { Home, BookOpen, FileText, Settings, LogOut, User, GitBranch, Activity, Users, ChevronsUpDown, ChevronRight, Code2, Lightbulb, BarChart3, Calendar, Tag, LucideIcon, PenTool, Key, UsersRound, Megaphone } from 'lucide-react'
 import * as LucideIcons from 'lucide-react'
 import { SignOutButton } from '@/components/auth/signout-button'
 import {
@@ -249,10 +249,28 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                             <SidebarMenu>
 
                                 <SidebarMenuItem>
+                                    <SidebarMenuButton asChild isActive={currentPath === '/home'}>
+                                        <Link href="/home">
+                                            <Home className="w-4 h-4" />
+                                            <span>Home</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+
+                                <SidebarMenuItem>
                                     <SidebarMenuButton asChild isActive={currentPath.startsWith('/blog')}>
                                         <Link href="/blog">
                                             <FileText className="w-4 h-4" />
                                             <span>Blog</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton asChild isActive={currentPath === '/releases' || currentPath.startsWith('/releases/')}>
+                                        <Link href="/releases">
+                                            <Megaphone className="w-4 h-4" />
+                                            <span>Releases</span>
                                         </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
@@ -565,6 +583,24 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                                             <Link href="/admin/users">
                                                 <Users className="w-4 h-4" />
                                                 <span>Users</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+
+                                    <SidebarMenuItem>
+                                        <SidebarMenuButton asChild isActive={currentPath === '/admin/teams' || currentPath.startsWith('/admin/teams/')}>
+                                            <Link href="/admin/teams">
+                                                <UsersRound className="w-4 h-4" />
+                                                <span>Teams</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+
+                                    <SidebarMenuItem>
+                                        <SidebarMenuButton asChild isActive={currentPath === '/admin/releases' || currentPath.startsWith('/admin/releases/')}>
+                                            <Link href="/admin/releases">
+                                                <Megaphone className="w-4 h-4" />
+                                                <span>Releases</span>
                                             </Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>

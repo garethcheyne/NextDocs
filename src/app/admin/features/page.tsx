@@ -140,9 +140,7 @@ export default async function AdminFeaturesPage() {
                 </div>
 
                 {/* Application Categories */}
-                <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
-
-
+                <Card >
                     <CardHeader>
                         <CardTitle>Application Categories</CardTitle>
                         <CardDescription>
@@ -151,7 +149,7 @@ export default async function AdminFeaturesPage() {
                     </CardHeader>
 
 
-                    <CardContent>
+                    <CardContent className="max-h-[600px] overflow-y-auto custom-scrollbar">
                         <div className="space-y-4">
                             {categories.map((category) => (
                                 <div

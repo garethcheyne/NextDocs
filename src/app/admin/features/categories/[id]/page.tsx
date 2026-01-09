@@ -255,7 +255,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
         </div>
 
         {/* Integration Settings Link */}
-        <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+        <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
           <CardHeader>
             <CardTitle>DevOps Integration</CardTitle>
             <CardDescription>Configure GitHub or Azure DevOps integration for this category</CardDescription>
@@ -271,7 +271,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
-          <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+        <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
             <CardHeader>
               <CardTitle>Basic Information</CardTitle>
               <CardDescription>General details about the category</CardDescription>

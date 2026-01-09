@@ -1,0 +1,72 @@
+openapi: 3.0.3
+info:
+  title: NextDocs API
+  description: |-
+    Auto-generated API documentation for NextDocs
+
+    Generated on: 2026-01-08T21:36:06.662Z
+  version: 1.0.0-20260108
+  contact:
+    name: NextDocs Team
+servers:
+  - url: /api
+    description: API Server
+security:
+  - sessionAuth: []
+  - apiKeyAuth: []
+components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: authjs.session-token
+      description: NextAuth.js session cookie
+    apiKeyAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: hex
+      description: API Key authentication (64-char hex string)
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error description
+      required:
+        - error
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+      required:
+        - success
+  responses:
+    BadRequest:
+      description: Bad request - validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Unauthorized - authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+paths: {}
+tags: []

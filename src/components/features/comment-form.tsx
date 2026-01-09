@@ -77,7 +77,7 @@ export function CommentForm({ featureId }: CommentFormProps) {
 
     if (!session?.user) {
         return (
-            <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+            <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
                 <CardContent className="pt-6">
                     <p className="text-center text-muted-foreground">
                         Please <a href="/login" className="text-brand-orange hover:underline">sign in</a> to post a comment
@@ -88,7 +88,7 @@ export function CommentForm({ featureId }: CommentFormProps) {
     }
 
     return (
-        <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+        <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
             <form onSubmit={handleSubmit}>
                 <CardContent className="pt-6">
                     <div className="space-y-2">

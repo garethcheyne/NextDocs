@@ -63,6 +63,12 @@ model User {
   
   // API Key Relations
   apiKeys               APIKey[] @relation("UserAPIKeys")
+
+  // Team Membership Relations
+  teamMemberships       UserTeamMembership[] @relation("UserTeamMemberships")
+
+  // Release Relations
+  createdReleases       Release[] @relation("UserReleases")
 }
 
 model APIKey {
@@ -526,7 +532,8 @@ model FeatureCategory {
   featureRequests FeatureRequest[]
   epics           Epic[]
   tags            Tag[]
-  
+  releases        Release[]
+
   @@index([enabled])
   @@index([slug])
 }
@@ -602,7 +609,8 @@ model FeatureRequest {
   mergedRequests  FeatureRequest[] @relation("MergedRequests")
   parentMerges    FeatureMerge[] @relation("ParentMerges")
   childMerges     FeatureMerge[] @relation("ChildMerges")
-  
+  releases        Release[]      @relation("ReleaseFeatures")
+
   @@index([status])
   @@index([categoryId])
   @@index([createdBy])
@@ -991,6 +999,91 @@ model UserNotificationSettings {
   updatedAt            DateTime  @updatedAt
   
   user                 User      @relation("UserNotificationSettings", fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId])
+}
+
+// Team/Business Unit Models
+
+model Team {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique      // Used in markdown: "crm", "pos"
+  description String?  @db.Text
+  icon        String?               // Lucide icon name
+  color       String?               // Hex color for badges
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  memberships UserTeamMembership[]
+  releases    Release[] @relation("ReleaseTeams")
+
+  @@index([enabled])
+  @@index([slug])
+}
+
+model UserTeamMembership {
+  id                  String   @id @default(uuid())
+  userId              String
+  teamId              String
+  role                String?  @default("member")  // member, lead, admin
+  subscribeToReleases Boolean  @default(true)      // Opt-in for release notifications
+  notifyEmail         Boolean  @default(true)
+  notifyInApp         Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user User @relation("UserTeamMemberships", fields: [userId], references: [id], onDelete: Cascade)
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId])
+  @@index([userId])
+  @@index([teamId])
+}
+
+// Release Notification Models
+
+model Release {
+  id           String    @id @default(uuid())
+  version      String                          // yyyy.mm.dd.sub format
+  title        String?
+  content      String    @db.Text              // Markdown body
+  categoryId   String?                         // Application category (from FeatureCategory)
+  documentId   String?                         // Source document (if from repo sync)
+  repositoryId String?                         // Source repository (if from repo sync)
+  filePath     String?                         // Source file path (if from repo sync)
+  source       String    @default("manual")    // "manual" or "repository"
+  createdById  String?                         // User who created (for manual releases)
+  publishedAt  DateTime  @default(now())
+  notifiedAt   DateTime?                       // When notifications were sent
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  category        FeatureCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  createdBy       User?            @relation("UserReleases", fields: [createdById], references: [id], onDelete: SetNull)
+  teams           Team[]           @relation("ReleaseTeams")
+  featureRequests FeatureRequest[] @relation("ReleaseFeatures")
+
+  @@unique([version, documentId])
+  @@index([version])
+  @@index([publishedAt])
+  @@index([categoryId])
+  @@index([source])
+}
+
+model ReleaseNotificationLog {
+  id        String    @id @default(uuid())
+  releaseId String
+  userId    String
+  teamId    String
+  channel   String    // "email", "in-app"
+  status    String    @default("pending")  // pending, sent, failed
+  sentAt    DateTime?
+  error     String?   @db.Text
+  createdAt DateTime  @default(now())
+
+  @@index([releaseId])
+  @@index([userId])
+  @@index([status])
 }

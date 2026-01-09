@@ -16,7 +16,7 @@ export function RestrictedAccess({
 }: RestrictedAccessProps) {
     return (
         <div className="flex items-center justify-center min-h-[60vh] p-4">
-            <Card className="max-w-md w-full bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+            <Card className="max-w-md w-full bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
                 <CardHeader className="text-center">
                     <div className="flex justify-center mb-4">
                         <div className="p-3 bg-red-100 dark:bg-red-900/20 rounded-full">

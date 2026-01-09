@@ -24,7 +24,10 @@ export async function GET(request: NextRequest) {
         createdAt: true,
         category: {
           select: {
+            id: true,
             name: true,
+            color: true,
+            iconBase64: true,
           },
         },
         _count: {
@@ -58,7 +61,10 @@ export async function GET(request: NextRequest) {
         createdAt: true,
         category: {
           select: {
+            id: true,
             name: true,
+            color: true,
+            iconBase64: true,
           },
         },
         _count: {
@@ -92,7 +98,10 @@ export async function GET(request: NextRequest) {
         createdAt: true,
         category: {
           select: {
+            id: true,
             name: true,
+            color: true,
+            iconBase64: true,
           },
         },
         _count: {

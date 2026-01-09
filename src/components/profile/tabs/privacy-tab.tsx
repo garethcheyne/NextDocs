@@ -36,7 +36,7 @@ export function PrivacyTab({ userId }: PrivacyTabProps) {
   return (
     <div className="space-y-6">
       {/* Data Privacy Information */}
-      <Card className="bg-gray-900/40 border-gray-800/50 backdrop-blur-xl">
+      <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="w-5 h-5" />
