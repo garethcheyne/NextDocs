@@ -8,9 +8,6 @@ import {
   FileText,
   Lightbulb,
   Loader2,
-  Calendar,
-  MessageSquare,
-  ThumbsUp,
   ChevronRight,
   Users,
   Sparkles,
@@ -18,8 +15,11 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { CategoryBadge } from '@/components/features/category-badge'
 import { SidebarTrigger } from '@/components/ui/sidebar'
+import { ReleaseCard } from '@/components/cards/release-card'
+import { BlogPostCard } from '@/components/cards/blog-post-card'
+import { FeatureRequestCard } from '@/components/cards/feature-request-card'
+import { FeatureActivityCard } from '@/components/cards/feature-activity-card'
 import { Separator } from '@/components/ui/separator'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
@@ -235,35 +235,11 @@ export default function HomePage() {
               {data?.releases && data.releases.length > 0 ? (
                 <div className="space-y-4">
                   {data.releases.map((release) => (
-                    <Link
+                    <ReleaseCard
                       key={release.id}
-                      href="/releases"
-                      className="block p-3 rounded-lg bg-gray-100/50 dark:bg-gray-800/50 border border-gray-300/50 dark:border-gray-700/50 hover:border-green-500/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="outline" className="font-mono text-green-500 border-green-500/50">
-                          v{release.version}
-                        </Badge>
-                        {release.title && (
-                          <span className="text-sm font-medium">{release.title}</span>
-                        )}
-                        {isNewRelease(release.publishedAt) && (
-                          <Badge className="bg-green-500 text-white text-xs">NEW</Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {release.content.slice(0, 150)}{release.content.length > 150 ? '...' : ''}
-                      </p>
-                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                        {release.category && (
-                          <CategoryBadge category={release.category} />
-                        )}
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {formatDate(release.publishedAt)}
-                        </span>
-                      </div>
-                    </Link>
+                      release={release}
+                      isNew={isNewRelease(release.publishedAt)}
+                    />
                   ))}
                 </div>
               ) : (
@@ -272,6 +248,8 @@ export default function HomePage() {
                   <p>No releases for your teams yet</p>
                 </div>
               )}
+
+
             </CardContent>
           </Card>
 
@@ -293,28 +271,7 @@ export default function HomePage() {
               {data?.blogPosts && data.blogPosts.length > 0 ? (
                 <div className="space-y-4">
                   {data.blogPosts.map((post) => (
-                    <Link
-                      key={post.id}
-                      href={`/blog/${post.repository?.slug}/${post.slug}`}
-                      className="block p-3 rounded-lg bg-gray-100/50 dark:bg-gray-800/50 border border-gray-300/50 dark:border-gray-700/50 hover:border-blue-500/50 transition-colors"
-                    >
-                      <h4 className="font-medium mb-1 line-clamp-1">{post.title}</h4>
-                      {post.excerpt && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">{post.excerpt}</p>
-                      )}
-                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                        {post.category && (
-                          <Badge variant="secondary" className="text-xs">{post.category}</Badge>
-                        )}
-                        {post.author && <span>By {post.author}</span>}
-                        {post.publishedAt && (
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {formatDate(post.publishedAt)}
-                          </span>
-                        )}
-                      </div>
-                    </Link>
+                    <BlogPostCard key={post.id} post={post} />
                   ))}
                 </div>
               ) : (
@@ -347,40 +304,11 @@ export default function HomePage() {
               {data?.newFeatures && data.newFeatures.length > 0 ? (
                 <div className="space-y-3">
                   {data.newFeatures.map((feature) => (
-                    <Link
+                    <FeatureRequestCard
                       key={feature.id}
-                      href={`/features/${feature.slug}`}
-                      className="block p-3 rounded-lg bg-gray-100/50 dark:bg-gray-800/50 border border-gray-300/50 dark:border-gray-700/50 hover:border-yellow-500/50 transition-colors"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium line-clamp-1">{feature.title}</h4>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge className={`${statusColors[feature.status] || 'bg-gray-500'} text-white text-xs`}>
-                              {feature.status}
-                            </Badge>
-                            {feature.category && (
-                              <span
-                                className="text-xs"
-                                style={feature.category.color ? { color: feature.category.color } : undefined}
-                              >
-                                {feature.category.name}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <ThumbsUp className="w-3 h-3" />
-                            {feature._count.votes}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <MessageSquare className="w-3 h-3" />
-                            {feature._count.comments}
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
+                      feature={feature}
+                      statusColors={statusColors}
+                    />
                   ))}
                 </div>
               ) : (
@@ -413,48 +341,11 @@ export default function HomePage() {
               {data?.involvedFeatures && data.involvedFeatures.length > 0 ? (
                 <div className="space-y-3">
                   {data.involvedFeatures.map((feature) => (
-                    <Link
+                    <FeatureActivityCard
                       key={feature.id}
-                      href={`/features/${feature.slug}`}
-                      className="block p-3 rounded-lg bg-gray-100/50 dark:bg-gray-800/50 border border-gray-300/50 dark:border-gray-700/50 hover:border-purple-500/50 transition-colors"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-medium line-clamp-1">{feature.title}</h4>
-                            {feature.involvement && (
-                              <Badge variant="outline" className="text-xs">
-                                {feature.involvement === 'created' ? 'You created' :
-                                  feature.involvement === 'following' ? 'Following' : 'Voted'}
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge className={`${statusColors[feature.status] || 'bg-gray-500'} text-white text-xs`}>
-                              {feature.status}
-                            </Badge>
-                            {feature.category && (
-                              <span
-                                className="text-xs"
-                                style={feature.category.color ? { color: feature.category.color } : undefined}
-                              >
-                                {feature.category.name}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <ThumbsUp className="w-3 h-3" />
-                            {feature._count.votes}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <MessageSquare className="w-3 h-3" />
-                            {feature._count.comments}
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
+                      feature={feature}
+                      statusColors={statusColors}
+                    />
                   ))}
                 </div>
               ) : (

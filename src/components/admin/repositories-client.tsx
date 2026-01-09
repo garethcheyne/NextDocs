@@ -213,6 +213,24 @@ export default function RepositoriesClient({ initialRepositories }: { initialRep
 
   return (
     <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">
+            Repository Management
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Connect and manage documentation repositories from Azure DevOps and GitHub
+          </p>
+        </div>
+        <Link href="/admin/repositories/new">
+          <Button className="bg-gradient-to-r from-brand-orange to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Repository
+          </Button>
+        </Link>
+      </div>
+
       {/* Auto-sync Worker Status */}
       {workerStatus && (
         <Card className={workerStatus.isRunning ? 'border-green-500/50 bg-green-500/5' : 'border-yellow-500/50 bg-yellow-500/5'}>
@@ -271,23 +289,10 @@ export default function RepositoriesClient({ initialRepositories }: { initialRep
         </Card>
       )}
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">
-            Repository Management
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Connect and manage documentation repositories from Azure DevOps and GitHub
-          </p>
-        </div>
-        <Link href="/admin/repositories/new">
-          <Button className="bg-gradient-to-r from-brand-orange to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Repository
-          </Button>
-        </Link>
-      </div>
+
+
+
+
 
       {/* Search and Filters */}
       <Card>
@@ -399,6 +404,7 @@ export default function RepositoriesClient({ initialRepositories }: { initialRep
                     <TooltipProvider>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <Tooltip>
+
                           <TooltipTrigger asChild>
                             <div
                               className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 rounded-xl p-4 border border-blue-500/20 hover:border-blue-500/40 transition-colors cursor-pointer"
@@ -408,11 +414,12 @@ export default function RepositoriesClient({ initialRepositories }: { initialRep
                                 <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                                 <p className="text-xs font-medium text-blue-600 dark:text-blue-400">Documents</p>
                               </div>
-                              <span className="text-3xl font-bold text-gray-900 dark:text-white">
+                              <span className="text-3xl font-bold">
                                 {repo._count.documents}
                               </span>
                             </div>
                           </TooltipTrigger>
+
                           <TooltipContent side="bottom" className="max-w-xs max-h-60 overflow-auto">
                             {loadingTooltip === `${repo.id}-documents` ? (
                               <p className="text-xs">Loading...</p>
@@ -442,7 +449,7 @@ export default function RepositoriesClient({ initialRepositories }: { initialRep
                                 <BookOpen className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                                 <p className="text-xs font-medium text-purple-600 dark:text-purple-400">Blog Posts</p>
                               </div>
-                              <span className="text-3xl font-bold text-gray-900 dark:text-white">
+                              <span className="text-3xl font-bold">
                                 {repo._count.blogPosts}
                               </span>
                             </div>
@@ -476,7 +483,7 @@ export default function RepositoriesClient({ initialRepositories }: { initialRep
                                 <Users className="w-4 h-4 text-green-600 dark:text-green-400" />
                                 <p className="text-xs font-medium text-green-600 dark:text-green-400">Authors</p>
                               </div>
-                              <span className="text-3xl font-bold text-gray-900 dark:text-white">
+                              <span className="text-3xl font-bold">
                                 {repo.authorCount}
                               </span>
                             </div>
@@ -507,7 +514,7 @@ export default function RepositoriesClient({ initialRepositories }: { initialRep
                                 <FolderTree className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                                 <p className="text-xs font-medium text-orange-600 dark:text-orange-400">Categories</p>
                               </div>
-                              <span className="text-3xl font-bold text-gray-900 dark:text-white">
+                              <span className="text-3xl font-bold">
                                 {repo.parentCategoryCount}
                               </span>
                             </div>
@@ -607,7 +614,7 @@ export default function RepositoriesClient({ initialRepositories }: { initialRep
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-white">{repositories.length}</div>
+              <div className="text-3xl font-bold">{repositories.length}</div>
             </CardContent>
           </Card>
 
@@ -631,7 +638,7 @@ export default function RepositoriesClient({ initialRepositories }: { initialRep
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-white">
+              <div className="text-3xl font-bold">
                 {repositories.reduce((acc, r) => acc + r._count.syncLogs, 0)}
               </div>
             </CardContent>
