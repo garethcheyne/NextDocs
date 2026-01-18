@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
-import { MarkdownToolbar } from '@/components/ui/markdown-toolbar';
+import { MarkdownToolbar } from '@/components/markdown/markdown-toolbar';
 import { useMarkdownEditor } from '@/hooks/use-markdown-editor';
 import ReactMarkdown from 'react-markdown';
 

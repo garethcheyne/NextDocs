@@ -23,6 +23,7 @@ import { FeatureActivityCard } from '@/components/cards/feature-activity-card'
 import { Separator } from '@/components/ui/separator'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
+import type { AuthorData } from '@/components/badges/client-author-badge'
 import {
   Card,
   CardContent,
@@ -90,6 +91,7 @@ interface DashboardData {
   }
   releases: Release[]
   blogPosts: BlogPost[]
+  blogAuthors: Record<string, AuthorData>
   involvedFeatures: FeatureRequest[]
   newFeatures: FeatureRequest[]
 }
@@ -233,14 +235,17 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               {data?.releases && data.releases.length > 0 ? (
-                <div className="space-y-4">
+
+                <div className="flex flex-col gap-4">
                   {data.releases.map((release) => (
                     <ReleaseCard
                       key={release.id}
                       release={release}
                       isNew={isNewRelease(release.publishedAt)}
+                      isAnimated={true}
                     />
                   ))}
+
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
@@ -269,10 +274,17 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               {data?.blogPosts && data.blogPosts.length > 0 ? (
-                <div className="space-y-4">
-                  {data.blogPosts.map((post) => (
-                    <BlogPostCard key={post.id} post={post} />
-                  ))}
+                <div className="flex flex-col gap-4">
+                  {data.blogPosts.map((post) => {
+                    const authorData = post.author && data.blogAuthors ? data.blogAuthors[post.author] : undefined
+                    return (
+                      <BlogPostCard
+                        key={post.id}
+                        post={post}
+                        authorData={authorData}
+                        isAnimated={true} />
+                    )
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
@@ -302,12 +314,13 @@ export default function HomePage() {
                 Recently submitted - your vote matters!
               </CardDescription>
               {data?.newFeatures && data.newFeatures.length > 0 ? (
-                <div className="space-y-3">
+                <div className="flex flex-col gap-4">
                   {data.newFeatures.map((feature) => (
                     <FeatureRequestCard
                       key={feature.id}
                       feature={feature}
                       statusColors={statusColors}
+                      isAnimated={true}
                     />
                   ))}
                 </div>
@@ -339,12 +352,13 @@ export default function HomePage() {
                 Features you've created, voted on, or are following
               </CardDescription>
               {data?.involvedFeatures && data.involvedFeatures.length > 0 ? (
-                <div className="space-y-3">
+                <div className="flex flex-col gap-4">
                   {data.involvedFeatures.map((feature) => (
                     <FeatureActivityCard
                       key={feature.id}
                       feature={feature}
                       statusColors={statusColors}
+                      isAnimated={true}
                     />
                   ))}
                 </div>

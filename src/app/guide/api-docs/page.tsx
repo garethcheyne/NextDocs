@@ -2,7 +2,7 @@ import { auth } from '@/lib/auth/auth'
 import { redirect } from 'next/navigation'
 import fs from 'fs/promises'
 import path from 'path'
-import { MarkdownWithMermaid } from '@/components/markdown-with-mermaid'
+import { EnhancedMarkdown } from '@/components/markdown/enhanced-markdown'
 import { ContentDetailLayout } from '@/components/layout/content-detail-layout'
 
 export default async function APIDocsGuidePage() {
@@ -25,7 +25,7 @@ export default async function APIDocsGuidePage() {
       ]}
       content={content}
     >
-      <MarkdownWithMermaid>{content}</MarkdownWithMermaid>
+      <EnhancedMarkdown>{content}</EnhancedMarkdown>
     </ContentDetailLayout>
   )
 }

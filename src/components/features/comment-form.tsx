@@ -5,11 +5,9 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
-import { MarkdownToolbar } from '@/components/ui/markdown-toolbar'
-import { useMarkdownEditor } from '@/hooks/use-markdown-editor'
-import { EnhancedMarkdown } from '@/components/ui/enhanced-markdown'
+import { MarkdownInput } from '@/components/markdown/markdown-input'
+import { commentTemplates } from '@/lib/markdown-templates'
 
 interface CommentFormProps {
     featureId: string
@@ -23,9 +21,6 @@ export function CommentForm({ featureId }: CommentFormProps) {
     const [content, setContent] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
-    const [showPreview, setShowPreview] = useState(false)
-
-    const { textareaRef, handleInsert } = useMarkdownEditor(content, setContent)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -77,7 +72,7 @@ export function CommentForm({ featureId }: CommentFormProps) {
 
     if (!session?.user) {
         return (
-            <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+            <Card >
                 <CardContent className="pt-6">
                     <p className="text-center text-muted-foreground">
                         Please <a href="/login" className="text-brand-orange hover:underline">sign in</a> to post a comment
@@ -88,70 +83,32 @@ export function CommentForm({ featureId }: CommentFormProps) {
     }
 
     return (
-        <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+        <Card >
             <form onSubmit={handleSubmit}>
                 <CardContent className="pt-6">
                     <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                            <label htmlFor="comment" className="text-sm font-medium flex items-center gap-2">
-                                <MessageSquare className="w-4 h-4" />
-                                Add a comment
-                            </label>
-                            <div className="flex gap-2 text-xs">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPreview(false)}
-                                    className={`px-2 py-1 rounded ${!showPreview ? 'bg-muted' : ''}`}
-                                >
-                                    Write
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPreview(true)}
-                                    className={`px-2 py-1 rounded ${showPreview ? 'bg-muted' : ''}`}
-                                >
-                                    Preview
-                                </button>
-                            </div>
-                        </div>
+                        <label htmlFor="comment" className="text-sm font-medium flex items-center gap-2">
+                            <MessageSquare className="w-4 h-4" />
+                            Add a comment
+                        </label>
 
-                        {!showPreview && (
-                            <MarkdownToolbar onInsert={handleInsert} disabled={isSubmitting} />
-                        )}
-
-                        {showPreview ? (
-                            <div className="p-3 border rounded-md min-h-[100px]">
-                                {content ? (
-                                    <EnhancedMarkdown className="prose prose-sm max-w-none dark:prose-invert [&>*]:text-foreground/90 dark:[&>*]:text-foreground/90">
-                                        {content}
-                                    </EnhancedMarkdown>
-                                ) : (
-                                    <p className="text-muted-foreground italic">Nothing to preview</p>
-                                )}
-                            </div>
-                        ) : (
-                            <Textarea
-                                ref={textareaRef}
-                                id="comment"
-                                placeholder="Share your thoughts, ask questions, or provide feedback... 
+                        <MarkdownInput
+                            value={content}
+                            onChange={setContent}
+                            placeholder="Share your thoughts, ask questions, or provide feedback...
 
 💡 Tip: You can paste images directly from your clipboard (Ctrl+V)!"
-                                value={content}
-                                onChange={(e) => setContent(e.target.value)}
-                                disabled={isSubmitting || isPending}
-                                rows={4}
-                                className="resize-none font-mono"
-                            />
-                        )}
+                            disabled={isSubmitting || isPending}
+                            rows={4}
+                            maxLength={5000}
+                            showCharCount={true}
+                            templates={commentTemplates}
+                            showHelp={true}
+                        />
 
-                        <div className="flex justify-between items-center">
-                            <span className={`text-xs ${content.length > 5000 ? 'text-red-600' : 'text-muted-foreground'}`}>
-                                {content.length} / 5000
-                            </span>
-                            {error && (
-                                <span className="text-sm text-red-600">{error}</span>
-                            )}
-                        </div>
+                        {error && (
+                            <p className="text-sm text-destructive">{error}</p>
+                        )}
                     </div>
                 </CardContent>
                 <CardFooter>

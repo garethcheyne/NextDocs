@@ -6,9 +6,10 @@ import { useSession } from 'next-auth/react'
 import { Pencil, Trash2, X, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { MarkdownToolbar } from '@/components/ui/markdown-toolbar'
+import { MarkdownToolbar } from '@/components/markdown/markdown-toolbar'
 import { useMarkdownEditor } from '@/hooks/use-markdown-editor'
-import { EnhancedMarkdown } from '@/components/ui/enhanced-markdown'
+import { EnhancedMarkdown } from '@/components/markdown/enhanced-markdown'
+import { AuthorDisplay } from '@/components/ui/author-display'
 import ReactMarkdown from 'react-markdown'
 import { formatDate, formatTime } from '@/lib/utils/date-format'
 
@@ -190,22 +191,15 @@ export function CommentItem({ comment }: CommentItemProps) {
             {/* User Info and Actions on Same Line */}
             <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
-                    {comment.user?.image ? (
-                        <img
-                            src={comment.user.image}
-                            alt={comment.user.name || 'User'}
-                            className="w-5 h-5 rounded-full object-cover"
-                        />
-                    ) : (
-                        <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center">
-                            <span className="text-xs font-semibold">
-                                {(comment.user?.name || 'A').charAt(0).toUpperCase()}
-                            </span>
-                        </div>
-                    )}
-                    <span className="font-medium text-foreground/80">
-                        {comment.user?.name || 'Anonymous'}
-                    </span>
+                    <AuthorDisplay 
+                        author={{
+                            name: comment.user?.name || 'Anonymous',
+                            email: comment.user?.email || undefined,
+                            image: comment.user?.image,
+                            isSystemUser: !!comment.user?.image
+                        }}
+                        showIcon={false}
+                    />
                     {isEdited && <span className="text-xs italic text-foreground/60">(edited)</span>}
                 </div>
 

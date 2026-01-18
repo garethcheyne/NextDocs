@@ -1,7 +1,9 @@
 import Link from 'next/link'
-import { ThumbsUp, MessageSquare } from 'lucide-react'
+import { ThumbsUp, MessageSquare, Lightbulb } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { AnimatedCard } from '@/components/ui/animated-card'
+import { defaultStatusColors, getStatusBgClass, getStatusHoverClass } from '@/lib/status-colors'
 
 interface Category {
     id: string
@@ -31,22 +33,22 @@ interface FeatureRequestCardProps {
     }
     statusColors?: Record<string, string>
     isExtended?: boolean
+    isAnimated?: boolean
 }
 
-const defaultStatusColors: Record<string, string> = {
-    proposal: 'bg-yellow-500',
-    approved: 'bg-purple-500',
-    'in-progress': 'bg-blue-500',
-    completed: 'bg-green-500',
-    declined: 'bg-red-500',
-    'on-hold': 'bg-orange-500',
-}
+export function FeatureRequestCard({ feature, statusColors = defaultStatusColors, isExtended = false, isAnimated = false }: FeatureRequestCardProps) {
+    const CardWrapper = isAnimated ? AnimatedCard : Card
 
-export function FeatureRequestCard({ feature, statusColors = defaultStatusColors, isExtended = false }: FeatureRequestCardProps) {
     if (isExtended) {
+        const hoverClass = getStatusHoverClass(feature.status)
         return (
             <Link href={`/features/${feature.slug}`}>
-                <Card className="hover:border-yellow-500/50 transition-colors cursor-pointer">
+                <CardWrapper 
+                    className={`${hoverClass} transition-colors cursor-pointer`}
+                    isAnimated={isAnimated}
+                    decorativeIcon={<Lightbulb className="w-32 h-32" />}
+                    iconColor="#f97316"
+                >
                     <CardContent className="p-4">
                         <div className="flex items-start justify-between gap-4 mb-3">
                             <div className="flex-1 min-w-0">
@@ -57,7 +59,7 @@ export function FeatureRequestCard({ feature, statusColors = defaultStatusColors
                                     </p>
                                 )}
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <Badge className={`${statusColors[feature.status] || 'bg-gray-500'} text-white text-xs`}>
+                                    <Badge className={`${getStatusBgClass(feature.status)} text-white text-xs`}>
                                         {feature.status}
                                     </Badge>
                                     {feature.priority && (
@@ -92,14 +94,20 @@ export function FeatureRequestCard({ feature, statusColors = defaultStatusColors
                             </div>
                         )}
                     </CardContent>
-                </Card>
+                </CardWrapper>
             </Link>
         )
     }
 
+    const hoverClass = getStatusHoverClass(feature.status)
     return (
         <Link href={`/features/${feature.slug}`}>
-            <Card className="hover:border-yellow-500/50 transition-colors cursor-pointer">
+            <CardWrapper 
+                className={`${hoverClass} transition-colors cursor-pointer`}
+                isAnimated={isAnimated}
+                decorativeIcon={<Lightbulb className="w-32 h-32" />}
+                iconColor="#f97316"
+            >
                 <CardContent className="p-3">
                     <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
@@ -130,7 +138,7 @@ export function FeatureRequestCard({ feature, statusColors = defaultStatusColors
                         </div>
                     </div>
                 </CardContent>
-            </Card>
+            </CardWrapper>
         </Link>
     )
 }

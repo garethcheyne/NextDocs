@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Home, BookOpen, FileText, Settings, LogOut, User, GitBranch, Activity, Users, ChevronsUpDown, ChevronRight, Code2, Lightbulb, BarChart3, Calendar, Tag, LucideIcon, PenTool, Key, UsersRound, Megaphone } from 'lucide-react'
+import { Home, BookOpen, FileText, Settings, LogOut, User, GitBranch, Activity, Users, ChevronsUpDown, ChevronRight, Code2, Lightbulb, BarChart3, Calendar, Tag, LucideIcon, PenTool, Key, UsersRound, Megaphone, Database } from 'lucide-react'
 import * as LucideIcons from 'lucide-react'
 import { SignOutButton } from '@/components/auth/signout-button'
 import {
@@ -225,13 +225,13 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
         <Sidebar className="border-r bg-gradient-to-b from-background to-sidebar-background dark:from-[#02060f] dark:to-[#0a1420]">
             <TooltipProvider delayDuration={300}>
                 <SidebarHeader className="border-b-0">
-                    <Link href="/" className="flex h-16 items-center gap-3 px-4">
+                    <Link href="/" className="flex h-16 items-center gap-3 px-4 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:px-2">
                         <ThemeAwareLogo
                             width={48}
                             height={48}
-                            className="drop-shadow-lg flex-shrink-0"
+                            className="drop-shadow-lg flex-shrink-0 group-data-[state=collapsed]:w-8 group-data-[state=collapsed]:h-8 transition-all"
                         />
-                        <div className="flex flex-col">
+                        <div className="flex flex-col group-data-[state=collapsed]:hidden">
                             <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                                 Wiki
                             </h1>
@@ -258,42 +258,70 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                                 </SidebarMenuItem>
 
                                 <SidebarMenuItem>
-                                    <SidebarMenuButton asChild isActive={currentPath.startsWith('/blog')}>
-                                        <Link href="/blog">
-                                            <FileText className="w-4 h-4" />
-                                            <span>Blog</span>
-                                        </Link>
-                                    </SidebarMenuButton>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <SidebarMenuButton asChild isActive={currentPath.startsWith('/docs')}>
+                                                <Link href="/docs">
+                                                    <BookOpen className="w-4 h-4" />
+                                                    <span>Documentation</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="right">
+                                            <p>Documentation</p>
+                                        </TooltipContent>
+                                    </Tooltip>
                                 </SidebarMenuItem>
 
                                 <SidebarMenuItem>
-                                    <SidebarMenuButton asChild isActive={currentPath === '/releases' || currentPath.startsWith('/releases/')}>
-                                        <Link href="/releases">
-                                            <Megaphone className="w-4 h-4" />
-                                            <span>Releases</span>
-                                        </Link>
-                                    </SidebarMenuButton>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <SidebarMenuButton asChild isActive={currentPath.startsWith('/blog')}>
+                                                <Link href="/blog">
+                                                    <FileText className="w-4 h-4" />
+                                                    <span>Blog & News</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="right">
+                                            <p>Blog & News</p>
+                                        </TooltipContent>
+                                    </Tooltip>
                                 </SidebarMenuItem>
 
                                 <SidebarMenuItem>
-                                    <SidebarMenuButton asChild isActive={currentPath.startsWith('/docs')}>
-                                        <Link href="/docs">
-                                            <BookOpen className="w-4 h-4" />
-                                            <span>Documentation</span>
-                                        </Link>
-                                    </SidebarMenuButton>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <SidebarMenuButton asChild isActive={currentPath === '/releases' || currentPath.startsWith('/releases/')}>
+                                                <Link href="/releases">
+                                                    <Megaphone className="w-4 h-4" />
+                                                    <span>Release Notes</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="right">
+                                            <p>Release Notes</p>
+                                        </TooltipContent>
+                                    </Tooltip>
                                 </SidebarMenuItem>
 
                                 {featureCategories && featureCategories.length > 0 ? (
                                     <Collapsible asChild defaultOpen={currentPath.startsWith('/features')}>
                                         <SidebarMenuItem>
-                                            <CollapsibleTrigger asChild>
-                                                <SidebarMenuButton isActive={currentPath.startsWith('/features')}>
-                                                    <Lightbulb className="w-4 h-4" />
-                                                    <span>Feature Requests</span>
-                                                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                                                </SidebarMenuButton>
-                                            </CollapsibleTrigger>
+                                            <Tooltip>
+                                                <CollapsibleTrigger asChild>
+                                                    <TooltipTrigger asChild>
+                                                        <SidebarMenuButton isActive={currentPath.startsWith('/features')}>
+                                                            <Lightbulb className="w-4 h-4" />
+                                                            <span>Feature Requests</span>
+                                                            <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                                        </SidebarMenuButton>
+                                                    </TooltipTrigger>
+                                                </CollapsibleTrigger>
+                                                <TooltipContent side="right">
+                                                    <p>Feature Requests</p>
+                                                </TooltipContent>
+                                            </Tooltip>
                                             <CollapsibleContent>
                                                 <SidebarMenuSub>
                                                     <SidebarMenuSubItem>
@@ -334,47 +362,42 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                                     </Collapsible>
                                 ) : (
                                     <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={currentPath.startsWith('/features')}>
-                                            <Link href="/features">
-                                                <Lightbulb className="w-4 h-4" />
-                                                <span>Feature Requests</span>
-                                            </Link>
-                                        </SidebarMenuButton>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <SidebarMenuButton asChild isActive={currentPath.startsWith('/features')}>
+                                                    <Link href="/features">
+                                                        <Lightbulb className="w-4 h-4" />
+                                                        <span>Feature Requests</span>
+                                                    </Link>
+                                                </SidebarMenuButton>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="right">
+                                                <p>Feature Requests</p>
+                                            </TooltipContent>
+                                        </Tooltip>
                                     </SidebarMenuItem>
                                 )}
 
 
 
                                 <SidebarMenuItem>
-                                    <SidebarMenuButton asChild isActive={currentPath.startsWith('/api-specs')}>
-                                        <Link href="/api-specs">
-                                            <Code2 className="w-4 h-4" />
-                                            <span>API Swagger</span>
-                                        </Link>
-                                    </SidebarMenuButton>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <SidebarMenuButton asChild isActive={currentPath.startsWith('/api-specs')}>
+                                                <Link href="/api-specs">
+                                                    <Code2 className="w-4 h-4" />
+                                                    <span>API Documentation</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="right">
+                                            <p>API Documentation</p>
+                                        </TooltipContent>
+                                    </Tooltip>
                                 </SidebarMenuItem>
                             </SidebarMenu>
                         </SidebarGroupContent>
                     </SidebarGroup>
-
-                    {/* Content Creator Section - Only for content creators and admins */}
-                    {(user?.role === 'editor' || user?.role === 'admin') && (
-                        <SidebarGroup>
-                            <SidebarGroupLabel>Content Creator</SidebarGroupLabel>
-                            <SidebarGroupContent>
-                                <SidebarMenu>
-                                    <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={currentPath.startsWith('/guide')}>
-                                            <Link href="/guide">
-                                                <PenTool className="w-4 h-4" />
-                                                <span>Creator Guide</span>
-                                            </Link>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
-                                </SidebarMenu>
-                            </SidebarGroupContent>
-                        </SidebarGroup>
-                    )}
 
                     {blogDateGroups && blogDateGroups.length > 0 && currentPath.startsWith('/blog') && (
                         <SidebarGroup>
@@ -533,6 +556,25 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                         </SidebarGroup>
                     )}
 
+                    {/* Content Creator Section - Only for content creators and admins */}
+                    {(user?.role === 'editor' || user?.role === 'admin') && (
+                        <SidebarGroup>
+                            <SidebarGroupLabel>Content Creator</SidebarGroupLabel>
+                            <SidebarGroupContent>
+                                <SidebarMenu>
+                                    <SidebarMenuItem>
+                                        <SidebarMenuButton asChild isActive={currentPath.startsWith('/guide')}>
+                                            <Link href="/guide">
+                                                <PenTool className="w-4 h-4" />
+                                                <span>Creator Guide</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                </SidebarMenu>
+                            </SidebarGroupContent>
+                        </SidebarGroup>
+                    )}
+
                     {isAdmin && (
                         <SidebarGroup>
                             <SidebarGroupLabel>Administration</SidebarGroupLabel>
@@ -547,80 +589,147 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
 
+                                    {/* Analytics */}
+                                    <Collapsible asChild defaultOpen={currentPath.includes('/admin/analytics')}>
+                                        <SidebarMenuItem>
+                                            <CollapsibleTrigger asChild>
+                                                <SidebarMenuButton>
+                                                    <BarChart3 className="w-4 h-4" />
+                                                    <span>Analytics</span>
+                                                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                                </SidebarMenuButton>
+                                            </CollapsibleTrigger>
+                                            <CollapsibleContent>
+                                                <SidebarMenuSub>
+                                                    <SidebarMenuSubItem>
+                                                        <SidebarMenuSubButton asChild isActive={currentPath === '/admin/analytics'}>
+                                                            <Link href="/admin/analytics">
+                                                                <Activity className="w-4 h-4" />
+                                                                <span>Dashboard</span>
+                                                            </Link>
+                                                        </SidebarMenuSubButton>
+                                                    </SidebarMenuSubItem>
+                                                    <SidebarMenuSubItem>
+                                                        <SidebarMenuSubButton asChild isActive={currentPath === '/admin/analytics/details'}>
+                                                            <Link href="/admin/analytics/details">
+                                                                <Database className="w-4 h-4" />
+                                                                <span>Event Details</span>
+                                                            </Link>
+                                                        </SidebarMenuSubButton>
+                                                    </SidebarMenuSubItem>
+                                                </SidebarMenuSub>
+                                            </CollapsibleContent>
+                                        </SidebarMenuItem>
+                                    </Collapsible>
 
-                                    <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={currentPath === '/admin/analytics' || currentPath.startsWith('/admin/analytics/')}>
-                                            <Link href="/admin/analytics">
-                                                <BarChart3 className="w-4 h-4" />
-                                                <span>Analytics</span>
-                                            </Link>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
+                                    {/* Content Management */}
+                                    <Collapsible asChild defaultOpen={currentPath.includes('/admin/repositories') || currentPath.includes('/admin/releases')}>
+                                        <SidebarMenuItem>
+                                            <CollapsibleTrigger asChild>
+                                                <SidebarMenuButton>
+                                                    <GitBranch className="w-4 h-4" />
+                                                    <span>Content</span>
+                                                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                                </SidebarMenuButton>
+                                            </CollapsibleTrigger>
+                                            <CollapsibleContent>
+                                                <SidebarMenuSub>
+                                                    <SidebarMenuSubItem>
+                                                        <SidebarMenuSubButton asChild isActive={currentPath === '/admin/repositories' || currentPath.startsWith('/admin/repositories/')}>
+                                                            <Link href="/admin/repositories">
+                                                                <GitBranch className="w-4 h-4" />
+                                                                <span>Repositories</span>
+                                                            </Link>
+                                                        </SidebarMenuSubButton>
+                                                    </SidebarMenuSubItem>
+                                                    <SidebarMenuSubItem>
+                                                        <SidebarMenuSubButton asChild isActive={currentPath === '/admin/releases' || currentPath.startsWith('/admin/releases/')}>
+                                                            <Link href="/admin/releases">
+                                                                <Megaphone className="w-4 h-4" />
+                                                                <span>Releases</span>
+                                                            </Link>
+                                                        </SidebarMenuSubButton>
+                                                    </SidebarMenuSubItem>
+                                                </SidebarMenuSub>
+                                            </CollapsibleContent>
+                                        </SidebarMenuItem>
+                                    </Collapsible>
 
-
-                                    <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={currentPath === '/admin/repositories' || currentPath.startsWith('/admin/repositories/')}>
-                                            <Link href="/admin/repositories">
-                                                <GitBranch className="w-4 h-4" />
-                                                <span>Repositories</span>
-                                            </Link>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
-
-
+                                    {/* Features Management */}
                                     <SidebarMenuItem>
                                         <SidebarMenuButton asChild isActive={currentPath === '/admin/features' || currentPath.startsWith('/admin/features/')}>
                                             <Link href="/admin/features">
                                                 <Lightbulb className="w-4 h-4" />
-                                                <span>Feature / Categories</span>
+                                                <span>Features & Categories</span>
                                             </Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
 
+                                    {/* User Management */}
+                                    <Collapsible asChild defaultOpen={currentPath.includes('/admin/users') || currentPath.includes('/admin/teams')}>
+                                        <SidebarMenuItem>
+                                            <CollapsibleTrigger asChild>
+                                                <SidebarMenuButton>
+                                                    <Users className="w-4 h-4" />
+                                                    <span>User Management</span>
+                                                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                                </SidebarMenuButton>
+                                            </CollapsibleTrigger>
+                                            <CollapsibleContent>
+                                                <SidebarMenuSub>
+                                                    <SidebarMenuSubItem>
+                                                        <SidebarMenuSubButton asChild isActive={currentPath === '/admin/users' || currentPath.startsWith('/admin/users/')}>
+                                                            <Link href="/admin/users">
+                                                                <User className="w-4 h-4" />
+                                                                <span>Users</span>
+                                                            </Link>
+                                                        </SidebarMenuSubButton>
+                                                    </SidebarMenuSubItem>
+                                                    <SidebarMenuSubItem>
+                                                        <SidebarMenuSubButton asChild isActive={currentPath === '/admin/teams' || currentPath.startsWith('/admin/teams/')}>
+                                                            <Link href="/admin/teams">
+                                                                <UsersRound className="w-4 h-4" />
+                                                                <span>Teams</span>
+                                                            </Link>
+                                                        </SidebarMenuSubButton>
+                                                    </SidebarMenuSubItem>
+                                                </SidebarMenuSub>
+                                            </CollapsibleContent>
+                                        </SidebarMenuItem>
+                                    </Collapsible>
 
-                                    <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={currentPath === '/admin/users' || currentPath.startsWith('/admin/users/')}>
-                                            <Link href="/admin/users">
-                                                <Users className="w-4 h-4" />
-                                                <span>Users</span>
-                                            </Link>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
-
-                                    <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={currentPath === '/admin/teams' || currentPath.startsWith('/admin/teams/')}>
-                                            <Link href="/admin/teams">
-                                                <UsersRound className="w-4 h-4" />
-                                                <span>Teams</span>
-                                            </Link>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
-
-                                    <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={currentPath === '/admin/releases' || currentPath.startsWith('/admin/releases/')}>
-                                            <Link href="/admin/releases">
-                                                <Megaphone className="w-4 h-4" />
-                                                <span>Releases</span>
-                                            </Link>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
-
-                                    <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={currentPath === '/admin/api-keys' || currentPath.startsWith('/admin/api-keys/')}>
-                                            <Link href="/admin/api-keys">
-                                                <Key className="w-4 h-4" />
-                                                <span>API Keys</span>
-                                            </Link>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
-                                    <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={currentPath === '/admin/api-docs' || currentPath.startsWith('/admin/api-docs/')}>
-                                            <Link href="/admin/api-docs">
-                                                <FileText className="w-4 h-4" />
-                                                <span>API Documentation</span>
-                                            </Link>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
+                                    {/* Developer Tools */}
+                                    <Collapsible asChild defaultOpen={currentPath.includes('/admin/api-keys') || currentPath.includes('/admin/api-docs')}>
+                                        <SidebarMenuItem>
+                                            <CollapsibleTrigger asChild>
+                                                <SidebarMenuButton>
+                                                    <Code2 className="w-4 h-4" />
+                                                    <span>Developer Tools</span>
+                                                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                                </SidebarMenuButton>
+                                            </CollapsibleTrigger>
+                                            <CollapsibleContent>
+                                                <SidebarMenuSub>
+                                                    <SidebarMenuSubItem>
+                                                        <SidebarMenuSubButton asChild isActive={currentPath === '/admin/api-keys' || currentPath.startsWith('/admin/api-keys/')}>
+                                                            <Link href="/admin/api-keys">
+                                                                <Key className="w-4 h-4" />
+                                                                <span>API Keys</span>
+                                                            </Link>
+                                                        </SidebarMenuSubButton>
+                                                    </SidebarMenuSubItem>
+                                                    <SidebarMenuSubItem>
+                                                        <SidebarMenuSubButton asChild isActive={currentPath === '/admin/api-docs' || currentPath.startsWith('/admin/api-docs/')}>
+                                                            <Link href="/admin/api-docs">
+                                                                <FileText className="w-4 h-4" />
+                                                                <span>API Documentation</span>
+                                                            </Link>
+                                                        </SidebarMenuSubButton>
+                                                    </SidebarMenuSubItem>
+                                                </SidebarMenuSub>
+                                            </CollapsibleContent>
+                                        </SidebarMenuItem>
+                                    </Collapsible>
                                 </SidebarMenu>
                             </SidebarGroupContent>
                         </SidebarGroup>

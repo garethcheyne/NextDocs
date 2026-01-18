@@ -18,6 +18,7 @@ interface MetricsData {
   }
   topPages: Array<{ path: string; views: number }>
   topDocuments: Array<{ resourceId: string; views: number; avgDuration: number | null; avgScrollDepth: number | null }>
+  topUsers: Array<{ userId: string; name: string; email: string; activityCount: number }>
   timeline: Array<{ date: string; pageViews: number; sessions: number; users: number }>
 }
 
@@ -183,32 +184,75 @@ export function AnalyticsDashboard() {
         </Card>
       </div>
 
-      {/* Content Grid */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Activity Timeline */}
-        <Card >
-          <CardHeader>
-            <CardTitle>Activity Timeline</CardTitle>
-            <CardDescription>Daily page views, sessions, and users over the last 30 days</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {metrics.timeline && metrics.timeline.length > 0 ? (
-              <div className="space-y-4">
-                {/* Debug info */}
-                <div className="text-xs text-muted-foreground mb-2">
-                  Total days: {metrics.timeline.length} | Max views: {Math.max(...metrics.timeline.map(d => d.pageViews))} | Total views: {metrics.timeline.reduce((sum, d) => sum + d.pageViews, 0)}
-                </div>
-                <div className="h-64 flex items-end justify-between gap-1">
-                  {metrics.timeline.map((day, index) => {
-                    const maxValue = Math.max(...metrics.timeline.map(d => d.pageViews))
-                    const heightPercent = maxValue > 0 ? Math.round((day.pageViews / maxValue) * 100) : 0
+      {/* Activity Timeline - Full Width */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Activity Timeline</CardTitle>
+          <CardDescription>Daily page views, sessions, and users over the last 30 days</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {metrics.timeline && metrics.timeline.length > 0 ? (
+            <div className="space-y-4">
+              {/* Stats summary */}
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Last {metrics.timeline.length} days</span>
+                <span>Total: {metrics.timeline.reduce((sum, d) => sum + d.pageViews, 0).toLocaleString()} views</span>
+              </div>
+              
+              {/* Line chart */}
+              <div className="relative h-64">
+                <svg className="w-full h-full" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="rgb(249, 115, 22)" stopOpacity="0.3" />
+                      <stop offset="100%" stopColor="rgb(249, 115, 22)" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  {(() => {
+                    const maxValue = Math.max(...metrics.timeline.map(d => d.pageViews), 1)
+                    const width = 100 / (metrics.timeline.length - 1 || 1)
+                    
+                    // Create path data for line
+                    const pathData = metrics.timeline.map((day, index) => {
+                      const x = index * width
+                      const y = 100 - (day.pageViews / maxValue) * 100
+                      return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`
+                    }).join(' ')
+                    
+                    // Create area fill path
+                    const areaData = `${pathData} L 100 100 L 0 100 Z`
+                    
                     return (
-                      <div key={index} className="flex-1 flex flex-col items-center gap-1">
-                        <div className="w-full relative group h-full flex items-end">
-                          <div
-                            className={`w-full bg-gradient-to-t from-brand-orange to-orange-500 rounded-t transition-all hover:from-orange-600 hover:to-orange-400 ${heightPercent === 0 && day.pageViews > 0 ? 'min-h-[2px]' : ''}`}
-                            style={{ height: heightPercent > 0 ? `${heightPercent}%` : (day.pageViews > 0 ? '2px' : '0') }}
-                          />
+                      <>
+                        {/* Filled area under line */}
+                        <path
+                          d={areaData}
+                          fill="url(#lineGradient)"
+                          vectorEffect="non-scaling-stroke"
+                        />
+                        {/* Line */}
+                        <path
+                          d={pathData}
+                          fill="none"
+                          stroke="rgb(249, 115, 22)"
+                          strokeWidth="2"
+                          vectorEffect="non-scaling-stroke"
+                        />
+                      </>
+                    )
+                  })()}
+                </svg>
+                
+                {/* Hover points overlay */}
+                <div className="absolute inset-0 flex items-end">
+                  {metrics.timeline.map((day, index) => {
+                    const maxValue = Math.max(...metrics.timeline.map(d => d.pageViews), 1)
+                    const heightPercent = (day.pageViews / maxValue) * 100
+                    
+                    return (
+                      <div key={index} className="flex-1 flex flex-col items-center h-full justify-end" style={{ paddingBottom: `${heightPercent}%` }}>
+                        <div className="relative group">
+                          <div className="w-2 h-2 rounded-full bg-orange-500 border-2 border-white cursor-pointer transform transition-transform hover:scale-150" />
                           <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 border border-gray-700">
                             <div className="font-semibold">{new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
                             <div className="text-orange-400">{day.pageViews} views</div>
@@ -216,33 +260,70 @@ export function AnalyticsDashboard() {
                             <div className="text-green-400">{day.users} users</div>
                           </div>
                         </div>
-                        {index % 5 === 0 && (
-                          <span className="text-xs text-gray-500 mt-1">
-                            {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          </span>
-                        )}
                       </div>
                     )
                   })}
                 </div>
-                <div className="flex items-center justify-center gap-6 text-xs">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-gradient-to-r from-brand-orange to-orange-500 rounded" />
-                    <span className="text-gray-400">Page Views</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-purple-500 rounded" />
-                    <span className="text-gray-400">Sessions</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-500 rounded" />
-                    <span className="text-gray-400">Users</span>
-                  </div>
+              </div>
+              
+              {/* X-axis labels */}
+              <div className="flex justify-between text-xs text-gray-500">
+                {metrics.timeline.filter((_, index) => index % Math.ceil(metrics.timeline.length / 5) === 0).map((day, index) => (
+                  <span key={index}>{new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                ))}
+              </div>
+              
+              <div className="flex items-center justify-center gap-6 text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-orange-500 rounded" />
+                  <span className="text-gray-400">Page Views</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-purple-500 rounded" />
+                  <span className="text-gray-400">Sessions</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-500 rounded" />
+                  <span className="text-gray-400">Users</span>
                 </div>
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-8">No timeline data available</p>
-            )}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-8">No timeline data available</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Top Documents, Top Pages, and Top Users Grid */}
+      <div className="grid gap-6 md:grid-cols-3">
+        {/* Top Documents */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Top Documents</CardTitle>
+            <CardDescription>Most read documentation</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {metrics.topDocuments.slice(0, 10).map((doc, index) => (
+                <div key={doc.resourceId} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-mono text-muted-foreground">{index + 1}</span>
+                    <div>
+                      <div className="text-sm truncate max-w-[250px]">{doc.resourceId}</div>
+                      {doc.avgDuration && (
+                        <div className="text-xs text-muted-foreground">
+                          Avg {Math.round(doc.avgDuration / 1000)}s · {doc.avgScrollDepth}% scroll
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <Badge variant="secondary">{doc.views.toLocaleString()}</Badge>
+                </div>
+              ))}
+              {metrics.topDocuments.length === 0 && (
+                <p className="text-sm text-muted-foreground">No document reads yet</p>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -270,32 +351,28 @@ export function AnalyticsDashboard() {
           </CardContent>
         </Card>
 
-        {/* Top Documents */}
-        <Card >
+        {/* Top Active Users */}
+        <Card>
           <CardHeader>
-            <CardTitle>Top Documents</CardTitle>
-            <CardDescription>Most read documentation</CardDescription>
+            <CardTitle>Most Active Users</CardTitle>
+            <CardDescription>Users with most activity</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {metrics.topDocuments.slice(0, 10).map((doc, index) => (
-                <div key={doc.resourceId} className="flex items-center justify-between">
+              {metrics.topUsers.slice(0, 10).map((user, index) => (
+                <div key={user.userId} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-mono text-muted-foreground">{index + 1}</span>
                     <div>
-                      <div className="text-sm truncate max-w-[250px]">{doc.resourceId}</div>
-                      {doc.avgDuration && (
-                        <div className="text-xs text-muted-foreground">
-                          Avg {Math.round(doc.avgDuration / 1000)}s · {doc.avgScrollDepth}% scroll
-                        </div>
-                      )}
+                      <div className="text-sm font-medium">{user.name}</div>
+                      <div className="text-xs text-muted-foreground truncate max-w-[200px]">{user.email}</div>
                     </div>
                   </div>
-                  <Badge variant="secondary">{doc.views.toLocaleString()}</Badge>
+                  <Badge variant="secondary">{user.activityCount.toLocaleString()}</Badge>
                 </div>
               ))}
-              {metrics.topDocuments.length === 0 && (
-                <p className="text-sm text-muted-foreground">No document reads yet</p>
+              {metrics.topUsers.length === 0 && (
+                <p className="text-sm text-muted-foreground">No user activity yet</p>
               )}
             </div>
           </CardContent>

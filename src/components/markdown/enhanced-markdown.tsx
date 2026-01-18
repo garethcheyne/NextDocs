@@ -5,9 +5,9 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { Components } from 'react-markdown'
 import { MarkdownImage } from './markdown-image'
+import { LanguageBadgeDisplay } from '../badges/code-language-badge'
 import * as LucideIcons from 'lucide-react'
 import * as FluentIcons from '@fluentui/react-icons'
-import { BookOpen } from 'lucide-react'
 import {
     Dialog,
     DialogContent,
@@ -21,7 +21,33 @@ import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/pris
 import { Input } from '@/components/ui/input'
 import DOMPurify from 'isomorphic-dompurify'
 import { extractReleaseBlocks, splitByReleasePlaceholders } from '@/lib/markdown/release-block-preprocessor'
-import { ReleaseNotificationBlock } from '@/components/markdown/release-notification-block'
+import { ReleaseNotificationBlock } from './release-notification-block'
+import { cn } from '@/lib/utils'
+
+const DEFAULT_PROSE_CLASSES = `prose prose-slate dark:prose-invert max-w-none 
+    prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-foreground prose-headings:scroll-mt-20
+    prose-h1:text-3xl prose-h1:mb-4 prose-h1:mt-8
+    prose-h2:text-2xl prose-h2:mb-3 prose-h2:mt-6 prose-h2:border-b prose-h2:pb-2 dark:prose-h2:border-border
+    prose-h3:text-xl prose-h3:mb-2 prose-h3:mt-4
+    prose-h4:text-lg prose-h4:mb-2 prose-h4:mt-4
+    prose-p:text-sm prose-p:leading-6 prose-p:mb-4 prose-p:text-foreground
+    prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-a:font-medium
+    prose-strong:font-semibold prose-strong:text-foreground
+    prose-code:text-xs prose-code:bg-muted prose-code:text-foreground prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-[''] prose-code:after:content-['']
+    prose-pre:bg-muted prose-pre:text-sm prose-pre:text-foreground prose-pre:border prose-pre:rounded-lg prose-pre:p-4 dark:prose-pre:bg-slate-900 dark:prose-pre:border-slate-700
+    prose-ul:list-disc prose-ul:ml-6 prose-ul:mb-4 prose-ul:text-sm prose-ul:text-foreground
+    prose-ol:list-decimal prose-ol:ml-6 prose-ol:mb-4 prose-ol:text-sm prose-ol:text-foreground
+    prose-li:mb-1 prose-li:text-sm prose-li:text-foreground
+    prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-sm prose-blockquote:text-muted-foreground
+    prose-img:rounded-lg prose-img:shadow-md
+    prose-table:border-collapse prose-table:w-full prose-table:text-sm
+    prose-th:bg-muted prose-th:p-2 prose-th:text-left prose-th:font-semibold prose-th:text-sm prose-th:text-foreground dark:prose-th:bg-slate-800
+    prose-td:p-2 prose-td:border-t prose-td:text-sm prose-td:text-foreground dark:prose-td:border-slate-700
+    dark:prose-headings:text-slate-100
+    dark:prose-p:text-slate-300
+    dark:prose-li:text-slate-300
+    dark:prose-strong:text-slate-100
+    dark:prose-code:bg-slate-800 dark:prose-code:text-slate-100`
 
 // Sanitize SVG content from Mermaid diagrams
 function sanitizeSvg(html: string): string {
@@ -37,10 +63,8 @@ function CodeBlock({ language, children }: { language: string; children: string 
     const [isDark, setIsDark] = useState(false)
 
     useEffect(() => {
-        // Check if dark mode is enabled
         setIsDark(document.documentElement.classList.contains('dark'))
 
-        // Watch for theme changes
         const observer = new MutationObserver(() => {
             setIsDark(document.documentElement.classList.contains('dark'))
         })
@@ -59,34 +83,11 @@ function CodeBlock({ language, children }: { language: string; children: string 
         setTimeout(() => setCopied(false), 2000)
     }
 
-    // Map common language aliases
-    const languageMap: Record<string, string> = {
-        'js': 'javascript',
-        'ts': 'typescript',
-        'jsx': 'javascript',
-        'tsx': 'typescript',
-        'sh': 'bash',
-        'yml': 'yaml',
-        'md': 'markdown',
-    }
-
-    const displayLanguage = languageMap[language] || language || 'text'
-
     return (
-        <div className="relative group my-6 rounded-lg overflow-hidden border border-border bg-muted/30">
-            {/* Header with language and copy button */}
+        <div className="relative group rounded-lg overflow-hidden border border-border bg-muted/30">
             <div className="flex items-center justify-between px-4 py-2 bg-muted border-b border-border">
                 <div className="flex items-center gap-2">
-                    <div className="flex gap-1.5">
-                        <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
-                        <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-                        <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
-                    </div>
-                    {language && (
-                        <span className="text-xs font-mono text-muted-foreground ml-2">
-                            {displayLanguage}
-                        </span>
-                    )}
+                    {language && <LanguageBadgeDisplay language={language} isDark={isDark} />}
                 </div>
                 <Button
                     variant="ghost"
@@ -107,11 +108,9 @@ function CodeBlock({ language, children }: { language: string; children: string 
                     )}
                 </Button>
             </div>
-
-            {/* Code content with syntax highlighting */}
             <div className="overflow-x-auto">
                 <SyntaxHighlighter
-                    language={displayLanguage}
+                    language={language || 'text'}
                     style={isDark ? oneDark : oneLight}
                     customStyle={{
                         margin: 0,
@@ -133,7 +132,7 @@ function CodeBlock({ language, children }: { language: string; children: string 
     )
 }
 
-// Mermaid component that renders diagrams
+// Mermaid component
 function MermaidDiagram({ chart }: { chart: string }) {
     const ref = useRef<HTMLDivElement>(null)
     const [isOpen, setIsOpen] = useState(false)
@@ -143,73 +142,16 @@ function MermaidDiagram({ chart }: { chart: string }) {
             if (!ref.current) return
 
             try {
-                // Dynamically import mermaid to avoid SSR issues
                 const mermaid = (await import('mermaid')).default
-
-                // Detect dark mode
                 const isDark = document.documentElement.classList.contains('dark')
 
-                // Initialize mermaid with theme-aware configuration
                 mermaid.initialize({
                     startOnLoad: false,
                     theme: isDark ? 'dark' : 'default',
                     securityLevel: 'loose',
-                    themeVariables: isDark ? {
-                        primaryColor: '#f97316',
-                        primaryTextColor: '#ffffff',
-                        primaryBorderColor: '#ea580c',
-                        lineColor: '#94a3b8',
-                        secondaryColor: '#8b5cf6',
-                        secondaryTextColor: '#ffffff',
-                        secondaryBorderColor: '#7c3aed',
-                        tertiaryColor: '#3b82f6',
-                        tertiaryTextColor: '#ffffff',
-                        tertiaryBorderColor: '#2563eb',
-                        background: '#1e293b',
-                        mainBkg: '#334155',
-                        secondBkg: '#6366f1',
-                        tertiaryBkg: '#3b82f6',
-                        edgeLabelBackground: '#1e293b',
-                        textColor: '#f1f5f9',
-                        fontSize: '16px',
-                        fontFamily: 'ui-sans-serif, system-ui, sans-serif',
-                        nodeBorder: '#94a3b8',
-                        clusterBkg: '#475569',
-                        clusterBorder: '#64748b',
-                    } : {
-                        primaryColor: '#f97316',
-                        primaryTextColor: '#ffffff',
-                        primaryBorderColor: '#ea580c',
-                        lineColor: '#64748b',
-                        secondaryColor: '#8b5cf6',
-                        secondaryTextColor: '#ffffff',
-                        secondaryBorderColor: '#7c3aed',
-                        tertiaryColor: '#3b82f6',
-                        tertiaryTextColor: '#ffffff',
-                        tertiaryBorderColor: '#2563eb',
-                        background: '#ffffff',
-                        mainBkg: '#f1f5f9',
-                        secondBkg: '#ddd6fe',
-                        tertiaryBkg: '#dbeafe',
-                        edgeLabelBackground: '#ffffff',
-                        textColor: '#1e293b',
-                        fontSize: '16px',
-                        fontFamily: 'ui-sans-serif, system-ui, sans-serif',
-                        nodeBorder: '#64748b',
-                        clusterBkg: '#f1f5f9',
-                        clusterBorder: '#94a3b8',
-                    },
-                    flowchart: {
-                        htmlLabels: true,
-                        curve: 'basis',
-                        padding: 15,
-                    },
                 })
 
-                // Generate unique ID
                 const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`
-
-                // Render the diagram
                 const { svg } = await mermaid.render(id, chart)
 
                 if (ref.current) {
@@ -235,16 +177,11 @@ function MermaidDiagram({ chart }: { chart: string }) {
                 ref={ref}
                 className="my-4 flex justify-center cursor-pointer group relative hover:bg-muted/30 rounded-lg transition-colors p-4"
                 onClick={() => setIsOpen(true)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === 'Enter' && setIsOpen(true)}
-                aria-label="Click to view diagram in full screen"
             >
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 rounded-md p-2">
                     <Maximize2 className="w-4 h-4 text-muted-foreground" />
                 </div>
             </div>
-
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-auto p-6">
                     <DialogTitle className="sr-only">Mermaid Diagram</DialogTitle>
@@ -259,43 +196,29 @@ function MermaidDiagram({ chart }: { chart: string }) {
     )
 }
 
-// Helper function to get Lucide icon component from string name
+// Helper functions for icon processing
 function getLucideIcon(iconName: string) {
-    // Try direct match first (PascalCase)
     let Icon = (LucideIcons as any)[iconName]
-
-    // If not found, try converting kebab-case to PascalCase
     if (!Icon) {
-        // Convert kebab-case to PascalCase (e.g., "file-spreadsheet" -> "FileSpreadsheet")
         const pascalCase = iconName
             .split('-')
             .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
             .join('')
         Icon = (LucideIcons as any)[pascalCase]
     }
-
     return Icon || null
 }
 
-// Helper function to get FluentUI icon component from string name
 function getFluentIcon(iconName: string) {
-    // FluentUI icons are named like: Add20Regular, Delete24Filled
-    // Try direct match first
     let Icon = (FluentIcons as any)[iconName]
-
-    // If not found and no size/variant specified, try with default 20Regular
     if (!Icon && !iconName.match(/\d+(Regular|Filled)$/)) {
         Icon = (FluentIcons as any)[`${iconName}20Regular`]
     }
-
     return Icon || null
 }
 
-// Process text content to replace :icon-name: with actual icons
 function processTextWithIcons(text: string | React.ReactNode): React.ReactNode {
-    // Handle non-string children (already processed elements, arrays, etc.)
     if (typeof text !== 'string') {
-        // If it's an array, process each item
         if (Array.isArray(text)) {
             return text.map((child, index) => {
                 if (typeof child === 'string') {
@@ -307,34 +230,21 @@ function processTextWithIcons(text: string | React.ReactNode): React.ReactNode {
         return text
     }
 
-    // Match :icon-name: or :#fluentui icon-name: pattern
-    // Supports: :Settings:, :file-spreadsheet:, :#fluentui Add:, :#fluentui Delete20Filled:
     const iconPattern = /:(#fluentui\s+)?([a-zA-Z0-9-]+):/g
     const parts: React.ReactNode[] = []
     let lastIndex = 0
     let match
 
     while ((match = iconPattern.exec(text)) !== null) {
-        // Add text before the icon
         if (match.index > lastIndex) {
             parts.push(text.substring(lastIndex, match.index))
         }
 
-        // Check if it's a FluentUI icon (has #fluentui prefix)
         const isFluentUI = !!match[1]
         const iconName = match[2]
-
-        let IconComponent
-        if (isFluentUI) {
-            // Get FluentUI icon
-            IconComponent = getFluentIcon(iconName)
-        } else {
-            // Get Lucide icon (default)
-            IconComponent = getLucideIcon(iconName)
-        }
+        const IconComponent = isFluentUI ? getFluentIcon(iconName) : getLucideIcon(iconName)
 
         if (IconComponent) {
-            // Render the icon
             parts.push(
                 <IconComponent
                     key={`icon-${match.index}`}
@@ -343,14 +253,12 @@ function processTextWithIcons(text: string | React.ReactNode): React.ReactNode {
                 />
             )
         } else {
-            // If icon not found, keep the original text
             parts.push(match[0])
         }
 
         lastIndex = match.index + match[0].length
     }
 
-    // Add remaining text
     if (lastIndex < text.length) {
         parts.push(text.substring(lastIndex))
     }
@@ -358,18 +266,17 @@ function processTextWithIcons(text: string | React.ReactNode): React.ReactNode {
     return parts.length > 0 ? <>{parts}</> : text
 }
 
-interface MarkdownWithMermaidProps {
+interface EnhancedMarkdownProps {
     children: string
     className?: string
     repositorySlug?: string
     documentPath?: string
 }
 
-export function MarkdownWithMermaid({ children, className, repositorySlug, documentPath }: MarkdownWithMermaidProps) {
-    // Extract release blocks from markdown content
-    const { processedContent, releases } = extractReleaseBlocks(children)
+export function EnhancedMarkdown({ children, className, repositorySlug, documentPath }: EnhancedMarkdownProps) {
+    const finalClassName = cn(className || DEFAULT_PROSE_CLASSES)
 
-    // Split content by release placeholders for rendering
+    const { processedContent, releases } = extractReleaseBlocks(children)
     const contentParts = splitByReleasePlaceholders(processedContent)
 
     const components: Components = {
@@ -378,17 +285,14 @@ export function MarkdownWithMermaid({ children, className, repositorySlug, docum
             const language = match ? match[1] : ''
             const inline = !match
 
-            // Check if it's a mermaid code block
             if (!inline && language === 'mermaid') {
                 return <MermaidDiagram chart={String(children).replace(/\n$/, '')} />
             }
 
-            // Regular code block with copy button
             if (!inline) {
                 return <CodeBlock language={language}>{String(children).replace(/\n$/, '')}</CodeBlock>
             }
 
-            // Inline code
             return (
                 <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border" {...props}>
                     {children}
@@ -406,30 +310,16 @@ export function MarkdownWithMermaid({ children, className, repositorySlug, docum
         },
         a({ href, children }: any) {
             const isExternal = href?.startsWith('http')
-
-            // Transform .md links to proper relative paths
             let transformedHref = href
+
             if (href && !isExternal && href.endsWith('.md')) {
-                // Remove .md extension
-                transformedHref = href.replace(/\.md$/, '')
+                transformedHref = href.replace(/\.md$/, '').replace(/^\.\//, '')
 
-                // Remove ./ prefix if present (indicates same directory)
-                transformedHref = transformedHref.replace(/^\.\//, '')
-
-                // If it's a relative link (doesn't start with /), make it relative to current document path
                 if (!transformedHref.startsWith('/') && documentPath) {
-                    // Get the directory of the current document
-                    // documentPath is like "docs/dynamics-365-ce-aus/product-import-wizard/best-practices"
-                    // We need to get "docs/dynamics-365-ce-aus/product-import-wizard"
                     const pathParts = documentPath.split('/')
-                    pathParts.pop() // Remove the current file/page name (e.g., "best-practices")
+                    pathParts.pop()
                     const currentDir = pathParts.join('/')
-
-                    // Combine current directory with the relative link
-                    // Result: "/docs/dynamics-365-ce-aus/product-import-wizard/getting-started"
-                    transformedHref = `/${currentDir}/${transformedHref}`
-                    // Clean up any double slashes
-                    transformedHref = transformedHref.replace(/\/+/g, '/')
+                    transformedHref = `/${currentDir}/${transformedHref}`.replace(/\/+/g, '/')
                 }
             }
 
@@ -446,89 +336,36 @@ export function MarkdownWithMermaid({ children, className, repositorySlug, docum
             )
         },
         h1({ children }: any) {
-            return (
-                <h1 className="text-4xl font-bold mt-8 mb-4 pb-2 border-b border-border">
-                    {processTextWithIcons(children)}
-                </h1>
-            )
+            return <h1>{processTextWithIcons(children)}</h1>
         },
         h2({ children }: any) {
-            return (
-                <h2 className="text-3xl font-semibold mt-6 mb-3 pb-2 border-b border-border">
-                    {processTextWithIcons(children)}
-                </h2>
-            )
+            return <h2>{processTextWithIcons(children)}</h2>
         },
         h3({ children }: any) {
-            return (
-                <h3 className="text-2xl font-semibold mt-5 mb-2">
-                    {processTextWithIcons(children)}
-                </h3>
-            )
+            return <h3>{processTextWithIcons(children)}</h3>
         },
         h4({ children }: any) {
-            return (
-                <h4 className="text-xl font-semibold mt-4 mb-2">
-                    {processTextWithIcons(children)}
-                </h4>
-            )
+            return <h4>{processTextWithIcons(children)}</h4>
         },
         h5({ children }: any) {
-            return (
-                <h5 className="text-lg font-semibold mt-3 mb-2">
-                    {processTextWithIcons(children)}
-                </h5>
-            )
+            return <h5>{processTextWithIcons(children)}</h5>
         },
         h6({ children }: any) {
-            return (
-                <h6 className="text-base font-semibold mt-3 mb-2">
-                    {processTextWithIcons(children)}
-                </h6>
-            )
+            return <h6>{processTextWithIcons(children)}</h6>
         },
         p({ children }: any) {
-            return (
-                <p className="my-4 leading-7">
-                    {processTextWithIcons(children)}
-                </p>
-            )
-        },
-        blockquote({ children }: any) {
-            return (
-                <blockquote className="border-l-4 border-primary pl-4 py-2 my-4 italic bg-muted/30 rounded-r">
-                    {children}
-                </blockquote>
-            )
-        },
-        ul({ children }: any) {
-            return (
-                <ul className="my-4 ml-6 list-disc space-y-2">
-                    {children}
-                </ul>
-            )
-        },
-        ol({ children }: any) {
-            return (
-                <ol className="my-4 ml-6 list-decimal space-y-2">
-                    {children}
-                </ol>
-            )
+            return <p>{processTextWithIcons(children)}</p>
         },
         li({ children }: any) {
-            return (
-                <li className="leading-7">
-                    {processTextWithIcons(children)}
-                </li>
-            )
+            return <li>{processTextWithIcons(children)}</li>
         },
-        hr() {
-            return (
-                <hr className="my-8 border-border" />
-            )
+        strong({ children }: any) {
+            return <strong>{processTextWithIcons(children)}</strong>
+        },
+        em({ children }: any) {
+            return <em>{processTextWithIcons(children)}</em>
         },
         input({ type, checked, disabled }: any) {
-            // Task list checkbox
             if (type === 'checkbox') {
                 return (
                     <Input
@@ -537,83 +374,16 @@ export function MarkdownWithMermaid({ children, className, repositorySlug, docum
                         disabled={disabled}
                         className="mr-2 rounded border-border w-4 h-4"
                         readOnly
-                        aria-label="Task list item"
                     />
                 )
             }
             return null
         },
-        table({ children }: any) {
-            return (
-                <div className="my-6 w-full overflow-x-auto">
-                    <table className="w-full border-collapse border border-border">
-                        {children}
-                    </table>
-                </div>
-            )
-        },
-        thead({ children }: any) {
-            return (
-                <thead className="bg-muted/50">
-                    {children}
-                </thead>
-            )
-        },
-        tbody({ children }: any) {
-            return (
-                <tbody className="divide-y divide-border">
-                    {children}
-                </tbody>
-            )
-        },
-        tr({ children }: any) {
-            return (
-                <tr className="border-b border-border hover:bg-muted/30 transition-colors">
-                    {children}
-                </tr>
-            )
-        },
-        th({ children }: any) {
-            return (
-                <th className="px-4 py-3 text-left font-semibold text-sm border border-border bg-muted">
-                    {children}
-                </th>
-            )
-        },
-        td({ children }: any) {
-            return (
-                <td className="px-4 py-3 text-sm border border-border">
-                    {children}
-                </td>
-            )
-        },
-        del({ children }: any) {
-            return (
-                <del className="text-muted-foreground line-through">
-                    {children}
-                </del>
-            )
-        },
-        strong({ children }: any) {
-            return (
-                <strong className="font-bold">
-                    {processTextWithIcons(children)}
-                </strong>
-            )
-        },
-        em({ children }: any) {
-            return (
-                <em className="italic">
-                    {processTextWithIcons(children)}
-                </em>
-            )
-        },
     }
 
-    // If no release blocks, render normally
     if (releases.length === 0) {
         return (
-            <div className={className}>
+            <div className={finalClassName} suppressHydrationWarning>
                 <ReactMarkdown components={components} remarkPlugins={[remarkGfm]}>
                     {children}
                 </ReactMarkdown>
@@ -621,9 +391,8 @@ export function MarkdownWithMermaid({ children, className, repositorySlug, docum
         )
     }
 
-    // Render content with release blocks interspersed
     return (
-        <div className={className}>
+        <div className={finalClassName} suppressHydrationWarning>
             {contentParts.map((part, index) => {
                 if (part.type === 'release') {
                     const release = releases[part.value as number]
@@ -640,7 +409,6 @@ export function MarkdownWithMermaid({ children, className, repositorySlug, docum
                     return null
                 }
 
-                // Regular markdown content
                 return (
                     <ReactMarkdown
                         key={`content-${index}`}

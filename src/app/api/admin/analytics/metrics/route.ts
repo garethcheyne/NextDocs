@@ -51,6 +51,7 @@ async function getAnalyticsMetrics(from: Date, to: Date, userFilter: string | nu
     featureViews,
     topPages,
     topDocuments,
+    topUsers,
     timeline
   ] = await Promise.all([
     // Total events count
@@ -121,6 +122,32 @@ async function getAnalyticsMetrics(from: Date, to: Date, userFilter: string | nu
       take: 10
     }),
     
+    // Top active users by event count
+    prisma.analyticsEvent.groupBy({
+      by: ['userId'],
+      where: { ...where, userId: { not: null } },
+      _count: { userId: true },
+      orderBy: { _count: { userId: 'desc' } },
+      take: 10
+    }).then(async (userGroups) => {
+      // Fetch user details for the top users
+      const userIds = userGroups.map(g => g.userId!)
+      const users = await prisma.user.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, name: true, email: true }
+      })
+      
+      return userGroups.map(group => {
+        const user = users.find(u => u.id === group.userId)
+        return {
+          userId: group.userId!,
+          name: user?.name || 'Unknown',
+          email: user?.email || '',
+          activityCount: group._count.userId
+        }
+      })
+    }),
+    
     // Daily timeline aggregation using raw query
     prisma.$queryRaw<Array<{
       date: Date
@@ -161,6 +188,7 @@ async function getAnalyticsMetrics(from: Date, to: Date, userFilter: string | nu
       avgDuration: d._avg.duration ? Math.round(d._avg.duration) : null,
       avgScrollDepth: d._avg.scrollDepth ? Math.round(d._avg.scrollDepth) : null
     })),
+    topUsers: topUsers,
     timeline: timeline.map(t => ({
       date: t.date.toISOString().split('T')[0],
       pageViews: Number(t.page_views),

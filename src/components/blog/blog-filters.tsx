@@ -62,7 +62,7 @@ export function BlogFilters({ categories, tags, dateGroups, currentCategory, cur
     }
 
     return (
-        <div className="space-y-4 lg:sticky lg:top-20">
+        <div className="space-y-4">
             {/* Active Filters */}
             {hasActiveFilters && (
                 <Card>
@@ -79,13 +79,13 @@ export function BlogFilters({ categories, tags, dateGroups, currentCategory, cur
                             </Button>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-2">
+                    <CardContent className="flex flex-wrap gap-2">
                         {activeCategory && (
                             <Badge variant="secondary" className="gap-1">
                                 <FolderOpen className="w-3 h-3" />
-                                {activeCategory}
+                                <span className="max-w-[120px] truncate">{activeCategory}</span>
                                 <X
-                                    className="w-3 h-3 cursor-pointer"
+                                    className="w-3 h-3 cursor-pointer hover:text-destructive"
                                     onClick={() => updateFilters({ category: null })}
                                 />
                             </Badge>
@@ -93,12 +93,14 @@ export function BlogFilters({ categories, tags, dateGroups, currentCategory, cur
                         {activeYear && (
                             <Badge variant="secondary" className="gap-1">
                                 <Calendar className="w-3 h-3" />
-                                {activeMonth !== null
-                                    ? `${monthNames[parseInt(activeMonth)]} ${activeYear}`
-                                    : activeYear
-                                }
+                                <span className="max-w-[120px] truncate">
+                                    {activeMonth !== null
+                                        ? `${monthNames[parseInt(activeMonth)]} ${activeYear}`
+                                        : activeYear
+                                    }
+                                </span>
                                 <X
-                                    className="w-3 h-3 cursor-pointer"
+                                    className="w-3 h-3 cursor-pointer hover:text-destructive"
                                     onClick={() => updateFilters({ year: null, month: null })}
                                 />
                             </Badge>
@@ -106,9 +108,9 @@ export function BlogFilters({ categories, tags, dateGroups, currentCategory, cur
                         {activeTags.map(tag => (
                             <Badge key={tag} variant="secondary" className="gap-1">
                                 <Tag className="w-3 h-3" />
-                                {tag}
+                                <span className="max-w-[120px] truncate">{tag}</span>
                                 <X
-                                    className="w-3 h-3 cursor-pointer"
+                                    className="w-3 h-3 cursor-pointer hover:text-destructive"
                                     onClick={() => toggleTag(tag)}
                                 />
                             </Badge>
@@ -119,14 +121,14 @@ export function BlogFilters({ categories, tags, dateGroups, currentCategory, cur
 
             {/* Date Filter */}
             {dateGroups.length > 0 && (
-                <Card >
+                <Card className="hidden sm:block">
                     <CardHeader>
                         <CardTitle className="text-sm font-medium flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
                             Date Range
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-2">
+                    <CardContent className="space-y-2 max-h-[300px] overflow-y-auto">
                         <Button
                             variant={!activeYear ? "default" : "ghost"}
                             size="sm"
@@ -175,14 +177,14 @@ export function BlogFilters({ categories, tags, dateGroups, currentCategory, cur
 
             {/* Category Filter */}
             {categories.length > 0 && (
-                <Card >
+                <Card className="hidden sm:block">
                     <CardHeader>
                         <CardTitle className="text-sm font-medium flex items-center gap-2">
                             <FolderOpen className="w-4 h-4" />
                             Categories
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-1">
+                    <CardContent className="space-y-1 max-h-[300px] overflow-y-auto">
                         <Button
                             variant={!activeCategory ? "default" : "ghost"}
                             size="sm"
@@ -199,8 +201,8 @@ export function BlogFilters({ categories, tags, dateGroups, currentCategory, cur
                                 className="w-full justify-between text-xs"
                                 onClick={() => updateFilters({ category })}
                             >
-                                <span>{category}</span>
-                                <span className="text-muted-foreground">({count})</span>
+                                <span className="truncate">{category}</span>
+                                <span className="text-muted-foreground shrink-0 ml-2">({count})</span>
                             </Button>
                         ))}
                     </CardContent>
@@ -209,14 +211,14 @@ export function BlogFilters({ categories, tags, dateGroups, currentCategory, cur
 
             {/* Tag Filter */}
             {tags.length > 0 && (
-                <Card >
+                <Card className="hidden sm:block">
                     <CardHeader>
                         <CardTitle className="text-sm font-medium flex items-center gap-2">
                             <Tag className="w-4 h-4" />
                             Filter by Tags
                         </CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="max-h-[200px] overflow-y-auto">
                         <div className="flex flex-wrap gap-1">
                             {tags.map(({ tag, count }) => (
                                 <Badge
@@ -225,7 +227,7 @@ export function BlogFilters({ categories, tags, dateGroups, currentCategory, cur
                                     className="cursor-pointer text-xs"
                                     onClick={() => toggleTag(tag)}
                                 >
-                                    {tag} ({count})
+                                    <span className="max-w-[100px] truncate">{tag}</span> ({count})
                                 </Badge>
                             ))}
                         </div>

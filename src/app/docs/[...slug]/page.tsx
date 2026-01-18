@@ -6,17 +6,14 @@ import { ContentDetailLayout } from '@/components/layout/content-detail-layout'
 import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
 import { DocumentTracker } from '@/components/document-tracker'
 import { Clock, User } from 'lucide-react'
-import { MarkdownWithMermaid } from '@/components/markdown-with-mermaid'
+import { EnhancedMarkdown } from '@/components/markdown/enhanced-markdown'
 import { Badge } from '@/components/ui/badge'
-import { CategoryBadge } from '@/components/features/category-badge'
-import { getAuthorBySlug, getAuthorDocuments, getAuthorBlogPosts } from '@/lib/authors'
-import { AuthorHoverCard } from '@/components/author-hover-card'
+import { CategoryBadge } from '@/components/badges/category-badge'
+import { AuthorBadge } from '@/components/badges/author-badge'
 import { ContentEngagement } from '@/components/content-engagement'
 import { processContentForUser } from '@/lib/content-access'
 import { RestrictionBadge, RestrictionSummary } from '@/components/content/restriction-indicators'
 import { RestrictedAccess } from '@/components/auth/restricted-access'
-import { resolveAuthor } from '@/lib/utils/author-resolver'
-import { AuthorDisplay } from '@/components/ui/author-display'
 
 export default async function DocPage({ params }: { params: Promise<{ slug: string[] }> }) {
     const session = await auth()
@@ -76,29 +73,6 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
     // If user doesn't have access, return 404
     if (!processedContent.hasAccess) {
         notFound()
-    }
-
-    // Fetch author data if available
-    let authorData = null
-    let resolvedAuthor = null
-    let authorContent: {
-        documents: Awaited<ReturnType<typeof getAuthorDocuments>>
-        blogPosts: Awaited<ReturnType<typeof getAuthorBlogPosts>>
-    } = { documents: [], blogPosts: [] }
-
-    if (document.author) {
-        // Resolve author (check if email exists as system user)
-        resolvedAuthor = await resolveAuthor(document.author)
-
-        // Also try to get author data from the author system
-        authorData = await getAuthorBySlug(document.author)
-        if (authorData) {
-            const [documents, blogPosts] = await Promise.all([
-                getAuthorDocuments(document.author),
-                getAuthorBlogPosts(document.author),
-            ])
-            authorContent = { documents, blogPosts }
-        }
     }
 
     // Fetch category metadata for sidebar
@@ -231,19 +205,7 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
                     })()}
 
 
-                    {document.author && resolvedAuthor && (
-                        <div>
-                            {authorData ? (
-                                <AuthorHoverCard author={authorData} content={authorContent}>
-                                    <div className="cursor-pointer hover:text-brand-orange transition-colors">
-                                        <AuthorDisplay author={resolvedAuthor} />
-                                    </div>
-                                </AuthorHoverCard>
-                            ) : (
-                                <AuthorDisplay author={resolvedAuthor} />
-                            )}
-                        </div>
-                    )}
+                    {document.author && <AuthorBadge authorSlug={document.author} />}
 
 
                     {document.updatedAt && (
@@ -309,12 +271,9 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
                                     dark:prose-li:text-slate-300
                     dark:prose-strong:text-slate-100
                     dark:prose-code:bg-slate-800 dark:prose-code:text-slate-100">
-                <MarkdownWithMermaid
-                    repositorySlug={document.repository.slug}
-                    documentPath={`docs/${fullSlug}`}
-                >
+                <EnhancedMarkdown>
                     {processedContent.content}
-                </MarkdownWithMermaid>
+                </EnhancedMarkdown>
             </div>            {/* Footer */}
             <div className="mt-12 pt-8 border-t">
                 <p className="text-sm text-muted-foreground">

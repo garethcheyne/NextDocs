@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Search, X, BookOpen, FileText, Code2, Lightbulb } from 'lucide-react'
+import { Search, X, BookOpen, FileText, Code2, Lightbulb, Megaphone } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useDebounce } from '@/hooks/use-debounce'
 import { useRouter } from 'next/navigation'
@@ -18,7 +18,7 @@ function sanitizeHtml(html: string): string {
 
 interface SearchResult {
     id: string
-    type: 'document' | 'blog' | 'api-spec' | 'feature-request'
+    type: 'document' | 'blog' | 'api-spec' | 'feature-request' | 'release'
     title: string
     excerpt: string
     url: string
@@ -36,7 +36,7 @@ export function SearchTrigger() {
     const [selectedIndex, setSelectedIndex] = useState(0)
     const [hoveredResult, setHoveredResult] = useState<SearchResult | null>(null)
     const [isExpanded, setIsExpanded] = useState(false)
-    const [activeFilters, setActiveFilters] = useState<Array<'document' | 'blog' | 'api-spec' | 'feature-request'>>([])
+    const [activeFilters, setActiveFilters] = useState<Array<'document' | 'blog' | 'api-spec' | 'feature-request' | 'release'>>([])
     const debouncedQuery = useDebounce(query, 300)
     const searchRef = useRef<HTMLDivElement>(null)
     const inputRef = useRef<HTMLInputElement>(null)
@@ -138,11 +138,12 @@ export function SearchTrigger() {
             case 'blog': return 'Blog'
             case 'api-spec': return 'API'
             case 'feature-request': return 'Feature'
+            case 'release': return 'Release'
             default: return type
         }
     }
 
-    const toggleFilter = (type: 'document' | 'blog' | 'api-spec' | 'feature-request') => {
+    const toggleFilter = (type: 'document' | 'blog' | 'api-spec' | 'feature-request' | 'release') => {
         setActiveFilters(prev =>
             prev.includes(type)
                 ? prev.filter(f => f !== type)
@@ -150,7 +151,7 @@ export function SearchTrigger() {
         )
     }
 
-    const getFilterColor = (type: 'document' | 'blog' | 'api-spec' | 'feature-request') => {
+    const getFilterColor = (type: 'document' | 'blog' | 'api-spec' | 'feature-request' | 'release') => {
         const isActive = activeFilters.includes(type)
         switch (type) {
             case 'document':
@@ -169,15 +170,20 @@ export function SearchTrigger() {
                 return isActive
                     ? 'bg-brand-orange/90 text-white border-brand-orange'
                     : 'bg-brand-orange/10 text-brand-orange hover:bg-brand-orange/20 border-brand-orange/20'
+            case 'release':
+                return isActive
+                    ? 'bg-green-500/90 text-white border-green-500'
+                    : 'bg-green-500/10 text-green-700 dark:text-green-300 hover:bg-green-500/20 border-green-500/20'
         }
     }
 
-    const getFilterIcon = (type: 'document' | 'blog' | 'api-spec' | 'feature-request') => {
+    const getFilterIcon = (type: 'document' | 'blog' | 'api-spec' | 'feature-request' | 'release') => {
         switch (type) {
             case 'document': return <BookOpen className="w-3 h-3" />
             case 'blog': return <FileText className="w-3 h-3" />
             case 'api-spec': return <Code2 className="w-3 h-3" />
             case 'feature-request': return <Lightbulb className="w-3 h-3" />
+            case 'release': return <Megaphone className="w-3 h-3" />
         }
     }
 
@@ -316,34 +322,41 @@ export function SearchTrigger() {
                         }`}>
                         <div className={`flex flex-col ${isExpanded ? 'w-full md:w-1/2 md:border-r' : 'w-full'}`}>
                             {/* Filter Pills */}
-                            <div className="flex gap-2 p-3 border-b bg-transparent overflow-x-auto">
+                            <div className="flex gap-2 p-3 border-b bg-transparent overflow-x-auto scrollbar-hide">
                                 <button
                                     onClick={() => toggleFilter('document')}
                                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border shrink-0 ${getFilterColor('document')}`}
                                 >
                                     {getFilterIcon('document')}
-                                    <span>Docs</span>
+                                    <span className="hidden sm:inline">Docs</span>
                                 </button>
                                 <button
                                     onClick={() => toggleFilter('blog')}
                                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border shrink-0 ${getFilterColor('blog')}`}
                                 >
                                     {getFilterIcon('blog')}
-                                    <span>Blog</span>
+                                    <span className="hidden sm:inline">Blog</span>
                                 </button>
                                 <button
                                     onClick={() => toggleFilter('api-spec')}
                                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border shrink-0 ${getFilterColor('api-spec')}`}
                                 >
                                     {getFilterIcon('api-spec')}
-                                    <span>API</span>
+                                    <span className="hidden sm:inline">API</span>
                                 </button>
                                 <button
                                     onClick={() => toggleFilter('feature-request')}
                                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border shrink-0 ${getFilterColor('feature-request')}`}
                                 >
                                     {getFilterIcon('feature-request')}
-                                    <span>Features</span>
+                                    <span className="hidden sm:inline">Features</span>
+                                </button>
+                                <button
+                                    onClick={() => toggleFilter('release')}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border shrink-0 ${getFilterColor('release')}`}
+                                >
+                                    {getFilterIcon('release')}
+                                    <span className="hidden sm:inline">Releases</span>
                                 </button>
                             </div>
 
@@ -437,7 +450,8 @@ export function SearchTrigger() {
                                                                 {result.type === 'blog' && <FileText className="w-3 h-3" />}
                                                                 {result.type === 'api-spec' && <Code2 className="w-3 h-3" />}
                                                                 {result.type === 'feature-request' && <Lightbulb className="w-3 h-3" />}
-                                                                {getTypeLabel(result.type)}
+                                                                {result.type === 'release' && <Megaphone className="w-3 h-3" />}
+                                                                <span className="hidden sm:inline">{getTypeLabel(result.type)}</span>
                                                             </span>
                                                         </div>
                                                         {result.category && (

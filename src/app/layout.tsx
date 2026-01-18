@@ -6,6 +6,7 @@ import { AuthProvider } from '@/components/auth/auth-provider'
 import { AnalyticsProvider } from '@/lib/analytics/client'
 import ParticlesBackground from '@/components/particles-background'
 import { Toaster } from '@/components/ui/sonner'
+import { PWAUpdatePrompt } from '@/components/pwa/pwa-update-prompt'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -51,7 +52,7 @@ export default function RootLayout({
 
               {/* Subtle radial gradient overlay */}
               <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent z-[2] pointer-events-none" />
-              
+
               {/* Subtle grid pattern */}
               <div className="fixed inset-0 bg-[linear-gradient(rgba(255,107,53,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,107,53,0.02)_1px,transparent_1px)] bg-[size:50px_50px] z-[2] pointer-events-none" />
 
@@ -60,6 +61,7 @@ export default function RootLayout({
                 {children}
               </div>
               <Toaster />
+              <PWAUpdatePrompt />
             </AnalyticsProvider>
           </AuthProvider>
         </ThemeProvider>

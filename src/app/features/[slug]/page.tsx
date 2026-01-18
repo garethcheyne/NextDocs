@@ -18,9 +18,10 @@ import { EditFeatureDialog } from '@/components/admin/edit-feature-dialog'
 import { AdminMenubar } from '@/components/admin/admin-menubar'
 import { FeatureBanner } from '@/components/features/feature-banner'
 import { SyncCommentsButton } from '@/components/features/sync-comments-button'
-import { EnhancedMarkdown } from '@/components/ui/enhanced-markdown'
+import { EnhancedMarkdown } from '@/components/markdown/enhanced-markdown'
 import { RestrictedAccess } from '@/components/auth/restricted-access'
 import { checkFeatureAccess } from '@/lib/auth/access-control'
+import { AuthorBadge } from '@/components/badges/author-badge'
 
 export default async function FeatureRequestPage({
     params,
@@ -162,8 +163,7 @@ export default async function FeatureRequestPage({
                 status={feature.status}
                 priority={feature.priority}
                 category={feature.category}
-                creator={feature.creator?.name || feature.createdByName || 'Anonymous'}
-                creatorImage={feature.creator?.image}
+                creatorEmail={feature.createdByEmail}
                 createdAt={feature.createdAt}
                 voteCount={feature.voteCount}
                 upvotes={upvotes}
@@ -366,24 +366,10 @@ export default async function FeatureRequestPage({
                                 <CardContent>
                                     <div className="space-y-2">
                                         {feature.followers.map((follower) => (
-                                            <div
-                                                key={follower.userId}
-                                                className="flex items-center gap-2"
-                                            >
-                                                {follower.user?.image ? (
-                                                    <img
-                                                        src={follower.user.image}
-                                                        alt={follower.user.name || 'Anonymous'}
-                                                        className="w-6 h-6 rounded-full object-cover border border-border"
-                                                    />
-                                                ) : (
-                                                    <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
-                                                        <User className="w-3 h-3 text-muted-foreground" />
-                                                    </div>
+                                            <div key={follower.userId}>
+                                                {follower.user?.email && (
+                                                    <AuthorBadge authorSlug={follower.user.email} />
                                                 )}
-                                                <span className="text-sm text-foreground/70">
-                                                    {follower.user?.name || 'Anonymous'}
-                                                </span>
                                             </div>
                                         ))}
                                     </div>
@@ -412,24 +398,10 @@ export default async function FeatureRequestPage({
                                                     {feature.votes
                                                         .filter((vote) => vote.voteType === 1)
                                                         .map((vote) => (
-                                                            <div
-                                                                key={vote.userId}
-                                                                className="flex items-center gap-2 pl-6"
-                                                            >
-                                                                {vote.user?.image ? (
-                                                                    <img
-                                                                        src={vote.user.image}
-                                                                        alt={vote.user.name || 'Anonymous'}
-                                                                        className="w-6 h-6 rounded-full object-cover border border-border"
-                                                                    />
-                                                                ) : (
-                                                                    <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
-                                                                        <User className="w-3 h-3 text-muted-foreground" />
-                                                                    </div>
+                                                            <div key={vote.userId} className="pl-6">
+                                                                {vote.user?.email && (
+                                                                    <AuthorBadge authorSlug={vote.user.email} />
                                                                 )}
-                                                                <span className="text-sm text-foreground/70">
-                                                                    {vote.user?.name || 'Anonymous'}
-                                                                </span>
                                                             </div>
                                                         ))}
                                                 </div>
@@ -452,24 +424,10 @@ export default async function FeatureRequestPage({
                                                     {feature.votes
                                                         .filter((vote) => vote.voteType === -1)
                                                         .map((vote) => (
-                                                            <div
-                                                                key={vote.userId}
-                                                                className="flex items-center gap-2 pl-6"
-                                                            >
-                                                                {vote.user?.image ? (
-                                                                    <img
-                                                                        src={vote.user.image}
-                                                                        alt={vote.user.name || 'Anonymous'}
-                                                                        className="w-6 h-6 rounded-full object-cover border border-border"
-                                                                    />
-                                                                ) : (
-                                                                    <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
-                                                                        <User className="w-3 h-3 text-muted-foreground" />
-                                                                    </div>
+                                                            <div key={vote.userId} className="pl-6">
+                                                                {vote.user?.email && (
+                                                                    <AuthorBadge authorSlug={vote.user.email} />
                                                                 )}
-                                                                <span className="text-sm text-foreground/70">
-                                                                    {vote.user?.name || 'Anonymous'}
-                                                                </span>
                                                             </div>
                                                         ))}
                                                 </div>

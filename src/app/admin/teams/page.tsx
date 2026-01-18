@@ -88,7 +88,7 @@ export default async function AdminTeamsPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-900 dark:text-white">{teams.length}</div>
+              <div className="text-3xl font-bold">{teams.length}</div>
             </CardContent>
           </Card>
 
@@ -100,7 +100,7 @@ export default async function AdminTeamsPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-900 dark:text-white">{totalMembers}</div>
+              <div className="text-3xl font-bold">{totalMembers}</div>
             </CardContent>
           </Card>
 
@@ -112,7 +112,7 @@ export default async function AdminTeamsPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-900 dark:text-white">{totalSubscribed}</div>
+              <div className="text-3xl font-bold">{totalSubscribed}</div>
             </CardContent>
           </Card>
 
@@ -124,7 +124,7 @@ export default async function AdminTeamsPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-900 dark:text-white">{totalReleases}</div>
+              <div className="text-3xl font-bold">{totalReleases}</div>
             </CardContent>
           </Card>
         </div>
@@ -155,61 +155,62 @@ export default async function AdminTeamsPage() {
             ) : (
               <div className="space-y-4">
                 {teams.map((team) => (
-                  <div
-                    key={team.id}
-                    className="flex items-center justify-between p-4 rounded-lg bg-white/80 dark:bg-gray-800/50 border border-gray-300/50 dark:border-gray-700/50 hover:border-gray-400/50 dark:hover:border-gray-600/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold"
-                        style={{ backgroundColor: team.color || '#ff6b35' }}
-                      >
-                        {team.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-gray-900 dark:text-white">{team.name}</h3>
-                          <Badge variant="outline" className="text-xs">
-                            {team.slug}
-                          </Badge>
-                          {!team.enabled && (
-                            <Badge variant="secondary" className="text-xs">
-                              Disabled
-                            </Badge>
-                          )}
+                  <Card key={team.id} className="hover:border-primary transition-colors">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div
+                            className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold shrink-0"
+                            style={{ backgroundColor: team.color || '#ff6b35' }}
+                          >
+                            {team.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-semibold">{team.name}</h3>
+                              <Badge variant="outline" className="text-xs">
+                                {team.slug}
+                              </Badge>
+                              {!team.enabled && (
+                                <Badge variant="secondary" className="text-xs">
+                                  Disabled
+                                </Badge>
+                              )}
+                            </div>
+                            {team.description && (
+                              <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
+                                {team.description}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Users className="w-3 h-3" />
+                                {team._count.memberships} members
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Bell className="w-3 h-3" />
+                                {team._count.releases} releases
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        {team.description && (
-                          <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
-                            {team.description}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Users className="w-3 h-3" />
-                            {team._count.memberships} members
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Bell className="w-3 h-3" />
-                            {team._count.releases} releases
-                          </span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Link href={`/admin/teams/${team.id}/members`}>
+                            <Button variant="ghost" size="sm">
+                              <Users className="w-4 h-4 mr-1" />
+                              Members
+                            </Button>
+                          </Link>
+                          <Link href={`/admin/teams/${team.id}`}>
+                            <Button variant="ghost" size="sm">
+                              <Pencil className="w-4 h-4 mr-1" />
+                              Edit
+                            </Button>
+                          </Link>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Link href={`/admin/teams/${team.id}/members`}>
-                        <Button variant="ghost" size="sm">
-                          <Users className="w-4 h-4 mr-1" />
-                          Members
-                        </Button>
-                      </Link>
-                      <Link href={`/admin/teams/${team.id}`}>
-                        <Button variant="ghost" size="sm">
-                          <Pencil className="w-4 h-4 mr-1" />
-                          Edit
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             )}

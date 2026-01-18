@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { Clock, CheckCircle, Play, Check, X } from 'lucide-react'
+import { Clock, CheckCircle, Play, Check, X, AlertCircle } from 'lucide-react'
+import { getStatusColors } from '@/lib/status-colors'
 
 interface StatusBadgeProps {
     status: string
@@ -9,35 +10,42 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
     const getStatusConfig = (status: string) => {
+        const colors = getStatusColors(status)
+        
         switch (status) {
             case 'proposal':
                 return {
-                    styles: 'bg-gray-700 text-white border-gray-700',
+                    styles: `${colors.bg} ${colors.text} ${colors.border}`,
                     icon: Clock
                 }
             case 'approved':
                 return {
-                    styles: 'bg-green-600 text-white border-green-600',
+                    styles: `${colors.bg} ${colors.text} ${colors.border}`,
                     icon: CheckCircle
                 }
             case 'in-progress':
                 return {
-                    styles: 'bg-blue-600 text-white border-blue-600',
+                    styles: `${colors.bg} ${colors.text} ${colors.border}`,
                     icon: Play
                 }
             case 'completed':
                 return {
-                    styles: 'bg-purple-600 text-white border-purple-600',
+                    styles: `${colors.bg} ${colors.text} ${colors.border}`,
                     icon: Check
                 }
             case 'declined':
                 return {
-                    styles: 'bg-red-600 text-white border-red-600',
+                    styles: `${colors.bg} ${colors.text} ${colors.border}`,
                     icon: X
+                }
+            case 'on-hold':
+                return {
+                    styles: `${colors.bg} ${colors.text} ${colors.border}`,
+                    icon: AlertCircle
                 }
             default:
                 return {
-                    styles: 'bg-gray-700 text-white border-gray-700',
+                    styles: 'bg-gray-500 text-white border-gray-500',
                     icon: Clock
                 }
         }

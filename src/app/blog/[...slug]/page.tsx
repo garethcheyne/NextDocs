@@ -4,17 +4,14 @@ import { prisma } from '@/lib/db/prisma'
 import { ContentDetailLayout } from '@/components/layout/content-detail-layout'
 import { DocumentTracker } from '@/components/document-tracker'
 import { Calendar, User, Tag, Clock } from 'lucide-react'
-import { MarkdownWithMermaid } from '@/components/markdown-with-mermaid'
+import { EnhancedMarkdown } from '@/components/markdown/enhanced-markdown'
 import { Badge } from '@/components/ui/badge'
 import Image from 'next/image'
-import { getAuthorBySlug, getAuthorDocuments, getAuthorBlogPosts } from '@/lib/authors'
-import { AuthorHoverCard } from '@/components/author-hover-card'
 import { ContentEngagement } from '@/components/content-engagement'
 import { processContentForUser } from '@/lib/content-access'
 import { RestrictionBadge, RestrictionSummary } from '@/components/content/restriction-indicators'
 import { formatDate } from '@/lib/utils/date-format'
-import { resolveAuthor } from '@/lib/utils/author-resolver'
-import { AuthorDisplay } from '@/components/ui/author-display'
+import { AuthorBadge } from '@/components/badges/author-badge'
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string[] }> }) {
     const session = await auth()
@@ -76,29 +73,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     // If user doesn't have access, return 404
     if (!processedContent.hasAccess) {
         notFound()
-    }
-
-    // Fetch author data if available
-    let authorData = null
-    let resolvedAuthor = null
-    let authorContent: {
-        documents: Awaited<ReturnType<typeof getAuthorDocuments>>
-        blogPosts: Awaited<ReturnType<typeof getAuthorBlogPosts>>
-    } = { documents: [], blogPosts: [] }
-
-    if (blogPost.author) {
-        // Resolve author using author slug
-        resolvedAuthor = await resolveAuthor(blogPost.author)
-        
-        // Also try to get author data from the author system (for legacy author slugs)
-        authorData = await getAuthorBySlug(blogPost.author)
-        if (authorData) {
-            const [documents, blogPosts] = await Promise.all([
-                getAuthorDocuments(blogPost.author),
-                getAuthorBlogPosts(blogPost.author),
-            ])
-            authorContent = { documents, blogPosts }
-        }
     }
 
     // Get blog categories with counts for sidebar
@@ -165,19 +139,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                         </div>
                     )}
 
-                    {blogPost.author && resolvedAuthor && (
-                        <div>
-                            {authorData ? (
-                                <AuthorHoverCard author={authorData} content={authorContent}>
-                                    <div className="cursor-pointer hover:text-brand-orange transition-colors">
-                                        <AuthorDisplay author={resolvedAuthor} />
-                                    </div>
-                                </AuthorHoverCard>
-                            ) : (
-                                <AuthorDisplay author={resolvedAuthor} />
-                            )}
+                    {blogPost.author &&
+                        <div className="flex items-center gap-2">
+                            <AuthorBadge authorSlug={blogPost.author} />
                         </div>
-                    )}
+                    }
 
                     <div className="flex items-center gap-2">
                         <Clock className="w-4 h-4" />
@@ -246,12 +212,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                                     dark:prose-li:text-slate-300
                                     dark:prose-strong:text-slate-100
                                     dark:prose-code:bg-slate-800 dark:prose-code:text-slate-100">
-                <MarkdownWithMermaid
+                <EnhancedMarkdown
                     repositorySlug={blogPost.repository.slug}
-                    documentPath={`blog/${fullSlug}`}
+                    documentPath={blogPost.slug}
                 >
                     {processedContent.content}
-                </MarkdownWithMermaid>
+                </EnhancedMarkdown>
             </div>
 
             {/* Footer */}

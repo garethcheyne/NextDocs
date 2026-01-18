@@ -18,9 +18,14 @@ export async function resolveAuthor(author: string): Promise<ResolvedAuthor> {
 
   if (isEmail) {
     try {
-      // Check if this email exists as a system user
-      const systemUser = await prisma.user.findUnique({
-        where: { email: author },
+      // Check if this email exists as a system user (case-insensitive)
+      const systemUser = await prisma.user.findFirst({
+        where: { 
+          email: {
+            equals: author,
+            mode: 'insensitive'
+          }
+        },
         select: {
           name: true,
           email: true,

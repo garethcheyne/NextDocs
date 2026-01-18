@@ -11,8 +11,8 @@ import {
   Quote,
   Minus
 } from 'lucide-react';
-import { Button } from './button';
-import { ImageUpload } from './image-upload';
+import { Button } from '@/components/ui/button';
+import { ImageUpload } from '@/components/ui/image-upload';
 
 interface MarkdownToolbarProps {
   onInsert: (before: string, after?: string, placeholder?: string) => void;

@@ -1,9 +1,10 @@
 import Link from 'next/link'
-import { Calendar, Users } from 'lucide-react'
+import { Calendar, Users, Megaphone } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { CategoryBadge } from '@/components/features/category-badge'
+import { CategoryBadge } from '@/components/badges/category-badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { EnhancedMarkdown } from '@/components/ui/enhanced-markdown'
+import { AnimatedCard } from '@/components/ui/animated-card'
+import { EnhancedMarkdown } from '@/components/markdown/enhanced-markdown'
 
 interface Category {
     id: string
@@ -33,6 +34,7 @@ interface ReleaseCardProps {
     href?: string
     isNew?: boolean
     isExtended?: boolean
+    isAnimated?: boolean
 }
 
 function formatDate(date: string | Date) {
@@ -43,63 +45,79 @@ function formatDate(date: string | Date) {
     })
 }
 
-export function ReleaseCard({ release, href = '/releases', isNew = false, isExtended = false }: ReleaseCardProps) {
+export function ReleaseCard({ release, href = '/releases', isNew = false, isExtended = false, isAnimated = false }: ReleaseCardProps) {
+    const CardWrapper = isAnimated ? AnimatedCard : Card
+    const releaseHref = `/releases#${release.version}`
+
     if (isExtended) {
         return (
-            <Card className="hover:border-green-500/50 transition-colors">
-                <CardHeader>
-                    <div className="flex items-center gap-3 mb-2">
-                        <Badge variant="outline" className="font-mono text-lg px-3 py-1 text-green-500 border-green-500/50">
-                            v{release.version}
-                        </Badge>
-                        {release.title && (
-                            <CardTitle className="text-xl">{release.title}</CardTitle>
-                        )}
-                        {isNew && (
-                            <Badge className="bg-green-500 text-white">NEW</Badge>
-                        )}
-                    </div>
-                    <div className="flex items-center flex-wrap gap-4 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            {formatDate(release.publishedAt)}
-                        </span>
-                        {release.category && (
-                            <CategoryBadge category={release.category} />
-                        )}
-                        {release.teams && release.teams.length > 0 && (
-                            <span className="flex items-center gap-1">
-                                <Users className="w-4 h-4" />
-                                {release.teams.length} team{release.teams.length !== 1 ? 's' : ''}
-                            </span>
-                        )}
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <EnhancedMarkdown>{release.content}</EnhancedMarkdown>
-                    {release.teams && release.teams.length > 0 && (
-                        <div className="mt-4 pt-4 border-t">
-                            <div className="flex flex-wrap gap-2">
-                                {release.teams.map((team) => (
-                                    <Badge
-                                        key={team.id}
-                                        variant="outline"
-                                        style={team.color ? { borderColor: team.color, color: team.color } : undefined}
-                                    >
-                                        {team.name}
-                                    </Badge>
-                                ))}
-                            </div>
+            <Link href={releaseHref} id={release.version}>
+                <CardWrapper 
+                    className="hover:border-primary/50 transition-colors cursor-pointer"
+                    isAnimated={isAnimated}
+                    decorativeIcon={<Megaphone className="w-32 h-32" />}
+                    iconColor="#22c55e"
+                >
+                    <CardContent className="p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                            <Badge variant="outline" className="font-mono text-green-500 border-green-500/50">
+                                v{release.version}
+                            </Badge>
+                            {release.title && (
+                                <span className="font-semibold text-lg">{release.title}</span>
+                            )}
+                            {isNew && (
+                                <Badge className="bg-green-500 text-white text-xs">NEW</Badge>
+                            )}
                         </div>
-                    )}
-                </CardContent>
-            </Card>
+                        
+                        <div className="prose prose-sm max-w-none dark:prose-invert mb-4">
+                            <EnhancedMarkdown>{release.content}</EnhancedMarkdown>
+                        </div>
+                        
+                        <div className="flex items-center flex-wrap gap-4 text-sm text-muted-foreground pt-3 border-t">
+                            <span className="flex items-center gap-1">
+                                <Calendar className="w-4 h-4" />
+                                {formatDate(release.publishedAt)}
+                            </span>
+                            {release.category && (
+                                <CategoryBadge category={release.category} />
+                            )}
+                            {release.teams && release.teams.length > 0 && (
+                                <div className="flex items-center gap-2">
+                                    <span className="flex items-center gap-1">
+                                        <Users className="w-4 h-4" />
+                                        {release.teams.length} team{release.teams.length !== 1 ? 's' : ''}:
+                                    </span>
+                                    <div className="flex flex-wrap gap-1">
+                                        {release.teams.map((team) => (
+                                            <Badge
+                                                key={team.id}
+                                                variant="outline"
+                                                className="text-xs"
+                                                style={team.color ? { borderColor: team.color, color: team.color } : undefined}
+                                            >
+                                                {team.name}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </CardContent>
+                </CardWrapper>
+            </Link>
         )
     }
 
     return (
         <Link href={href}>
-            <Card className="hover:border-green-500/50 transition-colors cursor-pointer">
+            <CardWrapper 
+                className="hover:border-green-500/50 transition-colors cursor-pointer"
+                isAnimated={isAnimated}
+                decorativeIcon={<Megaphone className="w-32 h-32" />}
+                iconColor="#22c55e"
+            >
                 <CardContent className="p-3">
                     <div className="flex items-center gap-2 mb-2">
                         <Badge variant="outline" className="font-mono text-green-500 border-green-500/50">
@@ -125,7 +143,7 @@ export function ReleaseCard({ release, href = '/releases', isNew = false, isExte
                         </span>
                     </div>
                 </CardContent>
-            </Card>
+            </CardWrapper>
         </Link>
     )
 }

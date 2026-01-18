@@ -29,6 +29,22 @@ export default async function DocsPage() {
         ],
     })
 
+    // Fetch feature categories to get their icons
+    const featureCategories = await prisma.featureCategory.findMany({
+        where: { enabled: true },
+        select: {
+            slug: true,
+            icon: true,
+            iconBase64: true,
+            color: true,
+        },
+    })
+
+    // Create a map for quick lookup
+    const featureCategoryMap = new Map(
+        featureCategories.map(fc => [fc.slug, fc])
+    )
+
     // Fetch all index documents to determine which categories have index.md
     const indexDocuments = await prisma.document.findMany({
         where: {
@@ -57,6 +73,7 @@ export default async function DocsPage() {
                     parentSlug: child.parentSlug,
                     level: child.level,
                     hasIndexDocument: indexDocumentSlugs.has(child.categorySlug),
+                    featureCategory: featureCategoryMap.get(child.categorySlug),
                     children: buildChildren(child.categorySlug), // Recursive call
                 }))
         }
@@ -75,6 +92,7 @@ export default async function DocsPage() {
                 description: cat.description,
                 parentSlug: cat.parentSlug,
                 level: cat.level,
+                featureCategory: featureCategoryMap.get(cat.categorySlug),
                 hasIndexDocument: indexDocumentSlugs.has(cat.categorySlug),
                 children: buildChildren(cat.categorySlug), // Recursive call
             }))
@@ -102,7 +120,7 @@ export default async function DocsPage() {
             />
 
             <div className="space-y-6">
-                <div className='px-12 py-6'>
+                <div className="px-4 sm:px-6 lg:px-12 py-6">
                     {categoriesWithMeta.length === 0 ? (
                         <Card>
                             <CardContent className="pt-6">
@@ -125,40 +143,93 @@ export default async function DocsPage() {
                             </CardContent>
                         </Card>
                     ) : (
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                             {categoriesWithMeta.map((category) => {
+                                const iconColor = category.featureCategory?.color || '#f97316'
+                                const hasCustomIcon = category.featureCategory?.iconBase64
+
                                 return (
                                     <Link key={category.slug} href={`/docs/${category.slug}`}>
-                                        <Card className="hover:border-brand-orange hover:shadow-lg hover:shadow-brand-orange/20 transition-all duration-300 cursor-pointer group h-full relative overflow-hidden">
-                                            {/* Gradient overlay on hover */}
-                                            <div className="absolute inset-0 bg-gradient-to-br from-brand-orange/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                        <Card className="hover:border-brand-orange hover:shadow-xl hover:shadow-brand-orange/20 transition-all duration-500 cursor-pointer group h-full relative overflow-hidden bg-gradient-to-br from-background to-muted/20">
+                                            {/* Large decorative icon on the right - half visible */}
+                                            {hasCustomIcon ? (
+                                                <div 
+                                                    className="absolute -right-8 top-1/2 -translate-y-1/2 w-32 h-32 opacity-[0.08] group-hover:opacity-[0.12] group-hover:scale-110 transition-all duration-500"
+                                                    style={{
+                                                        filter: `drop-shadow(0 0 20px ${iconColor}40)`,
+                                                    }}
+                                                >
+                                                    <img
+                                                        src={category.featureCategory?.iconBase64 || ''}
+                                                        alt=""
+                                                        className="w-full h-full object-contain"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <BookOpen 
+                                                    className="absolute -right-8 top-1/2 -translate-y-1/2 w-32 h-32 opacity-[0.08] group-hover:opacity-[0.12] group-hover:scale-110 transition-all duration-500"
+                                                    style={{ 
+                                                        color: iconColor,
+                                                        filter: `drop-shadow(0 0 20px ${iconColor}40)`,
+                                                    }}
+                                                />
+                                            )}
 
-                                            <CardHeader className="relative">
-                                                <div className="flex items-start justify-between">
-                                                    <div className="flex-1">
-                                                        <CardTitle className="group-hover:text-brand-orange transition-colors text-lg">
-                                                            {category.title}
-                                                        </CardTitle>
-                                                    </div>
-                                                    <div className="not-prose p-2 rounded-lg bg-brand-orange/10 group-hover:bg-brand-orange/20 group-hover:scale-110 transition-all duration-300" data-ui-component="category-badge">
-                                                        <BookOpen className="w-5 h-5 text-brand-orange" />
+                                            {/* Animated gradient overlay */}
+                                            <div className="absolute inset-0 bg-gradient-to-br from-brand-orange/0 via-brand-orange/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                            
+                                            {/* Shimmer effect on hover */}
+                                            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+                                            <CardHeader className="relative z-10">
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <div
+                                                                className="p-1.5 rounded-md group-hover:scale-110 transition-all duration-300"
+                                                                style={{
+                                                                    backgroundColor: `${iconColor}20`,
+                                                                }}
+                                                            >
+                                                                {hasCustomIcon ? (
+                                                                    <img
+                                                                        src={category.featureCategory?.iconBase64 || ''}
+                                                                        alt={category.title}
+                                                                        className="w-4 h-4 object-contain"
+                                                                    />
+                                                                ) : (
+                                                                    <BookOpen
+                                                                        className="w-4 h-4"
+                                                                        style={{ color: iconColor }}
+                                                                    />
+                                                                )}
+                                                            </div>
+                                                            <CardTitle className="group-hover:text-brand-orange transition-colors text-base sm:text-lg font-bold">
+                                                                {category.title}
+                                                            </CardTitle>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </CardHeader>
                                             {category.description && (
-                                                <CardContent className="relative">
-                                                    <p className="text-sm text-muted-foreground line-clamp-3">
+                                                <CardContent className="relative z-10">
+                                                    <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
                                                         {category.description}
                                                     </p>
                                                     {category.children && category.children.length > 0 && (
-                                                        <div className="mt-4 pt-3 border-t flex items-center gap-2">
-                                                            <div className="flex-1">
+                                                        <div className="mt-4 pt-3 border-t border-border/50 flex items-center justify-between">
+                                                            <div className="flex items-center gap-2">
+                                                                <div 
+                                                                    className="w-2 h-2 rounded-full"
+                                                                    style={{ backgroundColor: iconColor }}
+                                                                />
                                                                 <p className="text-xs font-medium text-muted-foreground">
                                                                     {category.children.length} {category.children.length === 1 ? 'section' : 'sections'}
                                                                 </p>
                                                             </div>
-                                                            <div className="text-brand-orange group-hover:translate-x-1 transition-transform duration-300">
-                                                                →
+                                                            <div className="flex items-center gap-1 text-brand-orange font-medium text-sm group-hover:gap-2 transition-all duration-300">
+                                                                <span>Explore</span>
+                                                                <span className="group-hover:translate-x-1 transition-transform duration-300">→</span>
                                                             </div>
                                                         </div>
                                                     )}

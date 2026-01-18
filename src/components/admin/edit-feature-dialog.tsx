@@ -15,9 +15,9 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { MarkdownToolbar } from '@/components/ui/markdown-toolbar'
+import { MarkdownToolbar } from '@/components/markdown/markdown-toolbar'
 import { useMarkdownEditor } from '@/hooks/use-markdown-editor'
-import { EnhancedMarkdown } from '@/components/ui/enhanced-markdown'
+import { EnhancedMarkdown } from '@/components/markdown/enhanced-markdown'
 
 interface EditFeatureDialogProps {
     featureId: string

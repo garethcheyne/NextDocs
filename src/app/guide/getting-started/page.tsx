@@ -2,7 +2,7 @@ import { auth } from '@/lib/auth/auth'
 import { redirect } from 'next/navigation'
 import fs from 'fs'
 import path from 'path'
-import { MarkdownWithMermaid } from '@/components/markdown-with-mermaid'
+import { EnhancedMarkdown } from '@/components/markdown/enhanced-markdown'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
@@ -35,7 +35,7 @@ export default async function GettingStartedPage() {
                     Back to Guide
                 </Button>
             </Link>
-            <MarkdownWithMermaid>{content}</MarkdownWithMermaid>
+            <EnhancedMarkdown>{content}</EnhancedMarkdown>
         </ContentDetailLayout>
     )
 }

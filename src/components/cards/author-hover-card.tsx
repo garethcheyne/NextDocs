@@ -79,22 +79,22 @@ export function AuthorHoverCard({ author, content, children }: AuthorHoverCardPr
   }
 
   return (
-    <div 
+    <div
       className="relative inline-block"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       {children}
-      
+
       {isHovering && (
-        <Card 
-          className="absolute z-50 w-96 shadow-lg border-2 top-full left-0 mt-1"
+        <Card
+          className="absolute z-50 w-96 shadow-lg border-2 top-full left-0 mt-1 bg-card hover-card-animation"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
           <CardHeader className="pb-3">
-            <div className="flex items-start gap-4">
-              <div className="relative w-16 h-16 rounded-full overflow-hidden bg-muted flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="relative w-14 h-14 rounded-full overflow-hidden bg-muted flex-shrink-0">
                 {author.avatar ? (
                   <Image
                     src={author.avatar}
@@ -104,13 +104,13 @@ export function AuthorHoverCard({ author, content, children }: AuthorHoverCardPr
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-brand-orange to-brand-orange/80">
-                    <span className="text-xl font-semibold text-white">
+                    <span className="text-lg font-semibold text-white">
                       {getInitials(author.name)}
                     </span>
                   </div>
                 )}
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-lg">{author.name}</h3>
                 <p className="text-sm text-muted-foreground">{author.title}</p>
                 <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
@@ -126,7 +126,7 @@ export function AuthorHoverCard({ author, content, children }: AuthorHoverCardPr
               </div>
             </div>
           </CardHeader>
-          
+
           <CardContent className="space-y-4">
             {/* Bio */}
             <p className="text-sm text-muted-foreground line-clamp-3">{author.bio}</p>
@@ -135,31 +135,31 @@ export function AuthorHoverCard({ author, content, children }: AuthorHoverCardPr
             {(author.social.linkedin || author.social.github || author.social.website) && (
               <div className="flex gap-2">
                 {author.social.linkedin && (
-                  <a 
-                    href={author.social.linkedin} 
-                    target="_blank" 
+                  <a
+                    href={author.social.linkedin}
+                    target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs px-2 py-1 border rounded hover:bg-muted"
+                    className="text-xs text-muted-foreground px-2 py-1 border rounded hover:bg-muted"
                   >
                     LinkedIn
                   </a>
                 )}
                 {author.social.github && (
-                  <a 
-                    href={author.social.github} 
-                    target="_blank" 
+                  <a
+                    href={author.social.github}
+                    target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs px-2 py-1 border rounded hover:bg-muted"
+                    className="text-xs text-muted-foreground px-2 py-1 border rounded hover:bg-muted"
                   >
                     GitHub
                   </a>
                 )}
                 {author.social.website && (
-                  <a 
-                    href={author.social.website} 
-                    target="_blank" 
+                  <a
+                    href={author.social.website}
+                    target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs px-2 py-1 border rounded hover:bg-muted"
+                    className="text-xs text-muted-foreground px-2 py-1 border rounded hover:bg-muted"
                   >
                     Website
                   </a>
@@ -168,7 +168,6 @@ export function AuthorHoverCard({ author, content, children }: AuthorHoverCardPr
             )}
 
             <Separator />
-
             {/* Recent Content */}
             <div className="space-y-3">
               {content.documents.length > 0 && (
@@ -179,10 +178,10 @@ export function AuthorHoverCard({ author, content, children }: AuthorHoverCardPr
                   </div>
                   <div className="space-y-1">
                     {content.documents.slice(0, 3).map((doc) => (
-                      <Link 
-                        key={doc.id} 
+                      <Link
+                        key={doc.id}
                         href={`/${doc.slug}`}
-                        className="block text-xs hover:text-brand-orange truncate"
+                        className="block text-xs text-muted-foreground hover:text-brand-orange truncate"
                       >
                         • {doc.title}
                       </Link>
@@ -199,10 +198,10 @@ export function AuthorHoverCard({ author, content, children }: AuthorHoverCardPr
                   </div>
                   <div className="space-y-1">
                     {content.blogPosts.slice(0, 3).map((post) => (
-                      <Link 
-                        key={post.id} 
+                      <Link
+                        key={post.id}
                         href={`/${post.slug}`}
-                        className="block text-xs hover:text-brand-orange truncate"
+                        className="block text-xs text-muted-foreground hover:text-brand-orange truncate"
                       >
                         • {post.title}
                       </Link>
@@ -214,8 +213,8 @@ export function AuthorHoverCard({ author, content, children }: AuthorHoverCardPr
 
             {/* View All Link */}
             {(content.documents.length > 3 || content.blogPosts.length > 3) && (
-              <Link 
-                href={`/search?author=${author.email.split('@')[0]}`}
+              <Link
+                href={`/search?author=${encodeURIComponent(author.email)}`}
                 className="text-xs text-brand-orange hover:underline flex items-center gap-1"
               >
                 View all content by {author.name}

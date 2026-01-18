@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/db/prisma'
+import { getAuthorsData } from '@/lib/authors-data'
 
 /**
  * Get dashboard data for the current user
@@ -111,6 +112,7 @@ export async function GET(request: NextRequest) {
               name: true,
               slug: true,
               color: true,
+              iconBase64: true,
             },
           },
           _count: {
@@ -137,6 +139,7 @@ export async function GET(request: NextRequest) {
               name: true,
               slug: true,
               color: true,
+              iconBase64: true,
             },
           },
           _count: {
@@ -163,6 +166,7 @@ export async function GET(request: NextRequest) {
               name: true,
               slug: true,
               color: true,
+              iconBase64: true,
             },
           },
           _count: {
@@ -215,6 +219,7 @@ export async function GET(request: NextRequest) {
             name: true,
             slug: true,
             color: true,
+            iconBase64: true,
           },
         },
         creator: {
@@ -235,12 +240,23 @@ export async function GET(request: NextRequest) {
       take: 5,
     })
 
+    // Fetch author data for blog posts
+    const authorSlugs = blogPosts.map((post) => post.author).filter(Boolean) as string[]
+    const authorsDataMap = await getAuthorsData(authorSlugs)
+
+    // Convert Map to plain object for JSON serialization
+    const blogAuthorsObject: Record<string, any> = {}
+    authorsDataMap.forEach((value, key) => {
+      blogAuthorsObject[key] = value
+    })
+
     return NextResponse.json({
       user: {
         teams: userTeams.map((t) => t.team),
       },
       releases,
       blogPosts,
+      blogAuthors: blogAuthorsObject,
       involvedFeatures,
       newFeatures,
     })

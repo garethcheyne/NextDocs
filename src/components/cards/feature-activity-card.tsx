@@ -1,7 +1,11 @@
 import Link from 'next/link'
-import { ThumbsUp, MessageSquare } from 'lucide-react'
+import { ThumbsUp, MessageSquare, Activity } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { AnimatedCard } from '@/components/ui/animated-card'
+import { StatusBadge } from '@/components/badges/status-badge'
+import { CategoryBadge } from '@/components/badges/category-badge'
+import { defaultStatusColors, getStatusHoverClass } from '@/lib/status-colors'
 
 interface Category {
     id: string
@@ -29,22 +33,22 @@ interface FeatureActivityCardProps {
     }
     statusColors?: Record<string, string>
     isExtended?: boolean
+    isAnimated?: boolean
 }
 
-const defaultStatusColors: Record<string, string> = {
-    proposal: 'bg-yellow-500',
-    approved: 'bg-purple-500',
-    'in-progress': 'bg-blue-500',
-    completed: 'bg-green-500',
-    declined: 'bg-red-500',
-    'on-hold': 'bg-orange-500',
-}
+export function FeatureActivityCard({ feature, statusColors = defaultStatusColors, isExtended = false, isAnimated = false }: FeatureActivityCardProps) {
+    const CardWrapper = isAnimated ? AnimatedCard : Card
+    const hoverClass = getStatusHoverClass(feature.status)
 
-export function FeatureActivityCard({ feature, statusColors = defaultStatusColors, isExtended = false }: FeatureActivityCardProps) {
     if (isExtended) {
         return (
             <Link href={`/features/${feature.slug}`}>
-                <Card className="hover:border-purple-500/50 transition-colors cursor-pointer">
+                <CardWrapper 
+                    className={`${hoverClass} transition-colors cursor-pointer`}
+                    isAnimated={isAnimated}
+                    decorativeIcon={<Activity className="w-32 h-32" />}
+                    iconColor="#a855f7"
+                >
                     <CardContent className="p-4">
                         <div className="flex items-start justify-between gap-4 mb-3">
                             <div className="flex-1 min-w-0">
@@ -63,21 +67,14 @@ export function FeatureActivityCard({ feature, statusColors = defaultStatusColor
                                     </p>
                                 )}
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <Badge className={`${statusColors[feature.status] || 'bg-gray-500'} text-white text-xs`}>
-                                        {feature.status}
-                                    </Badge>
+                                    <StatusBadge status={feature.status} />
                                     {feature.priority && (
                                         <Badge variant="outline" className="text-xs">
                                             {feature.priority}
                                         </Badge>
                                     )}
                                     {feature.category && (
-                                        <span
-                                            className="text-xs"
-                                            style={feature.category.color ? { color: feature.category.color } : undefined}
-                                        >
-                                            {feature.category.name}
-                                        </span>
+                                        <CategoryBadge category={feature.category} />
                                     )}
                                 </div>
                             </div>
@@ -93,14 +90,19 @@ export function FeatureActivityCard({ feature, statusColors = defaultStatusColor
                             </div>
                         </div>
                     </CardContent>
-                </Card>
+                </CardWrapper>
             </Link>
         )
     }
 
     return (
         <Link href={`/features/${feature.slug}`}>
-            <Card className="hover:border-purple-500/50 transition-colors cursor-pointer">
+            <CardWrapper 
+                className={`${hoverClass} transition-colors cursor-pointer`}
+                isAnimated={isAnimated}
+                decorativeIcon={<Activity className="w-32 h-32" />}
+                iconColor="#a855f7"
+            >
                 <CardContent className="p-3">
                     <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
@@ -114,16 +116,9 @@ export function FeatureActivityCard({ feature, statusColors = defaultStatusColor
                                 )}
                             </div>
                             <div className="flex items-center gap-2 mt-1">
-                                <Badge className={`${statusColors[feature.status] || 'bg-gray-500'} text-white text-xs`}>
-                                    {feature.status}
-                                </Badge>
+                                <StatusBadge status={feature.status} />
                                 {feature.category && (
-                                    <span
-                                        className="text-xs"
-                                        style={feature.category.color ? { color: feature.category.color } : undefined}
-                                    >
-                                        {feature.category.name}
-                                    </span>
+                                    <CategoryBadge category={feature.category} />
                                 )}
                             </div>
                         </div>
@@ -139,7 +134,7 @@ export function FeatureActivityCard({ feature, statusColors = defaultStatusColor
                         </div>
                     </div>
                 </CardContent>
-            </Card>
+            </CardWrapper>
         </Link>
     )
 }

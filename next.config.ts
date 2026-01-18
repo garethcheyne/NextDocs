@@ -3,9 +3,9 @@ import type { NextConfig } from 'next'
 // Content Security Policy configuration
 const ContentSecurityPolicy = `
   default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net https://static.cloudflareinsights.com;
+  script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://*.cloudflare.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-  img-src 'self' data: blob: https://graph.microsoft.com https://avatars.githubusercontent.com https://*.blob.core.windows.net;
+  img-src 'self' data: blob: https://graph.microsoft.com https://avatars.githubusercontent.com https://*.blob.core.windows.net https://cdn.simpleicons.org;
   font-src 'self' https://fonts.gstatic.com data:;
   connect-src 'self' https://graph.microsoft.com https://api.github.com https://dev.azure.com https://*.visualstudio.com https://cloudflareinsights.com;
   frame-src 'self';
@@ -33,6 +33,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '*.blob.core.windows.net', // Azure Blob Storage
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.simpleicons.org', // Simple Icons for language badges
+      },
     ],
   },
   experimental: {
@@ -47,7 +51,11 @@ const nextConfig: NextConfig = {
     'ews-javascript-api',
     '@ewsjs/xhr',
     'http-cookie-agent',
-    'deasync'
+    'deasync',
+    'ioredis',
+    'net',
+    'tls',
+    'dns'
   ],
   // Security headers
   async headers() {
@@ -86,6 +94,23 @@ const nextConfig: NextConfig = {
           {
             key: 'Content-Security-Policy',
             value: ContentSecurityPolicy,
+          },
+        ],
+      },
+      {
+        source: '/sw.js',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/javascript; charset=utf-8',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self'; script-src 'self'",
           },
         ],
       },

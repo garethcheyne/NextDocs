@@ -1,13 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { Lightbulb, Plus, Calendar, User } from 'lucide-react'
+import { Lightbulb, Plus, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { VoteButton } from '@/components/features/vote-button'
 import { FollowButton } from '@/components/features/follow-button'
-import { StatusBadge } from './status-badge'
-import { PriorityBadge } from './priority-badge'
-import { CategoryBadge } from './category-badge'
+import { StatusBadge } from '../badges/status-badge'
+import { PriorityBadge } from '../badges/priority-badge'
+import { CategoryBadge } from '../badges/category-badge'
 import { formatDate } from '@/lib/utils/date-format'
 
 interface FeatureBannerProps {
@@ -18,8 +18,7 @@ interface FeatureBannerProps {
     status?: string
     priority?: string | null
     category?: { id: string; name: string; color?: string | null; icon?: string | null; iconBase64?: string | null } | null
-    creator?: string
-    creatorImage?: string | null
+    creatorEmail?: string
     createdAt?: Date
     voteCount?: number
     upvotes?: number
@@ -36,8 +35,7 @@ export function FeatureBanner({
     status,
     priority,
     category,
-    creator,
-    creatorImage,
+    creatorEmail,
     createdAt,
     voteCount = 0,
     upvotes = 0,
@@ -64,19 +62,8 @@ export function FeatureBanner({
 
                                 </div>
                                 <div className="flex items-center gap-4 text-sm text-foreground/70 dark:text-foreground/80">
-                                    {creator && (
-                                        <div className="flex items-center gap-1">
-                                            {creatorImage ? (
-                                                <img
-                                                    src={creatorImage}
-                                                    alt={creator}
-                                                    className="w-5 h-5 rounded-full object-cover"
-                                                />
-                                            ) : (
-                                                <User className="w-4 h-4" />
-                                            )}
-                                            {creator}
-                                        </div>
+                                    {creatorEmail && (
+                                        <span>{creatorEmail}</span>
                                     )}
                                     {createdAt && (
                                         <div className="flex items-center gap-1">

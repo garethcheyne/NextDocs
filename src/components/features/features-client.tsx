@@ -18,9 +18,9 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { FeatureBanner } from '@/components/features/feature-banner'
 import { VoteButton } from '@/components/features/vote-button'
-import { StatusBadge } from '@/components/features/status-badge'
-import { PriorityBadge } from '@/components/features/priority-badge'
-import { CategoryBadge } from '@/components/features/category-badge'
+import { StatusBadge } from '@/components/badges/status-badge'
+import { PriorityBadge } from '@/components/badges/priority-badge'
+import { CategoryBadge } from '@/components/badges/category-badge'
 import { ReclassifyDialog } from '@/components/admin/reclassify-dialog'
 import { MergeDialog } from '@/components/admin/merge-dialog'
 

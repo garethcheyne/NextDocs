@@ -167,6 +167,32 @@ services:
         limits:
           memory: 256M
 
+  # Prisma Studio for database management
+  studio:
+    image: node:20-alpine
+    container_name: nextdocs-studio
+    working_dir: /app
+    ports:
+      - "5555:5555"
+    environment:
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/nextdocs?schema=public
+    volumes:
+      - ./prisma:/app/prisma:ro
+      - ./package.json:/app/package.json:ro
+    command: >
+      sh -c "
+      npm install -g prisma@6.19.0 &&
+      prisma studio --port 5555 --hostname 0.0.0.0
+      "
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - nextdocs-network
+    restart: unless-stopped
+    profiles:
+      - studio
+
 volumes:
   postgres-data:
     driver: local

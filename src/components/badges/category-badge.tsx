@@ -1,4 +1,3 @@
-import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
 interface CategoryBadgeProps {
@@ -40,7 +39,7 @@ export function CategoryBadge({ category, className }: CategoryBadgeProps) {
             <div className="relative inline-flex items-center ml-3">
                 {/* Badge background - matching other badge heights (24px) */}
                 <div
-                    className="flex items-center rounded-md px-4 py-1 shadow-lg hover:shadow-xl transition-all duration-200 pl-6 h-6"
+                    className="flex items-center rounded-md px-4 py-1 shadow-lg pl-6 h-6"
                     style={{
                         backgroundColor,
                         color: textColor

@@ -360,7 +360,7 @@ export function APIKeyManagement({ userId }: APIKeyManagementProps) {
           </Card>
         ) : (
           apiKeys.map((key) => (
-            <Card key={key.id} className='bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl'>
+            <Card key={key.id} >
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div>
