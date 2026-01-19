@@ -94,6 +94,35 @@ async function createGitHubIssue(
 }
 
 /**
+ * Get Azure DevOps OAuth token using service principal
+ */
+async function getDevOpsAccessToken(): Promise<string> {
+  const tokenUrl = `https://login.microsoftonline.com/${process.env.DEVOPS_TENANT_ID}/oauth2/v2.0/token`;
+  
+  const params = new URLSearchParams({
+    client_id: process.env.DEVOPS_CLIENT_ID!,
+    client_secret: process.env.DEVOPS_CLIENT_SECRET!,
+    scope: '499b84ac-1321-427f-aa17-267ca6975798/.default', // Azure DevOps scope
+    grant_type: 'client_credentials'
+  });
+
+  const response = await fetch(tokenUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: params.toString()
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to get access token: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data.access_token;
+}
+
+/**
  * Create an Azure DevOps work item from a feature request
  */
 async function createAzureDevOpsWorkItem(
@@ -102,12 +131,20 @@ async function createAzureDevOpsWorkItem(
   customization?: WorkItemCustomization
 ): Promise<CreateWorkItemResult> {
   try {
-    if (!category.devopsPat || !category.devopsOrg || !category.devopsProject) {
-      return { success: false, error: 'Azure DevOps configuration incomplete' };
+    // Validate environment variables
+    if (!process.env.DEVOPS_ORG_URL || !process.env.DEVOPS_CLIENT_ID || 
+        !process.env.DEVOPS_CLIENT_SECRET || !process.env.DEVOPS_TENANT_ID) {
+      return { success: false, error: 'Azure DevOps OAuth configuration missing in environment' };
     }
 
-    const pat = decryptToken(category.devopsPat);
-    const auth = Buffer.from(`:${pat}`).toString('base64');
+    // Category only needs to specify the project name
+    if (!category.devopsProject) {
+      return { success: false, error: 'Azure DevOps project name not configured for category' };
+    }
+
+    // Get OAuth token
+    const accessToken = await getDevOpsAccessToken();
+    const orgName = process.env.DEVOPS_ORG_URL!.split('/').pop(); // Extract org name from URL
 
     // Get epic and tags if assigned
     const epic = featureRequest.epicId
@@ -188,18 +225,18 @@ async function createAzureDevOpsWorkItem(
         path: '/relations/-',
         value: {
           rel: 'System.LinkTypes.Hierarchy-Reverse',
-          url: `https://dev.azure.com/${category.devopsOrg}/${category.devopsProject}/_apis/wit/workitems/${epic.externalId}`,
+          url: `${process.env.DEVOPS_ORG_URL}/${category.devopsProject}/_apis/wit/workitems/${epic.externalId}`,
         },
       });
     }
 
     // Create work item
     const response = await fetch(
-      `https://dev.azure.com/${category.devopsOrg}/${category.devopsProject}/_apis/wit/workitems/$User%20Story?api-version=7.0`,
+      `${process.env.DEVOPS_ORG_URL}/${category.devopsProject}/_apis/wit/workitems/$${encodeURIComponent(workItemType)}?api-version=7.1`,
       {
         method: 'POST',
         headers: {
-          Authorization: `Basic ${auth}`,
+          Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json-patch+json',
         },
         body: JSON.stringify(fields),

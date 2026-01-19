@@ -79,16 +79,21 @@ export default function HomePage() {
 
                   {/* Title */}
                   <div className="text-center lg:text-left space-y-6">
-                    <h1 className={`text-6xl md:text-7xl lg:text-8xl font-black tracking-wider ${righteous.className}`}>
-                      <span className="inline-block text-white dark:text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.1)]">
-                        THE HIVE
-                      </span>
-                    </h1>
+                    <div>
+                      <h1 className={`text-6xl md:text-7xl lg:text-8xl font-black tracking-wider ${righteous.className}`}>
+                        <span className="inline-block drop-shadow-[0_2px_10px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_2px_10px_rgba(255,255,255,0.1)]">
+                          THE HIVE
+                        </span>
+                      </h1>
+                      <p className="text-lg md:text-xl text-muted-foreground mt-4 font-light tracking-wide">
+                        Enterprise Knowledge Hub
+                      </p>
+                    </div>
 
                     {/* Sign In Button */}
-                    <div className="flex justify-center lg:justify-start">
+                    <div className="flex flex-col items-center lg:items-start gap-3">
                       {error && (
-                        <div className="mb-4 bg-destructive/10 border border-destructive/50 rounded-lg p-3 flex items-start gap-2 max-w-md">
+                        <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-3 flex items-start gap-2 max-w-md">
                           <AlertCircle className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
                           <p className="text-sm text-destructive">{error}</p>
                         </div>
@@ -98,7 +103,9 @@ export default function HomePage() {
                         type="button"
                         onClick={handleAzureLogin}
                         disabled={isLoading}
-                        className="h-14 px-8 text-lg shadow-xl hover:shadow-2xl transition-all"
+                        variant="outline"
+                        size="lg"
+                        className="px-8 text-lg border-2 border-brand-orange text-brand-orange hover:bg-brand-orange hover:text-white dark:hover:text-white transition-all"
                       >
                         {isLoading ? (
                           <>
@@ -108,7 +115,7 @@ export default function HomePage() {
                         ) : (
                           <>
                             <Shield className="w-5 h-5 mr-2" />
-                            Sign in with Microsoft
+                            Sign in
                           </>
                         )}
                       </Button>

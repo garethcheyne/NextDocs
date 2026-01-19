@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
-import { BookOpen, Newspaper, Code2, Settings, LogOut, User, ChevronDown, UserCog } from 'lucide-react'
+import { BookOpen, Newspaper, Code2, Settings, LogOut, User, ChevronDown, UserCog, Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
     DropdownMenu,
@@ -14,6 +14,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { PushNotificationManager } from '@/components/pwa/push-notification-manager'
 
 export function Navigation() {
     const pathname = usePathname()
@@ -142,6 +143,10 @@ export function Navigation() {
                                             Preferences
                                         </Link>
                                     </DropdownMenuItem>
+                                    <DropdownMenuSeparator className="bg-gray-800" />
+                                    <div className="px-2 py-2">
+                                        <PushNotificationManager />
+                                    </div>
                                     {session.user.role?.toLowerCase() === 'admin' && (
                                         <>
                                             <DropdownMenuSeparator className="bg-gray-800" />
@@ -155,6 +160,12 @@ export function Navigation() {
                                                 <Link href="/admin" className="flex items-center">
                                                     <Settings className="w-4 h-4 mr-2" />
                                                     Admin Dashboard
+                                                </Link>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem asChild className="cursor-pointer hover:bg-gray-800 focus:bg-gray-800">
+                                                <Link href="/admin/push-notifications" className="flex items-center">
+                                                    <Bell className="w-4 h-4 mr-2" />
+                                                    Push Notifications
                                                 </Link>
                                             </DropdownMenuItem>
                                         </>

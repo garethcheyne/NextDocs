@@ -18,7 +18,7 @@ export function AnimatedLogo() {
   }
 
   return (
-    <div className="relative w-full max-w-[300px] sm:max-w-[400px] md:max-w-[500px] lg:max-w-[700px] aspect-square mx-auto flex items-center justify-center">
+    <div className="relative w-full max-w-[200px] sm:max-w-[280px] md:max-w-[350px] lg:max-w-[450px] aspect-square mx-auto flex items-center justify-center">
 
       {/* Center logo - responsive sizing with orange glow and animations */}
       <div className="relative flex items-center justify-center z-30">
@@ -26,7 +26,7 @@ export function AnimatedLogo() {
           <img
             src="/icons/logo-512.png"
             alt="The Hive - Documentation Platform"
-            className="w-[200px] h-[250px] sm:w-[280px] sm:h-[350px] md:w-[360px] md:h-[450px] lg:w-[500px] lg:h-[600px] object-contain hover:scale-105 transition-all duration-300 drop-shadow-2xl"
+            className="w-[140px] h-[175px] sm:w-[200px] sm:h-[250px] md:w-[250px] md:h-[310px] lg:w-[350px] lg:h-[420px] object-contain hover:scale-105 transition-all duration-300 drop-shadow-2xl"
           />
 
           {/* Orange glow effect behind the logo */}
