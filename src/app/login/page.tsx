@@ -1,152 +1,129 @@
 'use client'
 
-import { useState, Suspense } from 'react'
-import { signIn } from 'next-auth/react'
+import { useState, Suspense, useEffect } from 'react'
+import { signIn, useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Image from 'next/image'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 import { Shield, AlertCircle, Loader2 } from 'lucide-react'
-import ParticlesBackground from '@/components/particles-background'
-import { ThemeAwareLogo } from '@/components/theme-aware-logo'
+import { ThemeToggle } from '@/components/theme-toggle'
+import { AnimatedLogo } from '@/components/ui/animated-logo'
+import { Righteous } from 'next/font/google'
+
+const righteous = Righteous({
+  weight: '400',
+  subsets: ['latin'],
+  display: 'swap',
+})
 
 function LoginForm() {
   const router = useRouter()
+  const { data: session, status } = useSession()
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get('callbackUrl') || '/docs'
-  const error = searchParams.get('error')
+  const callbackUrl = searchParams.get('callbackUrl') || '/home'
+  const urlError = searchParams.get('error')
 
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [localError, setLocalError] = useState('')
-  const [showLocalLogin, setShowLocalLogin] = useState(false)
+  const [error, setError] = useState(urlError || '')
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user) {
+      router.push(callbackUrl)
+    }
+  }, [status, session, router, callbackUrl])
 
   async function handleAzureLogin() {
     setIsLoading(true)
-    setLocalError('')
+    setError('')
     try {
       await signIn('microsoft-entra-id', { callbackUrl })
     } catch (error) {
-      setLocalError('Failed to sign in with Microsoft')
-      setIsLoading(false)
-    }
-  }
-
-  async function handleLocalLogin(e: React.FormEvent) {
-    e.preventDefault()
-    setIsLoading(true)
-    setLocalError('')
-
-    try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      })
-
-      if (result?.error) {
-        setLocalError('Invalid email or password')
-        setIsLoading(false)
-      } else {
-        router.push(callbackUrl)
-        router.refresh()
-      }
-    } catch (error) {
-      setLocalError('An error occurred. Please try again.')
+      setError('Failed to sign in with Microsoft')
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-gray-950 via-brand-navy/90 to-black overflow-hidden">
-      <ParticlesBackground />
-
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-brand-orange/10 via-transparent to-transparent z-[2]" />
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,107,53,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,107,53,0.03)_1px,transparent_1px)] bg-[size:50px_50px] z-[2]" />
-
-      <div className="relative min-h-screen flex items-center justify-center p-6 z-10">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <div className="w-32 h-32 flex items-center justify-center">
-                <img
-                  src="/icons/logo-256.png"
-                  alt="The Hive"
-                  className="w-28 h-28 object-contain drop-shadow-2xl"
-                />
-              </div>
-            </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">
-              The Hive
-            </h1>
-            <p className="text-sm text-gray-400 mt-1">Commercial Apps Documentation</p>
+    <>
+      {status === 'loading' || (status === 'authenticated' && session?.user) ? (
+        // Loading state or redirecting authenticated users
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">
+              {status === 'loading' ? 'Loading...' : 'Redirecting...'}
+            </p>
+          </div>
+        </div>
+      ) : (
+        // Non-Authenticated User View - Login Page
+        <div className="relative min-h-screen overflow-hidden">
+          {/* Theme Toggle - Top Right */}
+          <div className="absolute top-4 right-4 z-20">
+            <ThemeToggle />
           </div>
 
-          <Card className="bg-white/90 dark:bg-gray-900/40 border-gray-200 dark:border-gray-800/50 backdrop-blur-xl shadow-2xl">
-            <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl font-bold text-white">
-                Sign In
-              </CardTitle>
-              <CardDescription className="text-gray-400">
-                Sign in to access documentation and resources
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Error Display */}
-              {(error || localError) && (
-                <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 flex items-start gap-2">
-                  <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-red-400">
-                    {localError || 'Authentication failed. Please try again.'}
-                  </p>
+          {/* Main Content */}
+          <div className="relative min-h-screen flex items-center justify-center p-6 z-10">
+            <div className="w-full max-w-7xl">
+              {/* Mobile: Stack vertically, Desktop: Side-by-side layout */}
+              <div className="flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16">
+
+                {/* Left Side - Logo */}
+                <div className="flex-shrink-0 order-1 lg:order-1">
+                  <div className="flex justify-center">
+                    <AnimatedLogo />
+                  </div>
                 </div>
-              )}
 
-              {/* Azure SSO Login (Primary) */}
-              <Button
-                type="button"
-                onClick={handleAzureLogin}
-                disabled={isLoading}
-                className="w-full bg-gradient-to-r from-brand-orange to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium h-12 shadow-lg shadow-brand-orange/25"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  <>
-                    <Shield className="w-5 h-5 mr-2" />
-                    Sign in with Microsoft
-                  </>
-                )}
-              </Button>
+                {/* Right Side - Content and Login */}
+                <div className="flex-1 order-2 lg:order-2 space-y-8 max-w-2xl">
 
+                  {/* Title */}
+                  <div className="text-center lg:text-left space-y-6">
+                    <h1 className={`text-6xl md:text-7xl lg:text-8xl font-black tracking-wider ${righteous.className}`}>
+                      <span className="inline-block text-white dark:text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.1)]">
+                        THE HIVE
+                      </span>
+                    </h1>
 
+                    {/* Sign In Button */}
+                    <div className="flex justify-center lg:justify-start">
+                      {error && (
+                        <div className="mb-4 bg-destructive/10 border border-destructive/50 rounded-lg p-3 flex items-start gap-2 max-w-md">
+                          <AlertCircle className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
+                          <p className="text-sm text-destructive">{error}</p>
+                        </div>
+                      )}
 
-              <div className="pt-4 text-center">
-                <Link
-                  href="/"
-                  className="text-sm text-gray-400 hover:text-brand-orange transition-colors"
-                >
-                  ← Back to Home
-                </Link>
+                      <Button
+                        type="button"
+                        onClick={handleAzureLogin}
+                        disabled={isLoading}
+                        size="lg"
+                        className="h-14 px-8 text-lg shadow-xl hover:shadow-2xl transition-all"
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                            Signing in...
+                          </>
+                        ) : (
+                          <>
+                            <Shield className="w-5 h-5 mr-2" />
+                            Sign in with Microsoft
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   )
 }
 
