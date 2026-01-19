@@ -28,8 +28,8 @@ export function ThemeAwareLogo({ width = 48, height = 48, className = '' }: Them
 
     return (
         <Image
-            src={isDark ? '/img/hnc_cat_logo.svg' : '/img/hnc_cat_logo_blk.svg'}
-            alt="Enterprise Platform"
+            src="/icons/logo-256.png"
+            alt="The Hive"
             width={width}
             height={height}
             className={className}

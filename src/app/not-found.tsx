@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { AnimatedIconArc } from '@/components/ui/animated-icon-arc'
+import { AnimatedLogo } from '@/components/ui/animated-logo'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Home, ArrowLeft } from 'lucide-react'
@@ -9,7 +9,7 @@ export default function NotFound() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 relative overflow-hidden">
       {/* Animated Background */}
       <div className="absolute inset-0 -z-10">
-        <AnimatedIconArc />
+        <AnimatedLogo />
       </div>
 
       {/* Overlay to ensure text readability */}

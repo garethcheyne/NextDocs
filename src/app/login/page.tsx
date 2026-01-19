@@ -80,14 +80,14 @@ function LoginForm() {
             <div className="flex justify-center mb-4">
               <div className="w-32 h-32 flex items-center justify-center">
                 <img
-                  src="/img/cat_logo.png"
-                  alt="Documentation Platform"
+                  src="/icons/logo-256.png"
+                  alt="The Hive"
                   className="w-28 h-28 object-contain drop-shadow-2xl"
                 />
               </div>
             </div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">
-              Documentation Platform
+              The Hive
             </h1>
             <p className="text-sm text-gray-400 mt-1">Commercial Apps Documentation</p>
           </div>

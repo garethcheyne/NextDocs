@@ -1,0 +1,5 @@
+# Add these to your .env file:
+
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=BESAPAR2fLwOqCN1wDorsiaOKvGxulMzgg3AQqqHzosfPfocZqqgoxSI9FBX8t_dVrce1a0Y4KJOqJVhyUv16nY
+VAPID_PRIVATE_KEY=WTg2lZpeDMIq6z8Z9OAbol2jz3EIufUMY7CGVyKOrQw
+VAPID_SUBJECT=mailto:your-email@example.com

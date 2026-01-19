@@ -43,17 +43,17 @@ export function Navigation() {
                     {/* Logo */}
                     <Link href="/docs" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                         <Image
-                            src="/img/hnc_cat_logo.svg"
-                            alt="Enterprise Platform"
+                            src="/icons/logo-256.png"
+                            alt="The Hive"
                             width={40}
                             height={40}
                             className="drop-shadow-lg"
                         />
                         <div>
                             <h1 className="text-xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">
-                                Wiki
+                                The Hive
                             </h1>
-                            <p className="text-xs text-gray-500">Commercial Apps</p>
+                            <p className="text-xs text-gray-500">Knowledge Hub</p>
                         </div>
                     </Link>
 

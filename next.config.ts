@@ -1,4 +1,41 @@
 import type { NextConfig } from 'next'
+import withPWAInit from '@ducanh2912/next-pwa'
+
+const withPWA = withPWAInit({
+  dest: 'public',
+  disable: process.env.NODE_ENV === 'development',
+  register: true,
+  scope: '/',
+  sw: 'sw.js',
+  reloadOnOnline: true,
+  workboxOptions: {
+    disableDevLogs: true,
+    runtimeCaching: [
+      {
+        urlPattern: /^\/api\//,
+        handler: 'NetworkFirst',
+        options: {
+          cacheName: 'api-cache',
+          expiration: {
+            maxEntries: 50,
+            maxAgeSeconds: 60 * 60 // 1 hour
+          }
+        }
+      },
+      {
+        urlPattern: /\.(png|jpg|jpeg|svg|gif|webp)$/,
+        handler: 'CacheFirst',
+        options: {
+          cacheName: 'images-cache',
+          expiration: {
+            maxEntries: 100,
+            maxAgeSeconds: 60 * 60 * 24 * 7 // 1 week
+          }
+        }
+      }
+    ]
+  }
+})
 
 // Content Security Policy configuration
 const ContentSecurityPolicy = `
@@ -19,6 +56,10 @@ const ContentSecurityPolicy = `
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: 'standalone',
+  
+  // Empty turbopack config to suppress warning
+  turbopack: {},
+  
   images: {
     remotePatterns: [
       {
@@ -118,4 +159,4 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+export default withPWA(nextConfig)

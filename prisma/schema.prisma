@@ -23,6 +23,8 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
+  pushSubscription Json?  // Web push subscription data
+
   // Email Notification Preferences
   emailNotifications            Boolean   @default(true)  // Master toggle for all emails
   notifyOnFeatureStatusChange   Boolean   @default(true)  // Status changes on followed features

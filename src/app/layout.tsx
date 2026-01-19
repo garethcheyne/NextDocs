@@ -11,15 +11,15 @@ import { PWAUpdatePrompt } from '@/components/pwa/pwa-update-prompt'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'NextDocs - Enterprise Documentation Platform',
-  description: '🎃 Frighteningly Fast Enterprise Solutions Hub for Microsoft Technologies & Business Applications',
+  title: 'The Hive - Knowledge Hub',
+  description: '🐝 Knowledge Hub for Enterprise Solutions, Microsoft Technologies & Business Applications',
   icons: {
     icon: [
-      { url: '/img/cat_logo.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
       { url: '/favicon.ico', sizes: '32x32' },
     ],
     apple: [
-      { url: '/img/cat_logo.png', sizes: '180x180', type: 'image/png' },
+      { url: '/icons/apple-icon-180x180.png', sizes: '180x180', type: 'image/png' },
     ],
   },
   manifest: '/manifest.json',

@@ -503,6 +503,7 @@ export async function sendTestTemplateEmail(to: string, template: string): Promi
         active: true,
         createdAt: new Date(),
         updatedAt: new Date(),
+        pushSubscription: null,
         emailNotifications: true,
         notifyOnFeatureStatusChange: true,
         notifyOnFeatureComment: true,
