@@ -29,6 +29,10 @@ export default async function CategoryIntegrationsPage({
     return notFound();
   }
 
+  // Check which integrations are enabled
+  const devopsEnabled = process.env.DEVOPS_ENABLED === 'true';
+  const githubEnabled = process.env.GITHUB_ENABLED === 'true';
+
   return (
     <>
       {/* Header */}
@@ -60,7 +64,12 @@ export default async function CategoryIntegrationsPage({
           </div>
         </div>
 
-        <IntegrationSettings key={category.id} category={category} />
+        <IntegrationSettings
+          key={category.id}
+          category={category}
+          devopsEnabled={devopsEnabled}
+          githubEnabled={githubEnabled}
+        />
       </div>
       <Toaster />
     </>

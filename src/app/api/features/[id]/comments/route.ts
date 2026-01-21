@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/db/prisma'
-import { notifyNewComment } from '@/lib/email/notification-service'
+import { notificationCoordinator } from '@/lib/notifications'
 import { addExternalComment } from '@/lib/sync/devops-sync'
 
 export async function GET(
@@ -114,7 +114,8 @@ export async function POST(
           featureRequest.externalId,
           featureRequest.category,
           content.trim(),
-          session.user.name || session.user.email || 'Unknown'
+          session.user.name || session.user.email || 'Unknown',
+          session.user.email || undefined
         );
       } catch (error) {
         console.error('Failed to sync comment to external system:', error);
@@ -122,17 +123,19 @@ export async function POST(
       }
     }
 
-    // Send email notifications to followers
-    notifyNewComment(id, comment.id).catch((error) => {
+    // Send notifications to followers
+    notificationCoordinator.notifyFeatureComment({
+      featureId: id,
+      featureTitle: featureRequest.title,
+      commentId: comment.id,
+      commentAuthor: {
+        id: session.user.id,
+        name: session.user.name || session.user.email || 'Unknown'
+      },
+      commentText: content.trim()
+    }).catch((error) => {
       console.error('Failed to send comment notifications:', error)
-      // Don't fail the request if email fails
-    })
-
-    // Check for mentions and notify mentioned users
-    const { notifyMentions } = await import('@/lib/email/notification-service')
-    notifyMentions(id, comment.id, content.trim()).catch((error) => {
-      console.error('Failed to send mention notifications:', error)
-      // Don't fail the request if mention notifications fail
+      // Don't fail the request if notifications fail
     })
 
     return NextResponse.json({ comment })

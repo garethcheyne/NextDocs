@@ -234,7 +234,7 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                         />
                         <div className="flex flex-col group-data-[state=collapsed]:hidden">
                             <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                                The Hive
+                                {process.env.NEXT_SITE_NAME || 'NextDocs'}
                             </h1>
                             <p className="text-xs text-muted-foreground">
                                 Commercial Knowledge Hub

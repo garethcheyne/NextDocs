@@ -505,26 +505,25 @@ model FeatureCategory {
   
   // Integration settings
   integrationType String?   // 'github', 'azure-devops', null
-  integrationUrl  String?   // Repository URL or DevOps project URL
   
-  // GitHub specific
+  // GitHub specific (OAuth handled by service worker)
   githubOwner     String?
   githubRepo      String?
-  githubPat       String?   @db.Text // GitHub PAT (encrypted)
   
-  // Azure DevOps specific
-  devopsOrg       String?
-  devopsProject   String?
+  // Azure DevOps specific (OAuth handled by service worker)
+  devopsProject   String?   // Project name (org comes from DEVOPS_ORG_URL env var)
   devopsAreaPath  String?   // Area path for work items
-  devopsPat       String?   @db.Text // Azure DevOps PAT (encrypted)
   
   // Sync settings
-  autoCreateOnApproval Boolean @default(false) // Auto-create work item when approved
   syncComments         Boolean @default(true)  // Bi-directional comment sync
   syncStatus           Boolean @default(true)  // Sync status changes
   
-  // Encrypted credentials (legacy - kept for backwards compatibility)
-  patEncrypted    String?   @db.Text
+  // Legacy fields (deprecated - kept for backwards compatibility)
+  integrationUrl  String?   // Repository URL or DevOps project URL (deprecated)
+  githubPat       String?   @db.Text // GitHub PAT (deprecated - use OAuth)
+  devopsOrg       String?   // DevOps org (deprecated - use DEVOPS_ORG_URL env var)
+  devopsPat       String?   @db.Text // Azure DevOps PAT (deprecated - use OAuth)
+  patEncrypted    String?   @db.Text // Legacy encrypted token (deprecated)
   
   enabled         Boolean   @default(true)
   createdAt       DateTime  @default(now())
@@ -1061,6 +1060,7 @@ model Release {
   notifiedAt   DateTime?                       // When notifications were sent
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+  searchVector    Unsupported("tsvector")? // For full-text search
 
   category        FeatureCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   createdBy       User?            @relation("UserReleases", fields: [createdById], references: [id], onDelete: SetNull)

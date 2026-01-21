@@ -7,11 +7,12 @@ import { AnalyticsProvider } from '@/lib/analytics/client'
 import ParticlesBackground from '@/components/particles-background'
 import { Toaster } from '@/components/ui/sonner'
 import { PWAUpdatePrompt } from '@/components/pwa/pwa-update-prompt'
+import { PushNotificationPrompt } from '@/components/pwa/push-notification-prompt'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'The Hive - Knowledge Hub',
+  title: `${process.env.NEXT_SITE_NAME || 'NextDocs'} - Knowledge Hub`,
   description: '🐝 Knowledge Hub for Enterprise Solutions, Microsoft Technologies & Business Applications',
   icons: {
     icon: [
@@ -62,6 +63,7 @@ export default function RootLayout({
               </div>
               <Toaster />
               <PWAUpdatePrompt />
+              <PushNotificationPrompt />
             </AnalyticsProvider>
           </AuthProvider>
         </ThemeProvider>

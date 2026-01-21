@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/db/prisma'
-import { notifyReleaseSubscribers } from '@/lib/email/notification-service'
 
 /**
  * Get a specific release (admin only)

@@ -36,7 +36,7 @@ export function PrivacyTab({ userId }: PrivacyTabProps) {
   return (
     <div className="space-y-6">
       {/* Data Privacy Information */}
-      <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+      <Card >
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="w-5 h-5" />
@@ -54,7 +54,7 @@ export function PrivacyTab({ userId }: PrivacyTabProps) {
                 Enterprise Data Management
               </p>
               <p className="text-blue-800 dark:text-blue-200">
-                Your account information is managed through Active Directory. Data is stored securely 
+                Your account information is managed through Active Directory. Data is stored securely
                 within the organization's infrastructure and is subject to company data governance policies.
               </p>
             </div>

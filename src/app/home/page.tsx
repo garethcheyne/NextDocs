@@ -178,9 +178,6 @@ export default function HomePage() {
             { label: 'Home', href: '/home' },
           ]}
         />
-        <div className="ml-auto flex items-center gap-2">
-          <ThemeToggle />
-        </div>
       </header>
 
       {/* Page Content */}

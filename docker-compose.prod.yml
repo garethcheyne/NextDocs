@@ -10,6 +10,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: runner
+      args:
+        - NEXT_PUBLIC_VAPID_PUBLIC_KEY=${NEXT_PUBLIC_VAPID_PUBLIC_KEY}
     image: nextdocs-app:latest
     container_name: nextdocs-app-prod
     ports:

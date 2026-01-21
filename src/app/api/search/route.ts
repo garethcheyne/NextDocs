@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   const offset = parseInt(searchParams.get('offset') || '0')
   const category = searchParams.get('category') || undefined
   const tags = searchParams.get('tags')?.split(',').filter(Boolean) || undefined
-  const types = searchParams.get('types')?.split(',') as Array<'document' | 'blog' | 'api-spec' | 'feature'> | undefined
+  const types = searchParams.get('types')?.split(',') as Array<'document' | 'blog' | 'api-spec' | 'feature' | 'feature-request' | 'release'> | undefined
 
   try {
     if (type === 'suggestions') {

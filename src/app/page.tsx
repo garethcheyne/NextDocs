@@ -56,6 +56,7 @@ export default function HomePage() {
       ) : (
         // Non-Authenticated User View - Login Page
         <div className="relative min-h-screen overflow-hidden">
+
           {/* Theme Toggle - Top Right */}
           <div className="absolute top-4 right-4 z-20">
             <ThemeToggle />
@@ -82,7 +83,7 @@ export default function HomePage() {
                     <div>
                       <h1 className={`text-6xl md:text-7xl lg:text-8xl font-black tracking-wider ${righteous.className}`}>
                         <span className="inline-block drop-shadow-[0_2px_10px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_2px_10px_rgba(255,255,255,0.1)]">
-                          THE HIVE
+                          {(process.env.NEXT_SITE_NAME || 'NEXTDOCS').toUpperCase()}
                         </span>
                       </h1>
                       <p className="text-lg md:text-xl text-muted-foreground mt-4 font-light tracking-wide">

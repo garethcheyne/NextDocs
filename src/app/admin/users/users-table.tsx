@@ -377,14 +377,15 @@ export function UsersTable({ users: initialUsers, currentUserId, allTeams }: Use
                                             >
                                                 <Users className="w-4 h-4" />
                                             </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => handleEdit(user)}
-                                                title="Edit Name"
-                                            >
-                                                <Pencil className="w-4 h-4" />
-                                            </Button>
+                                            <Link href={`/admin/users/${user.id}/edit`}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    title="Edit User"
+                                                >
+                                                    <Pencil className="w-4 h-4" />
+                                                </Button>
+                                            </Link>
                                             {user.id !== currentUserId && (
                                                 <>
                                                     <Button

@@ -192,7 +192,7 @@ export function SearchTrigger() {
             {/* Backdrop overlay when expanded */}
             {isExpanded && (
                 <div
-                    className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40"
+                    className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 animate-in fade-in duration-200"
                     onClick={() => {
                         setIsOpen(false)
                         setIsExpanded(false)
@@ -200,21 +200,21 @@ export function SearchTrigger() {
                 />
             )}
 
-            <div className={`${isExpanded ? 'fixed top-4 left-1/2 -translate-x-1/2 w-[95vw] max-w-6xl z-50' : 'relative'}`}>
+            <div className={`${isExpanded ? 'fixed top-4 left-1/2 -translate-x-1/2 w-[95vw] max-w-6xl z-50 animate-in slide-in-from-top-4 fade-in duration-300' : 'relative'}`}>
                 {isExpanded && (
-                    <div className="mb-4 text-center px-6 pt-6 relative">
+                    <div className="mb-4 text-center px-6 pt-6 relative animate-in fade-in slide-in-from-top-2 duration-400">
                         <button
                             onClick={() => {
                                 setIsOpen(false)
                                 setIsExpanded(false)
                                 setQuery('')
                             }}
-                            className="absolute top-6 right-6 h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center md:hidden"
+                            className="absolute top-6 right-6 h-8 w-8 rounded-full hover:bg-muted hover:scale-110 flex items-center justify-center md:hidden transition-all duration-200 active:scale-95"
                             aria-label="Close search"
                         >
                             <X className="h-4 w-4" />
                         </button>
-                        <h2 className="text-2xl font-bold gradient-text mb-1">
+                        <h2 className="text-2xl md:text-3xl font-bold gradient-text mb-1">
                             Search Everything
                         </h2>
                         <p className="text-sm text-muted-foreground">
@@ -225,21 +225,23 @@ export function SearchTrigger() {
 
                 <div className={`relative ${isExpanded ? 'px-6 pb-6' : ''}`}>
                     {/* Mobile: Icon Button */}
-                    <button
-                        onClick={() => {
-                            setIsExpanded(true)
-                            setIsOpen(true)
-                            setTimeout(() => inputRef.current?.focus(), 150)
-                        }}
-                        className="block md:hidden h-9 w-9 rounded-full bg-muted/50 hover:bg-muted/80 active:bg-muted active:scale-95 flex items-center justify-center transition-all duration-200 touch-manipulation"
-                        aria-label="Open search"
-                    >
-                        <Search className="h-4 w-4 text-muted-foreground" />
-                    </button>
+                    {!isExpanded && (
+                        <button
+                            onClick={() => {
+                                setIsExpanded(true)
+                                setIsOpen(true)
+                                setTimeout(() => inputRef.current?.focus(), 150)
+                            }}
+                            className="block md:hidden h-9 w-9 rounded-full bg-muted/50 hover:bg-muted/80 hover:scale-110 active:bg-muted active:scale-95 flex items-center justify-center transition-all duration-200 touch-manipulation group"
+                            aria-label="Open search"
+                        >
+                            <Search className="h-4 w-4 text-muted-foreground group-hover:scale-110 transition-transform" />
+                        </button>
+                    )}
 
                     {/* Desktop: Full Search Bar */}
-                    <div className="hidden md:block relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+                    <div className="hidden md:block relative group">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 transition-colors group-focus-within:text-brand-orange" />
                         <Input
                             ref={inputRef}
                             type="text"
@@ -259,7 +261,7 @@ export function SearchTrigger() {
                                 }
                             }}
                             onKeyDown={handleKeyDown}
-                            className="pl-9 pr-20 h-9 rounded-full bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-brand-orange/50 focus-visible:bg-background/80 w-full transition-all duration-200"
+                            className="pl-9 pr-20 h-9 rounded-full bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-brand-orange/50 focus-visible:bg-background focus-visible:shadow-lg focus-visible:shadow-brand-orange/10 w-full transition-all duration-200"
                         />
                         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                             {query && (
@@ -269,13 +271,13 @@ export function SearchTrigger() {
                                         setResults([])
                                         setIsExpanded(false)
                                     }}
-                                    className="h-6 w-6 rounded-full hover:bg-muted flex items-center justify-center"
+                                    className="h-6 w-6 rounded-full hover:bg-muted hover:scale-110 active:scale-95 flex items-center justify-center transition-all duration-200"
                                     aria-label="Clear search"
                                 >
                                     <X className="h-3 w-3" />
                                 </button>
                             )}
-                            <kbd className="hidden sm:inline-flex h-6 select-none items-center gap-1 rounded-full border bg-muted px-1.5 font-mono text-[10px] font-medium">
+                            <kbd className="hidden sm:inline-flex h-6 select-none items-center gap-1 rounded-full border bg-muted px-1.5 font-mono text-[10px] font-medium shadow-sm">
                                 <span className="text-xs">⌘</span>K
                             </kbd>
                         </div>
@@ -283,7 +285,7 @@ export function SearchTrigger() {
 
                     {/* Mobile: Expanded Search Input (shown when isExpanded) */}
                     {isExpanded && (
-                        <div className="block md:hidden relative">
+                        <div className="block md:hidden relative animate-in fade-in slide-in-from-top-2 duration-300">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
                             <Input
                                 ref={inputRef}
@@ -296,7 +298,7 @@ export function SearchTrigger() {
                                 }}
                                 onKeyDown={handleKeyDown}
                                 autoFocus
-                                className="pl-9 pr-10 h-12 rounded-lg bg-background/80 border border-border/50 focus-visible:ring-2 focus-visible:ring-brand-orange/50 focus-visible:border-brand-orange/50 w-full text-base transition-all duration-200"
+                                className="pl-9 pr-10 h-12 rounded-lg bg-background border border-border/50 focus-visible:ring-2 focus-visible:ring-brand-orange/50 focus-visible:border-brand-orange/50 focus-visible:shadow-lg focus-visible:shadow-brand-orange/10 w-full text-base transition-all duration-200"
                             />
                             {query && (
                                 <button
@@ -304,7 +306,7 @@ export function SearchTrigger() {
                                         setQuery('')
                                         setResults([])
                                     }}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full hover:bg-muted hover:scale-110 active:scale-95 flex items-center justify-center transition-all duration-200"
                                     aria-label="Clear search"
                                 >
                                     <X className="h-4 w-4" />
@@ -316,44 +318,44 @@ export function SearchTrigger() {
 
                 {/* Results Dropdown */}
                 {isOpen && (query || results.length > 0) && (
-                    <div className={`absolute top-full mt-2 rounded-lg shadow-lg overflow-hidden ${isExpanded
-                        ? 'w-full max-h-[calc(100vh-12rem)] bg-popover/95 backdrop-blur-xl border-border/50 flex flex-col md:flex-row'
-                        : 'w-full max-h-96 bg-popover border backdrop-blur-xl flex'
+                    <div className={`absolute top-full mt-2 rounded-lg shadow-lg border overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300 ${isExpanded
+                        ? 'w-full max-h-[calc(100vh-12rem)] bg-popover/95 backdrop-blur-xl shadow-2xl'
+                        : 'w-full max-h-96 bg-popover backdrop-blur-xl flex'
                         }`}>
                         <div className={`flex flex-col ${isExpanded ? 'w-full md:w-1/2 md:border-r' : 'w-full'}`}>
                             {/* Filter Pills */}
                             <div className="flex gap-2 p-3 border-b bg-transparent overflow-x-auto scrollbar-hide">
                                 <button
                                     onClick={() => toggleFilter('document')}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border shrink-0 ${getFilterColor('document')}`}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1.5 border shrink-0 hover:scale-105 active:scale-95 ${getFilterColor('document')}`}
                                 >
                                     {getFilterIcon('document')}
                                     <span className="hidden sm:inline">Docs</span>
                                 </button>
                                 <button
                                     onClick={() => toggleFilter('blog')}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border shrink-0 ${getFilterColor('blog')}`}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1.5 border shrink-0 hover:scale-105 active:scale-95 ${getFilterColor('blog')}`}
                                 >
                                     {getFilterIcon('blog')}
                                     <span className="hidden sm:inline">Blog</span>
                                 </button>
                                 <button
                                     onClick={() => toggleFilter('api-spec')}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border shrink-0 ${getFilterColor('api-spec')}`}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1.5 border shrink-0 hover:scale-105 active:scale-95 ${getFilterColor('api-spec')}`}
                                 >
                                     {getFilterIcon('api-spec')}
                                     <span className="hidden sm:inline">API</span>
                                 </button>
                                 <button
                                     onClick={() => toggleFilter('feature-request')}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border shrink-0 ${getFilterColor('feature-request')}`}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1.5 border shrink-0 hover:scale-105 active:scale-95 ${getFilterColor('feature-request')}`}
                                 >
                                     {getFilterIcon('feature-request')}
                                     <span className="hidden sm:inline">Features</span>
                                 </button>
                                 <button
                                     onClick={() => toggleFilter('release')}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border shrink-0 ${getFilterColor('release')}`}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1.5 border shrink-0 hover:scale-105 active:scale-95 ${getFilterColor('release')}`}
                                 >
                                     {getFilterIcon('release')}
                                     <span className="hidden sm:inline">Releases</span>
@@ -399,21 +401,29 @@ export function SearchTrigger() {
                             {/* Results with custom scrollbar */}
                             <div className="overflow-y-auto flex-1 custom-scrollbar">
                                 {loading && (
-                                    <div className="p-6 text-center">
-                                        <div className="flex items-center justify-center mb-2">
-                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-orange"></div>
-                                        </div>
-                                        <p className="text-sm text-muted-foreground">
-                                            Searching through all content...
-                                        </p>
+                                    <div className="p-4 space-y-3">
+                                        {[1, 2, 3].map((i) => (
+                                            <div key={i} className="animate-pulse">
+                                                <div className="flex items-start gap-3 p-3">
+                                                    <div className="flex-1 space-y-2">
+                                                        <div className="h-4 bg-muted rounded w-3/4"></div>
+                                                        <div className="h-3 bg-muted rounded w-full"></div>
+                                                        <div className="h-3 bg-muted rounded w-5/6"></div>
+                                                    </div>
+                                                    <div className="h-5 w-12 bg-muted rounded-full shrink-0"></div>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 )}
 
                                 {!loading && query && results.length === 0 && (
-                                    <div className="p-6 text-center">
-                                        <Search className="h-8 w-8 mx-auto mb-3 text-muted-foreground/50" />
-                                        <p className="text-sm text-muted-foreground mb-1">
-                                            No results for <span className="font-medium text-foreground">&quot;{query}&quot;</span>
+                                    <div className="p-8 text-center animate-in fade-in duration-300">
+                                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted/50 mb-4">
+                                            <Search className="h-8 w-8 text-muted-foreground/50" />
+                                        </div>
+                                        <p className="text-sm text-muted-foreground mb-2">
+                                            No results for <span className="font-semibold text-foreground">&quot;{query}&quot;</span>
                                         </p>
                                         <p className="text-xs text-muted-foreground">
                                             Try adjusting your search terms or using different keywords
@@ -434,9 +444,9 @@ export function SearchTrigger() {
                                                 onMouseLeave={() => {
                                                     if (!isExpanded) setHoveredResult(null)
                                                 }}
-                                                className={`w-full px-4 py-3 text-left transition-colors ${index === selectedIndex
-                                                    ? 'bg-accent/50 dark:bg-accent/20'
-                                                    : 'hover:bg-muted/50 dark:hover:bg-muted/30'
+                                                className={`w-full px-4 py-3 text-left transition-all duration-200 border-l-2 ${index === selectedIndex
+                                                    ? 'bg-accent/50 dark:bg-accent/20 border-brand-orange'
+                                                    : 'hover:bg-muted/50 dark:hover:bg-muted/30 border-transparent hover:border-muted-foreground/20'
                                                     }`}
                                             >
                                                 <div className="flex items-start gap-3">
@@ -481,13 +491,13 @@ export function SearchTrigger() {
 
                         {/* Preview Panel - Shows when expanded on desktop only */}
                         {isExpanded && hoveredResult && (
-                            <div className="hidden md:block w-1/2 p-6 overflow-y-auto custom-scrollbar bg-transparent">
+                            <div className="hidden md:block w-1/2 p-6 overflow-y-auto custom-scrollbar bg-transparent animate-in fade-in slide-in-from-right-4 duration-300">
                                 <div className="mb-4">
-                                    <div className="flex items-start justify-between gap-4 mb-2">
-                                        <h3 className="text-lg font-semibold text-foreground">
+                                    <div className="flex items-start justify-between gap-4 mb-3">
+                                        <h3 className="text-lg font-semibold text-foreground leading-tight">
                                             {hoveredResult.title}
                                         </h3>
-                                        <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary shrink-0">
+                                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary shrink-0 border border-primary/20">
                                             {getTypeLabel(hoveredResult.type)}
                                         </span>
                                     </div>
@@ -510,7 +520,7 @@ export function SearchTrigger() {
                                     )}
                                 </div>
 
-                                <div className="prose prose-sm dark:prose-invert max-w-none">
+                                <div className="max-w-none">
                                     {hoveredResult.highlight ? (
                                         <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(hoveredResult.highlight) }} />
                                     ) : hoveredResult.excerpt ? (
@@ -523,7 +533,7 @@ export function SearchTrigger() {
                                 <div className="mt-6 pt-4 border-t">
                                     <button
                                         onClick={() => handleResultClick(hoveredResult.url)}
-                                        className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm font-medium"
+                                        className="w-full px-4 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
                                     >
                                         View Full Content →
                                     </button>

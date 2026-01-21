@@ -1,3 +1,8 @@
+/**
+ * @deprecated Use notificationCoordinator.notifyContentUpdate() instead
+ */
+
+import { notificationCoordinator } from './coordinator'
 import { prisma } from '@/lib/db/prisma'
 import { formatDateTime } from '@/lib/utils/date-format'
 
@@ -9,7 +14,29 @@ interface ContentUpdateNotification {
   updatedAt: Date
 }
 
+/**
+ * @deprecated Use notificationCoordinator.notifyContentUpdate()
+ */
 export async function notifyFollowersOfContentUpdate({
+  contentType,
+  contentId,
+  contentTitle,
+  contentUrl,
+  updatedAt,
+}: ContentUpdateNotification) {
+  const result = await notificationCoordinator.notifyContentUpdate({
+    contentType,
+    contentId,
+    contentTitle,
+    contentUrl,
+    updatedAt,
+  })
+
+  return { notified: result.totalSent }
+}
+
+// Legacy implementation below for reference
+async function legacyNotifyFollowersOfContentUpdate({
   contentType,
   contentId,
   contentTitle,
@@ -101,7 +128,7 @@ function generateContentUpdateEmail({
   updatedAt: Date
 }) {
   const typeLabel = contentType === 'document' ? 'Documentation' : 'Blog Post'
-  
+
   return `
 <!DOCTYPE html>
 <html>

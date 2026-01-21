@@ -1,3 +1,29 @@
+/**
+ * @deprecated This file is deprecated. All notification functionality has been migrated.
+ * 
+ * MIGRATION GUIDE:
+ * 
+ * 1. For feature/comment/release notifications:
+ *    Old: import { notifyNewFeature } from '@/lib/email/notification-service'
+ *    New: import { notificationCoordinator } from '@/lib/notifications'
+ *         await notificationCoordinator.notifyNewFeature({ featureId, title, ... })
+ * 
+ * 2. For test emails:
+ *    Old: import { sendTestEmail } from '@/lib/email/notification-service'
+ *    New: import { getRestEmailClient } from '@/lib/email/rest-email-client'
+ *         const client = getRestEmailClient()
+ *         await client.sendEmail({ to: [email], subject: '...', body: '...', isHtml: true })
+ * 
+ * The new system provides:
+ * - Multi-channel support (email + push)
+ * - Better type safety
+ * - Cleaner architecture
+ * - System alerts to admins
+ */
+
+// Legacy implementation below - kept for reference, not executed
+// ============================================================================
+
 import { prisma } from '@/lib/db/prisma'
 import { getRestEmailClient } from './rest-email-client'
 import {
@@ -6,6 +32,88 @@ import {
   buildNewFeatureEmail,
   buildReleaseNotificationEmail,
 } from './templates'
+import webpush from 'web-push'
+import { Prisma } from '@prisma/client'
+
+// Configure VAPID keys for push notifications
+const vapidKeys = {
+  publicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
+  privateKey: process.env.VAPID_PRIVATE_KEY || '',
+}
+
+if (vapidKeys.publicKey && vapidKeys.privateKey) {
+  webpush.setVapidDetails(
+    'mailto:admin@harveynorman.com',
+    vapidKeys.publicKey,
+    vapidKeys.privateKey
+  )
+}
+
+/**
+ * Send push notification to users
+ */
+async function sendPushToUsers(
+  userIds: string[],
+  title: string,
+  body: string,
+  url: string
+) {
+  try {
+    if (!vapidKeys.publicKey || !vapidKeys.privateKey) {
+      console.warn('VAPID keys not configured, skipping push notifications')
+      return 0
+    }
+
+    const users = await prisma.user.findMany({
+      where: {
+        id: { in: userIds },
+        pushSubscription: { not: Prisma.JsonNull },
+      },
+      select: {
+        id: true,
+        pushSubscription: true,
+      },
+    })
+
+    const notificationPayload = JSON.stringify({
+      title,
+      body,
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-96x96.png',
+      url,
+      timestamp: Date.now(),
+    })
+
+    let successCount = 0
+
+    await Promise.all(
+      users.map(async (user) => {
+        if (!user.pushSubscription) return
+
+        try {
+          const subscription = JSON.parse(user.pushSubscription as string)
+          await webpush.sendNotification(subscription, notificationPayload)
+          successCount++
+        } catch (error: any) {
+          console.error(`Failed to send push to user ${user.id}:`, error.message)
+
+          // Remove invalid subscriptions
+          if (error.statusCode === 410 || error.statusCode === 404) {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { pushSubscription: Prisma.JsonNull },
+            })
+          }
+        }
+      })
+    )
+
+    return successCount
+  } catch (error) {
+    console.error('Error sending push notifications:', error)
+    return 0
+  }
+}
 
 /**
  * Send email notifications when a feature status changes
@@ -86,8 +194,16 @@ export async function notifyFeatureStatusChange(
       isHtml: true,
     })
 
+    // Send push notifications
+    const pushSent = await sendPushToUsers(
+      usersToNotify.map((u) => u.id),
+      'Feature Status Update',
+      `${feature.title} is now ${newStatus}`,
+      `/features/${feature.id}`
+    )
+
     console.log(
-      `✅ Sent status change notification to ${recipients.length} users`
+      `✅ Sent status change notification to ${recipients.length} users (${pushSent} push)`
     )
   } catch (error) {
     console.error('Failed to send feature status change notification:', error)
@@ -167,7 +283,15 @@ export async function notifyNewComment(
       isHtml: true,
     })
 
-    console.log(`✅ Sent new comment notification to ${recipients.length} users`)
+    // Send push notifications
+    const pushSent = await sendPushToUsers(
+      usersToNotify.map((u) => u.id),
+      'New Comment',
+      `${comment.user.name || 'Someone'} commented on ${feature.title}`,
+      `/features/${feature.id}`
+    )
+
+    console.log(`✅ Sent new comment notification to ${recipients.length} users (${pushSent} push)`)
   } catch (error) {
     console.error('Failed to send new comment notification:', error)
   }
@@ -231,8 +355,16 @@ export async function notifyNewFeature(featureId: string) {
         isHtml: true,
       })
 
+      // Send push notifications
+      const pushSent = await sendPushToUsers(
+        usersToNotify.map((u) => u.id),
+        'New Feature Request',
+        feature.title,
+        `/features/${feature.id}`
+      )
+
       console.log(
-        `✅ Sent new feature notification to ${recipients.length} users`
+        `✅ Sent new feature notification to ${recipients.length} users (${pushSent} push)`
       )
     } catch (emailError) {
       // Log detailed email error but don't fail the whole process
@@ -670,6 +802,15 @@ export async function notifyReleaseSubscribers(options: {
       isHtml: true,
     })
 
+    // Send push notifications
+    const userIds = Array.from(usersToNotify.keys())
+    const pushSent = await sendPushToUsers(
+      userIds,
+      `Release v${version}`,
+      documentTitle || `New release notes available`,
+      documentUrl || '/'
+    )
+
     // Log notification history if we have a release ID
     if (releaseId) {
       const notificationLogs = Array.from(usersToNotify.keys()).map((userId) => ({
@@ -692,7 +833,7 @@ export async function notifyReleaseSubscribers(options: {
       })
     }
 
-    console.log(`✅ Sent release notification v${version} to ${recipients.length} users`)
+    console.log(`✅ Sent release notification v${version} to ${recipients.length} users (${pushSent} push)`)
     return { sent: recipients.length }
   } catch (error) {
     console.error('Failed to send release notifications:', error)

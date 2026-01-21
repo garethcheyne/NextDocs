@@ -57,7 +57,6 @@ interface AdminMenubarProps {
     featureTitle: string
     featureDescription: string
     integrationType: 'github' | 'azure-devops' | null
-    autoCreateOnApproval: boolean
     hasExistingWorkItem: boolean
     userRole: string | null
     isCreator: boolean
@@ -77,7 +76,6 @@ export function AdminMenubar({
     featureTitle,
     featureDescription,
     integrationType,
-    autoCreateOnApproval,
     hasExistingWorkItem,
     userRole,
     isCreator,
@@ -318,7 +316,6 @@ export function AdminMenubar({
                 featureTitle={featureTitle}
                 featureDescription={featureDescription}
                 integrationType={integrationType}
-                autoCreateOnApproval={autoCreateOnApproval}
                 hasExistingWorkItem={hasExistingWorkItem}
                 open={statusDialogOpen}
                 onOpenChange={setStatusDialogOpen}

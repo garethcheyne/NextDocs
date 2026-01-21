@@ -13,6 +13,7 @@ interface WorkItemCustomization {
   description?: string;
   workItemType?: string;
   tags?: string[];
+  customFields?: Record<string, any>;
 }
 
 /**
@@ -218,6 +219,19 @@ async function createAzureDevOpsWorkItem(
       });
     }
 
+    // Add custom fields from the dialog
+    if (customization?.customFields) {
+      Object.entries(customization.customFields).forEach(([fieldName, fieldValue]) => {
+        if (fieldValue !== undefined && fieldValue !== null && fieldValue !== '') {
+          fields.push({
+            op: 'add',
+            path: `/fields/${fieldName}`,
+            value: fieldValue,
+          });
+        }
+      });
+    }
+
     if (epic?.externalId) {
       // Link to parent epic if it exists in DevOps
       fields.push({
@@ -264,7 +278,8 @@ async function createAzureDevOpsWorkItem(
 }
 
 /**
- * Create a work item when a feature request is approved
+ * Create a work item for a feature request (manual creation by admin)
+ * This function is used for manual work item creation via the UI
  */
 export async function createWorkItemOnApproval(
   featureRequestId: string,
@@ -284,11 +299,6 @@ export async function createWorkItemOnApproval(
     }
 
     const category = featureRequest.category;
-
-    // Check if auto-create is enabled
-    if (!category.autoCreateOnApproval) {
-      return { success: false, error: 'Auto-create is not enabled for this category' };
-    }
 
     // Check if already has external work item
     if (featureRequest.externalId) {
@@ -432,19 +442,83 @@ async function updateAzureDevOpsWorkItem(
 /**
  * Add a comment to an external work item
  */
+/**
+ * Convert simple HTML to Markdown for DevOps comments
+ */
+function htmlToMarkdown(html: string): string {
+  if (!html) return '';
+  
+  let markdown = html;
+  
+  // Strip HTML tags and convert to Markdown
+  markdown = markdown.replace(/<strong>([^<]+)<\/strong>/g, '**$1**');
+  markdown = markdown.replace(/<b>([^<]+)<\/b>/g, '**$1**');
+  markdown = markdown.replace(/<em>([^<]+)<\/em>/g, '*$1*');
+  markdown = markdown.replace(/<i>([^<]+)<\/i>/g, '*$1*');
+  markdown = markdown.replace(/<code>([^<]+)<\/code>/g, '`$1`');
+  markdown = markdown.replace(/<a href="([^"]+)">([^<]+)<\/a>/g, '[$2]($1)');
+  markdown = markdown.replace(/<br\s*\/?>/g, '\n');
+  markdown = markdown.replace(/<div[^>]*>/g, '');
+  markdown = markdown.replace(/<\/div>/g, '\n');
+  markdown = markdown.replace(/<p[^>]*>/g, '');
+  markdown = markdown.replace(/<\/p>/g, '\n\n');
+  markdown = markdown.replace(/<\/?(ul|ol|li)[^>]*>/g, '\n');
+  markdown = markdown.replace(/&nbsp;/g, ' ');
+  markdown = markdown.replace(/&amp;/g, '&');
+  markdown = markdown.replace(/&lt;/g, '<');
+  markdown = markdown.replace(/&gt;/g, '>');
+  markdown = markdown.replace(/&quot;/g, '"');
+  
+  // Clean up multiple newlines
+  markdown = markdown.replace(/\n{3,}/g, '\n\n');
+  markdown = markdown.trim();
+  
+  return markdown;
+}
+
+/**
+ * Convert Markdown to simple HTML for Azure DevOps
+ */
+function markdownToHtml(markdown: string): string {
+  let html = markdown;
+  
+  // Bold: **text** or __text__
+  html = html.replace(/\*\*([^\*]+)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+  
+  // Italic: *text* or _text_
+  html = html.replace(/\*([^\*]+)\*/g, '<em>$1</em>');
+  html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
+  
+  // Code inline: `code`
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  
+  // Links: [text](url)
+  html = html.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2">$1</a>');
+  
+  // Line breaks: convert double newlines to paragraphs, single to <br>
+  html = html.split('\n\n').map(para => {
+    const lines = para.split('\n').join('<br>');
+    return `<div>${lines}</div>`;
+  }).join('');
+  
+  return html;
+}
+
 export async function addExternalComment(
   externalId: string,
   category: any,
   commentText: string,
-  authorName: string
+  authorName: string,
+  authorEmail?: string
 ): Promise<void> {
-  // Format comment with standard prefix
-  const formattedComment = `#External.Comment: ${authorName}\n\n${commentText}`;
-
   if (category.integrationType === 'github') {
-    await addGitHubComment(externalId, category, formattedComment);
+    // GitHub supports Markdown - post directly
+    await addGitHubComment(externalId, category, commentText);
   } else if (category.integrationType === 'azure-devops') {
-    await addAzureDevOpsComment(externalId, category, formattedComment);
+    // Azure DevOps uses HTML - convert markdown to HTML
+    const htmlComment = markdownToHtml(commentText);
+    await addAzureDevOpsComment(externalId, category, htmlComment, authorEmail);
   }
 }
 
@@ -488,21 +562,28 @@ async function addGitHubComment(
 async function addAzureDevOpsComment(
   workItemId: string,
   category: any,
-  comment: string
+  comment: string,
+  authorEmail?: string
 ): Promise<void> {
-  if (!category.devopsPat || !category.devopsOrg || !category.devopsProject) {
-    throw new Error('Azure DevOps configuration incomplete');
+  // Validate OAuth environment configuration
+  if (!process.env.DEVOPS_ORG_URL || !process.env.DEVOPS_CLIENT_ID || 
+      !process.env.DEVOPS_CLIENT_SECRET || !process.env.DEVOPS_TENANT_ID) {
+    throw new Error('Azure DevOps OAuth configuration missing in environment');
   }
 
-  const pat = decryptToken(category.devopsPat);
-  const auth = Buffer.from(`:${pat}`).toString('base64');
+  if (!category.devopsProject) {
+    throw new Error('Azure DevOps project name not configured for category');
+  }
+
+  // Get OAuth token
+  const accessToken = await getDevOpsAccessToken();
 
   const response = await fetch(
-    `https://dev.azure.com/${category.devopsOrg}/${category.devopsProject}/_apis/wit/workitems/${workItemId}/comments?api-version=7.0-preview.3`,
+    `${process.env.DEVOPS_ORG_URL}/${category.devopsProject}/_apis/wit/workitems/${workItemId}/comments?api-version=7.0-preview.3`,
     {
       method: 'POST',
       headers: {
-        Authorization: `Basic ${auth}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ text: comment }),
@@ -531,7 +612,7 @@ export async function syncExternalComments(
       return { synced: 0, skipped: 0 };
     }
 
-    let externalComments: Array<{ id: string; body: string; author: string; createdAt: Date }> = [];
+    let externalComments: Array<{ id: string; body: string; author: string; authorEmail?: string; createdAt: Date }> = [];
 
     if (feature.category.integrationType === 'github') {
       externalComments = await getGitHubComments(feature.externalId, feature.category);
@@ -543,25 +624,11 @@ export async function syncExternalComments(
     let skipped = 0;
 
     for (const extComment of externalComments) {
-      // Skip comments with our external prefix (these originated from NextDocs)
-      if (extComment.body.startsWith('#External.Comment:')) {
-        skipped++;
-        continue;
-      }
-
-      // Check if comment already exists (by external ID or content)
+      // Check if comment already exists (by external ID)
       const existing = await prisma.featureComment.findFirst({
         where: {
           featureId: featureRequestId,
-          OR: [
-            { externalCommentId: extComment.id },
-            {
-              AND: [
-                { content: extComment.body },
-                { user: { name: extComment.author } },
-              ],
-            },
-          ],
+          externalCommentId: extComment.id,
         },
       });
 
@@ -570,21 +637,50 @@ export async function syncExternalComments(
         continue;
       }
 
-      // Create comment in NextDocs - need to create a system user first or use existing
-      const systemUser = await prisma.user.findFirst({
-        where: { email: 'system@nextdocs.local' },
-      });
+      // Look up user by email in the organization
+      let user = null;
+      if (extComment.authorEmail) {
+        user = await prisma.user.findFirst({
+          where: { email: extComment.authorEmail },
+        });
+      }
 
-      if (!systemUser) {
+      // If user not found by email, try to find or create by display name
+      if (!user) {
+        user = await prisma.user.findFirst({
+          where: { name: extComment.author },
+        });
+
+        // If still not found, create the user (they're in the org, just not in NextDocs yet)
+        if (!user && extComment.authorEmail) {
+          user = await prisma.user.create({
+            data: {
+              email: extComment.authorEmail,
+              name: extComment.author,
+              role: 'user',
+              emailVerified: new Date(),
+            },
+          });
+        }
+      }
+
+      // If we still don't have a user (no email provided), skip this comment
+      if (!user) {
+        console.warn(`Cannot sync comment ${extComment.id}: no email provided for author ${extComment.author}`);
         skipped++;
         continue;
       }
 
+      // Convert HTML to Markdown for DevOps comments
+      const content = feature.category.integrationType === 'azure-devops'
+        ? htmlToMarkdown(extComment.body)
+        : extComment.body;
+
       await prisma.featureComment.create({
         data: {
           featureId: featureRequestId,
-          content: extComment.body,
-          userId: systemUser.id,
+          content,
+          userId: user.id,
           externalCommentId: extComment.id,
           externalSource: feature.category.integrationType,
           createdAt: extComment.createdAt,
@@ -607,7 +703,7 @@ export async function syncExternalComments(
 async function getGitHubComments(
   issueNumber: string,
   category: any
-): Promise<Array<{ id: string; body: string; author: string; createdAt: Date }>> {
+): Promise<Array<{ id: string; body: string; author: string; authorEmail?: string; createdAt: Date }>> {
   if (!category.githubPat || !category.githubOwner || !category.githubRepo) {
     return [];
   }
@@ -635,6 +731,7 @@ async function getGitHubComments(
     id: c.id.toString(),
     body: c.body,
     author: c.user?.login || 'Unknown',
+    authorEmail: c.user?.email || undefined,
     createdAt: new Date(c.created_at),
   }));
 }
@@ -645,34 +742,46 @@ async function getGitHubComments(
 async function getAzureDevOpsComments(
   workItemId: string,
   category: any
-): Promise<Array<{ id: string; body: string; author: string; createdAt: Date }>> {
-  if (!category.devopsPat || !category.devopsOrg || !category.devopsProject) {
+): Promise<Array<{ id: string; body: string; author: string; authorEmail?: string; createdAt: Date }>> {
+  // Validate OAuth environment configuration
+  if (!process.env.DEVOPS_ORG_URL || !process.env.DEVOPS_CLIENT_ID || 
+      !process.env.DEVOPS_CLIENT_SECRET || !process.env.DEVOPS_TENANT_ID) {
     return [];
   }
 
-  const pat = decryptToken(category.devopsPat);
-  const auth = Buffer.from(`:${pat}`).toString('base64');
-
-  const response = await fetch(
-    `https://dev.azure.com/${category.devopsOrg}/${category.devopsProject}/_apis/wit/workitems/${workItemId}/comments?api-version=7.0-preview.3`,
-    {
-      headers: {
-        Authorization: `Basic ${auth}`,
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch Azure DevOps comments');
+  if (!category.devopsProject) {
+    return [];
   }
 
-  const data = await response.json();
-  
-  return (data.comments || []).map((c: any) => ({
-    id: c.id.toString(),
-    body: c.text,
-    author: c.createdBy?.displayName || 'Unknown',
-    createdAt: new Date(c.createdDate),
-  }));
+  try {
+    // Get OAuth token
+    const accessToken = await getDevOpsAccessToken();
+
+    const response = await fetch(
+      `${process.env.DEVOPS_ORG_URL}/${category.devopsProject}/_apis/wit/workitems/${workItemId}/comments?api-version=7.0-preview.3`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch Azure DevOps comments');
+    }
+
+    const data = await response.json();
+    
+    return (data.comments || []).map((c: any) => ({
+      id: c.id.toString(),
+      body: c.text,
+      author: c.createdBy?.displayName || 'Unknown',
+      authorEmail: c.createdBy?.uniqueName || c.createdBy?.mailAddress || undefined,
+      createdAt: new Date(c.createdDate),
+    }));
+  } catch (error) {
+    console.error('Error fetching Azure DevOps comments:', error);
+    return [];
+  }
 }
 

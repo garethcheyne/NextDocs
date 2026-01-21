@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Github, Box, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Github, Box, Loader2 } from 'lucide-react';
 
 interface IntegrationSettingsProps {
   category: {
@@ -18,35 +18,56 @@ interface IntegrationSettingsProps {
     integrationType: string | null;
     githubOwner: string | null;
     githubRepo: string | null;
-    devopsOrg: string | null;
     devopsProject: string | null;
     devopsAreaPath: string | null;
-    autoCreateOnApproval: boolean;
     syncComments: boolean;
     syncStatus: boolean;
   };
+  devopsEnabled?: boolean;
+  githubEnabled?: boolean;
 }
 
-export default function IntegrationSettings({ category }: IntegrationSettingsProps) {
+export default function IntegrationSettings({ category, devopsEnabled = false, githubEnabled = false }: IntegrationSettingsProps) {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
-  const [isTesting, setIsTesting] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
-  const [activeTab, setActiveTab] = useState<string>(category.integrationType || 'github');
+  const [activeTab, setActiveTab] = useState<string>(
+    category.integrationType || (devopsEnabled ? 'azure-devops' : githubEnabled ? 'github' : 'none')
+  );
+
+  // If no integrations are enabled, show warning
+  if (!devopsEnabled && !githubEnabled) {
+    return (
+      <Card className="border-yellow-200 dark:border-yellow-800">
+        <CardContent className="pt-6">
+          <div className="flex items-start gap-4">
+            <div className="rounded-full bg-yellow-100 dark:bg-yellow-900/20 p-3">
+              <Box className="h-6 w-6 text-yellow-600 dark:text-yellow-500" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="font-semibold text-lg">No Integrations Enabled</h3>
+              <p className="text-muted-foreground">
+                To enable integrations, set one or both of the following environment variables:
+              </p>
+              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li><code className="bg-muted px-1.5 py-0.5 rounded">DEVOPS_ENABLED=true</code> for Azure DevOps integration</li>
+                <li><code className="bg-muted px-1.5 py-0.5 rounded">GITHUB_ENABLED=true</code> for GitHub integration</li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   // GitHub state
   const [githubOwner, setGithubOwner] = useState(category.githubOwner || '');
   const [githubRepo, setGithubRepo] = useState(category.githubRepo || '');
-  const [githubPat, setGithubPat] = useState('');
 
-  // Azure DevOps state
-  const [devopsOrg, setDevopsOrg] = useState(category.devopsOrg || '');
+  // Azure DevOps state (org comes from DEVOPS_ORG_URL env var)
   const [devopsProject, setDevopsProject] = useState(category.devopsProject || '');
   const [devopsAreaPath, setDevopsAreaPath] = useState(category.devopsAreaPath || '');
-  const [devopsPat, setDevopsPat] = useState('');
 
   // Sync settings
-  const [autoCreateOnApproval, setAutoCreateOnApproval] = useState(category.autoCreateOnApproval);
   const [syncComments, setSyncComments] = useState(category.syncComments);
   const [syncStatus, setSyncStatus] = useState(category.syncStatus);
 
@@ -55,40 +76,11 @@ export default function IntegrationSettings({ category }: IntegrationSettingsPro
     setActiveTab(category.integrationType || 'github');
     setGithubOwner(category.githubOwner || '');
     setGithubRepo(category.githubRepo || '');
-    setDevopsOrg(category.devopsOrg || '');
     setDevopsProject(category.devopsProject || '');
     setDevopsAreaPath(category.devopsAreaPath || '');
-    setAutoCreateOnApproval(category.autoCreateOnApproval);
     setSyncComments(category.syncComments);
     setSyncStatus(category.syncStatus);
-    // PATs are never loaded from database for security
-    setGithubPat('');
-    setDevopsPat('');
   }, [category]);
-
-  const handleTestConnection = async () => {
-    setIsTesting(true);
-    setTestResult(null);
-
-    try {
-      const response = await fetch(`/api/admin/features/categories/${category.id}/test-connection`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: activeTab,
-          github: { owner: githubOwner, repo: githubRepo, pat: githubPat },
-          devops: { org: devopsOrg, project: devopsProject, pat: devopsPat },
-        }),
-      });
-
-      const data = await response.json();
-      setTestResult({ success: response.ok, message: data.message });
-    } catch (error) {
-      setTestResult({ success: false, message: 'Connection test failed' });
-    } finally {
-      setIsTesting(false);
-    }
-  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -102,16 +94,12 @@ export default function IntegrationSettings({ category }: IntegrationSettingsPro
           github: {
             owner: githubOwner,
             repo: githubRepo,
-            pat: githubPat || undefined,
           },
           devops: {
-            org: devopsOrg,
             project: devopsProject,
             areaPath: devopsAreaPath,
-            pat: devopsPat || undefined,
           },
           syncSettings: {
-            autoCreateOnApproval,
             syncComments,
             syncStatus,
           },
@@ -137,199 +125,118 @@ export default function IntegrationSettings({ category }: IntegrationSettingsPro
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="github">
-            <Github className="mr-2 h-4 w-4" />
-            GitHub
-          </TabsTrigger>
-          <TabsTrigger value="azure-devops">
-            <Box className="mr-2 h-4 w-4" />
-            Azure DevOps
-          </TabsTrigger>
+        <TabsList className={`grid w-full ${devopsEnabled && githubEnabled ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          {githubEnabled && (
+            <TabsTrigger value="github">
+              <Github className="mr-2 h-4 w-4" />
+              GitHub
+            </TabsTrigger>
+          )}
+          {devopsEnabled && (
+            <TabsTrigger value="azure-devops">
+              <Box className="mr-2 h-4 w-4" />
+              Azure DevOps
+            </TabsTrigger>
+          )}
         </TabsList>
 
-        <TabsContent value="github" className="space-y-4">
-          <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
-            <CardHeader>
-              <CardTitle>GitHub Integration</CardTitle>
-              <CardDescription>
-                Connect to a GitHub repository to sync feature requests as issues
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="github-owner">Owner/Organization</Label>
-                  <Input
-                    id="github-owner"
-                    placeholder="microsoft"
-                    value={githubOwner}
-                    onChange={(e) => setGithubOwner(e.target.value)}
-                  />
+        {githubEnabled && (
+          <TabsContent value="github" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>GitHub Integration</CardTitle>
+                <CardDescription>
+                  Connect to a GitHub repository to sync feature requests as issues.
+                  Authentication is handled via GitHub OAuth.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="github-owner">Owner/Organization *</Label>
+                    <Input
+                      id="github-owner"
+                      placeholder="microsoft"
+                      value={githubOwner}
+                      onChange={(e) => setGithubOwner(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="github-repo">Repository *</Label>
+                    <Input
+                      id="github-repo"
+                      placeholder="vscode"
+                      value={githubRepo}
+                      onChange={(e) => setGithubRepo(e.target.value)}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="github-repo">Repository</Label>
-                  <Input
-                    id="github-repo"
-                    placeholder="vscode"
-                    value={githubRepo}
-                    onChange={(e) => setGithubRepo(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="github-pat">Personal Access Token</Label>
-                <Input
-                  id="github-pat"
-                  type="password"
-                  placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-                  value={githubPat}
-                  onChange={(e) => setGithubPat(e.target.value)}
-                />
                 <p className="text-sm text-muted-foreground">
-                  Required scopes: <code className="text-xs">repo</code>, <code className="text-xs">write:discussion</code>
+                  <strong>Note:</strong> GitHub OAuth is configured via environment variables.
+                  Users will authenticate when creating work items.
                 </p>
-              </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
-              <Button
-                variant="outline"
-                onClick={handleTestConnection}
-                disabled={isTesting || !githubOwner || !githubRepo}
-              >
-                {isTesting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Testing...
-                  </>
-                ) : (
-                  'Test Connection'
-                )}
-              </Button>
-
-              {testResult && (
-                <div
-                  className={`flex items-center gap-2 p-3 rounded-md ${testResult.success ? 'bg-green-50 text-green-900' : 'bg-red-50 text-red-900'
-                    }`}
-                >
-                  {testResult.success ? (
-                    <CheckCircle className="h-5 w-5" />
-                  ) : (
-                    <XCircle className="h-5 w-5" />
-                  )}
-                  <span className="text-sm">{testResult.message}</span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="azure-devops" className="space-y-4">
-          <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
-            <CardHeader>
-              <CardTitle>Azure DevOps Integration</CardTitle>
-              <CardDescription>
-                Connect to Azure DevOps to sync feature requests as work items
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+        {devopsEnabled && (
+          <TabsContent value="azure-devops" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Azure DevOps Integration</CardTitle>
+                <CardDescription>
+                  Connect to Azure DevOps to sync feature requests as work items.
+                  Organization URL and authentication are configured via environment variables.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="devops-org">Organization</Label>
-                  <Input
-                    id="devops-org"
-                    placeholder="mycompany"
-                    value={devopsOrg}
-                    onChange={(e) => setDevopsOrg(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="devops-project">Project</Label>
+                  <Label htmlFor="devops-project">Project Name *</Label>
                   <Input
                     id="devops-project"
                     placeholder="MyProject"
                     value={devopsProject}
                     onChange={(e) => setDevopsProject(e.target.value)}
                   />
+                  <p className="text-sm text-muted-foreground">
+                    The name of your Azure DevOps project.
+                  </p>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="devops-area">Area Path (Optional)</Label>
-                <Input
-                  id="devops-area"
-                  placeholder="MyProject\\Features"
-                  value={devopsAreaPath}
-                  onChange={(e) => setDevopsAreaPath(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="devops-pat">Personal Access Token</Label>
-                <Input
-                  id="devops-pat"
-                  type="password"
-                  placeholder="Enter Azure DevOps PAT"
-                  value={devopsPat}
-                  onChange={(e) => setDevopsPat(e.target.value)}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Required scopes: <code className="text-xs">Work Items (Read, Write)</code>
-                </p>
-              </div>
-
-              <Button
-                variant="outline"
-                onClick={handleTestConnection}
-                disabled={isTesting || !devopsOrg || !devopsProject}
-              >
-                {isTesting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Testing...
-                  </>
-                ) : (
-                  'Test Connection'
-                )}
-              </Button>
-
-              {testResult && (
-                <div
-                  className={`flex items-center gap-2 p-3 rounded-md ${testResult.success ? 'bg-green-50 text-green-900' : 'bg-red-50 text-red-900'
-                    }`}
-                >
-                  {testResult.success ? (
-                    <CheckCircle className="h-5 w-5" />
-                  ) : (
-                    <XCircle className="h-5 w-5" />
-                  )}
-                  <span className="text-sm">{testResult.message}</span>
+                <div className="space-y-2">
+                  <Label htmlFor="devops-area">Area Path (Optional)</Label>
+                  <Input
+                    id="devops-area"
+                    placeholder="MyProject\Features"
+                    value={devopsAreaPath}
+                    onChange={(e) => setDevopsAreaPath(e.target.value)}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Default area path for work items. Leave empty to use project root.
+                  </p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+
+                <div className="rounded-md bg-blue-50 dark:bg-blue-950/20 p-4">
+                  <p className="text-sm text-blue-900 dark:text-blue-100">
+                    <strong>Environment Configuration:</strong><br />
+                    • Organization URL: <code className="text-xs bg-blue-100 dark:bg-blue-900/40 px-1 py-0.5 rounded">DEVOPS_ORG_URL</code><br />
+                    • OAuth Client: <code className="text-xs bg-blue-100 dark:bg-blue-900/40 px-1 py-0.5 rounded">DEVOPS_CLIENT_ID/SECRET</code><br />
+                    • Enabled: <code className="text-xs bg-blue-100 dark:bg-blue-900/40 px-1 py-0.5 rounded">DEVOPS_ENABLED=true</code>
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
 
-      <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+      <Card >
         <CardHeader>
           <CardTitle>Sync Settings</CardTitle>
           <CardDescription>Configure how features sync with the external system</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Auto-create on Approval</Label>
-              <p className="text-sm text-muted-foreground">
-                Automatically create work item when feature is approved
-              </p>
-            </div>
-            <Switch
-              checked={autoCreateOnApproval}
-              onCheckedChange={setAutoCreateOnApproval}
-            />
-          </div>
-
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>Sync Comments</Label>

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/db/prisma'
 import { updateFeatureRequestSearchVector } from '@/lib/search/indexer'
-import { notifyNewFeature } from '@/lib/email/notification-service'
+import { notificationCoordinator } from '@/lib/notifications'
 import { withReadAuth, withWriteAuth } from '@/lib/api-keys/middleware'
 import { ensureUserExists } from '@/lib/auth/ensure-user'
 
@@ -174,10 +174,22 @@ export const POST = withWriteAuth(async (request) => {
         // Update search vector
         await updateFeatureRequestSearchVector(feature.id)
 
-        // Send email notification to subscribed users
-        notifyNewFeature(feature.id).catch((error) => {
+        // Send notifications to subscribed users
+        notificationCoordinator.notifyNewFeature({
+            featureId: feature.id,
+            featureTitle: feature.title,
+            featureDescription: feature.description || '',
+            category: feature.category ? {
+                id: feature.category.id,
+                name: feature.category.name
+            } : undefined,
+            creator: {
+                id: feature.creator.id,
+                name: feature.creator.name || feature.creator.email
+            }
+        }).catch((error) => {
             console.error('Failed to send new feature notifications:', error)
-            // Don't fail the request if email fails
+            // Don't fail the request if notifications fail
         })
 
         return NextResponse.json({ feature }, { status: 201 })

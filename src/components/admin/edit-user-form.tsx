@@ -6,7 +6,9 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
     Select,
     SelectContent,
@@ -14,8 +16,25 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
-import { ArrowLeft, Save, Shield, Edit, User as UserIcon } from 'lucide-react'
+import { ArrowLeft, Save, Shield, Edit, User as UserIcon, Users, Bell, CheckCircle2, XCircle, Send } from 'lucide-react'
 import Link from 'next/link'
+
+interface TeamMembership {
+    id: string
+    teamId: string
+    teamName: string
+    teamSlug: string
+    role: string | null
+    subscribeToReleases: boolean
+}
+
+interface Team {
+    id: string
+    name: string
+    slug: string
+    icon: string | null
+    color: string | null
+}
 
 interface User {
     id: string
@@ -25,12 +44,19 @@ interface User {
     image: string | null
     provider: string | null
     createdAt: string
+    pushSubscription: any
+    teamMemberships: TeamMembership[]
 }
 
-export default function EditUserForm({ user }: { user: User }) {
+export default function EditUserForm({ user, allTeams }: { user: User; allTeams: Team[] }) {
     const router = useRouter()
     const [role, setRole] = useState(user.role)
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [selectedTeams, setSelectedTeams] = useState<string[]>(
+        user.teamMemberships.map(tm => tm.teamId)
+    )
+    const [testFeatureRequestId, setTestFeatureRequestId] = useState<string>('')
+    const [isSendingPush, setIsSendingPush] = useState(false)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -42,7 +68,10 @@ export default function EditUserForm({ user }: { user: User }) {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ role }),
+                body: JSON.stringify({ 
+                    role,
+                    teamIds: selectedTeams 
+                }),
             })
 
             if (!response.ok) {
@@ -53,10 +82,55 @@ export default function EditUserForm({ user }: { user: User }) {
             router.refresh()
         } catch (error) {
             console.error('Error updating user:', error)
-            alert('Failed to update user role')
+            alert('Failed to update user')
         } finally {
             setIsSubmitting(false)
         }
+    }
+
+    const handleSendTestPush = async () => {
+        if (!user.pushSubscription) return
+        
+        setIsSendingPush(true)
+        try {
+            const url = testFeatureRequestId 
+                ? `/features/${testFeatureRequestId}`
+                : '/'
+            
+            const response = await fetch('/api/push/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    title: testFeatureRequestId ? 'New Feature Request' : 'Test Notification',
+                    body: testFeatureRequestId 
+                        ? `Check out feature request #${testFeatureRequestId}`
+                        : `This is a test push notification for ${user.name || user.email}`,
+                    url: url,
+                    userIds: [user.id],
+                }),
+            })
+
+            if (!response.ok) {
+                throw new Error('Failed to send notification')
+            }
+
+            alert(`Test notification sent! ${testFeatureRequestId ? `Will open: ${url}` : ''}`)
+        } catch (error) {
+            console.error('Error sending push:', error)
+            alert('Failed to send test notification')
+        } finally {
+            setIsSendingPush(false)
+        }
+    }
+
+    const toggleTeam = (teamId: string) => {
+        setSelectedTeams(prev =>
+            prev.includes(teamId)
+                ? prev.filter(id => id !== teamId)
+                : [...prev, teamId]
+        )
     }
 
     const getRoleIcon = (roleType: string) => {
@@ -123,6 +197,115 @@ export default function EditUserForm({ user }: { user: User }) {
                                 </p>
                             </div>
                         </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Users className="w-5 h-5" />
+                            Team Memberships
+                        </CardTitle>
+                        <CardDescription>
+                            Assign user to teams for release notifications and organization
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {allTeams.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">No teams available</p>
+                        ) : (
+                            <div className="space-y-3">
+                                {allTeams.map(team => (
+                                    <div key={team.id} className="flex items-center gap-3 p-3 rounded-lg border">
+                                        <Checkbox
+                                            id={`team-${team.id}`}
+                                            checked={selectedTeams.includes(team.id)}
+                                            onCheckedChange={() => toggleTeam(team.id)}
+                                        />
+                                        <label
+                                            htmlFor={`team-${team.id}`}
+                                            className="flex-1 cursor-pointer"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-medium">{team.name}</span>
+                                                <Badge variant="outline" style={{ 
+                                                    borderColor: team.color || undefined,
+                                                    color: team.color || undefined
+                                                }}>
+                                                    {team.slug}
+                                                </Badge>
+                                            </div>
+                                        </label>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Bell className="w-5 h-5" />
+                            Push Notifications
+                        </CardTitle>
+                        <CardDescription>
+                            Test push notification delivery to this user
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex items-center gap-3 p-4 rounded-lg border">
+                            {user.pushSubscription ? (
+                                <>
+                                    <CheckCircle2 className="w-5 h-5 text-green-500" />
+                                    <div className="flex-1">
+                                        <p className="font-medium">Device Registered</p>
+                                        <p className="text-sm text-muted-foreground">
+                                            User has enabled push notifications
+                                        </p>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <XCircle className="w-5 h-5 text-muted-foreground" />
+                                    <div className="flex-1">
+                                        <p className="font-medium">No Device Registered</p>
+                                        <p className="text-sm text-muted-foreground">
+                                            User has not enabled push notifications
+                                        </p>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {user.pushSubscription && (
+                            <div className="space-y-3 pt-2">
+                                <Label htmlFor="featureRequestId">
+                                    Feature Request ID (optional)
+                                </Label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        id="featureRequestId"
+                                        type="text"
+                                        placeholder="e.g., 123"
+                                        value={testFeatureRequestId}
+                                        onChange={(e) => setTestFeatureRequestId(e.target.value)}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={handleSendTestPush}
+                                        disabled={isSendingPush}
+                                    >
+                                        <Send className="w-4 h-4 mr-2" />
+                                        {isSendingPush ? 'Sending...' : 'Send Test'}
+                                    </Button>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    Leave empty for a generic test notification, or enter a feature request ID to test deep linking
+                                </p>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 

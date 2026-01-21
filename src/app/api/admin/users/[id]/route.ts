@@ -15,7 +15,7 @@ export async function PATCH(
         }
 
         const body = await request.json()
-        const { role, active, firstName, lastName } = body
+        const { role, active, firstName, lastName, teamIds } = body
 
         if (role && !['user', 'editor', 'admin'].includes(role)) {
             return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
@@ -57,6 +57,44 @@ export async function PATCH(
             },
             data: updateData,
         })
+
+        // Update team memberships if provided
+        if (teamIds !== undefined && Array.isArray(teamIds)) {
+            // Get current memberships
+            const currentMemberships = await prisma.userTeamMembership.findMany({
+                where: { userId: resolvedParams.id },
+                select: { teamId: true, id: true },
+            })
+
+            const currentTeamIds = currentMemberships.map(m => m.teamId)
+            
+            // Teams to add
+            const teamsToAdd = teamIds.filter((id: string) => !currentTeamIds.includes(id))
+            
+            // Teams to remove
+            const teamsToRemove = currentTeamIds.filter(id => !teamIds.includes(id))
+
+            // Add new memberships
+            if (teamsToAdd.length > 0) {
+                await prisma.userTeamMembership.createMany({
+                    data: teamsToAdd.map((teamId: string) => ({
+                        userId: resolvedParams.id,
+                        teamId,
+                        role: 'member',
+                    })),
+                })
+            }
+
+            // Remove old memberships
+            if (teamsToRemove.length > 0) {
+                await prisma.userTeamMembership.deleteMany({
+                    where: {
+                        userId: resolvedParams.id,
+                        teamId: { in: teamsToRemove },
+                    },
+                })
+            }
+        }
 
         return NextResponse.json(user)
     } catch (error) {

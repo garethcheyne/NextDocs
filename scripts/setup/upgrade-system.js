@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 /**
  * System Upgrade Script
- * Handles database migrations, PWA setup, and other upgrade tasks
+ * Handles local environment setup (VAPID keys, schema checks)
+ * 
+ * Note: Database migrations are automatically applied by Docker
+ * This script only prepares the local environment before Docker starts
  */
 
 const { execSync } = require('child_process');
@@ -58,30 +61,16 @@ if (fs.existsSync(schemaPath)) {
   process.exit(1);
 }
 
-// Step 3: Run Prisma migrations
-console.log('\n📋 Step 3: Running Database Migrations...');
-try {
-  execSync('npx prisma migrate deploy', { 
-    stdio: 'inherit',
-    cwd: path.join(__dirname, '..', '..')
-  });
-  console.log('   ✅ Database migrations completed');
-} catch (error) {
-  console.log('   ⚠️  Migration warning (may already be applied)');
-}
+// Step 3: Database migrations (Skipped - handled by Docker)
+console.log('\n📋 Step 3: Database Migrations...');
+console.log('   ℹ️  Migrations are automatically applied by Docker on startup');
+console.log('   ℹ️  Docker runs: npx prisma db push --accept-data-loss');
+console.log('   ✅ No action needed');
 
-// Step 4: Generate Prisma Client
-console.log('\n📋 Step 4: Generating Prisma Client...');
-try {
-  execSync('npx prisma generate', { 
-    stdio: 'inherit',
-    cwd: path.join(__dirname, '..', '..')
-  });
-  console.log('   ✅ Prisma client generated');
-} catch (error) {
-  console.error('   ❌ Failed to generate Prisma client');
-  process.exit(1);
-}
+// Step 4: Prisma Client generation (Skipped - handled by Docker)
+console.log('\n📋 Step 4: Prisma Client Generation...');
+console.log('   ℹ️  Prisma client is generated during Docker build');
+console.log('   ✅ No action needed');
 
 // Step 5: Update Service Worker (if needed)
 console.log('\n📋 Step 5: Checking Service Worker...');
@@ -104,5 +93,6 @@ console.log('\n✅ System Upgrade Complete!\n');
 console.log('Next steps:');
 console.log('  1. Review changes in .env and prisma/schema.prisma');
 console.log('  2. Add push handlers to public/sw.js (if needed)');
-console.log('  3. Restart your application');
-console.log('  4. Test PWA installation and push notifications\n');
+console.log('  3. Docker will automatically apply migrations on startup');
+console.log('  4. Run: npm run update (rebuilds and restarts containers)');
+console.log('  5. Test PWA installation and push notifications\n');

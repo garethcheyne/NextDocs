@@ -22,7 +22,7 @@ export function PageHeader({ breadcrumbs }: PageHeaderProps) {
         <div className="flex-1 min-w-0">
           <BreadcrumbNavigation items={breadcrumbs} />
         </div>
-        <ThemeToggle />
+        {/* <ThemeToggle /> */}
       </div>
     </header>
   )

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/db/prisma'
-import { notifyReleaseSubscribers } from '@/lib/email/notification-service'
+import { notificationCoordinator } from '@/lib/notifications'
 
 /**
  * Get all releases (admin only)
@@ -181,20 +181,14 @@ export async function POST(request: NextRequest) {
     let notificationsSent = 0
     if (sendNotifications && teams.length > 0) {
       try {
-        const result = await notifyReleaseSubscribers({
+        const result = await notificationCoordinator.notifyReleasePublished({
           releaseId: release.id,
           teams: teams.map((t) => t.slug),
           version: release.version,
           content: release.content,
           documentTitle: release.title || `Release ${release.version}`,
         })
-        notificationsSent = result.sent
-
-        // Mark release as notified
-        await prisma.release.update({
-          where: { id: release.id },
-          data: { notifiedAt: new Date() },
-        })
+        notificationsSent = result.totalSent
       } catch (notifyError) {
         console.error('Failed to send release notifications:', notifyError)
       }

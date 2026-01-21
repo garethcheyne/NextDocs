@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db/prisma'
 import { parseMarkdownDocument, isBlogPost, isDocument } from './document-parser'
 import { updateDocumentSearchVector, updateBlogPostSearchVector } from '@/lib/search/indexer'
-import { notifyReleaseSubscribers } from '@/lib/email/notification-service'
+import { notificationCoordinator } from '@/lib/notifications'
 
 interface Change {
   changeType: 'added' | 'modified' | 'deleted'
@@ -335,7 +335,7 @@ export async function storeDocuments(
                 select: { slug: true, title: true },
               })
 
-              const result = await notifyReleaseSubscribers({
+              const result = await notificationCoordinator.notifyReleasePublished({
                 releaseId: newRelease.id,
                 teams: teams.map(t => t.slug),
                 version: release.version,
@@ -343,13 +343,9 @@ export async function storeDocuments(
                 documentUrl: document ? `/docs/${document.slug}` : undefined,
                 documentTitle: document?.title || parsed.title,
               })
-              notificationsSent += result.sent
+              notificationsSent += result.totalSent
 
-              // Mark release as notified
-              await prisma.release.update({
-                where: { id: newRelease.id },
-                data: { notifiedAt: new Date() },
-              })
+              // Mark release as notified (already done in coordinator)
             } catch (notifyError) {
               console.error(`   ❌ Failed to send notifications for release ${release.version}:`, notifyError)
             }

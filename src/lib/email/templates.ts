@@ -108,7 +108,7 @@ export function buildFeatureStatusChangeEmail(
         <!-- Header -->
         <div style="${headerStyles}">
           <div style="${logoStyles}">
-            <img src="${process.env.NEXT_PUBLIC_URL}/icons/logo-256.png" alt="The Hive" style="max-height: 200px; height: auto; width: auto;" />
+            <img src="${process.env.NEXT_PUBLIC_URL}/icons/logo-256.png" alt="${process.env.NEXT_SITE_NAME || 'NextDocs'}" style="max-height: 200px; height: auto; width: auto;" />
           </div>
           <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             ${statusEmoji[newStatus] || '📢'} Feature Status Updated
@@ -211,7 +211,7 @@ export function buildNewCommentEmail(
         <!-- Header -->
         <div style="${headerStyles}">
           <div style="${logoStyles}">
-            <img src="${process.env.NEXT_PUBLIC_URL}/icons/logo-256.png" alt="The Hive" style="max-height: 200px; height: auto; width: auto;" />
+            <img src="${process.env.NEXT_PUBLIC_URL}/icons/logo-256.png" alt="${process.env.NEXT_SITE_NAME || 'NextDocs'}" style="max-height: 200px; height: auto; width: auto;" />
           </div>
           <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             💬 New Comment Added
@@ -314,7 +314,7 @@ export function buildReleaseNotificationEmail(options: {
         <!-- Header -->
         <div style="${headerStyles}">
           <div style="${logoStyles}">
-            <img src="${process.env.NEXT_PUBLIC_URL}/icons/logo-256.png" alt="The Hive" style="max-height: 200px; height: auto; width: auto;" />
+            <img src="${process.env.NEXT_PUBLIC_URL}/icons/logo-256.png" alt="${process.env.NEXT_SITE_NAME || 'NextDocs'}" style="max-height: 200px; height: auto; width: auto;" />
           </div>
           <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             🚀 Release Notes v${version}
@@ -398,7 +398,7 @@ export function buildNewFeatureEmail(
         <!-- Header -->
         <div style="${headerStyles}">
           <div style="${logoStyles}">
-            <img src="${process.env.NEXT_PUBLIC_URL}/icons/logo-256.png" alt="The Hive" style="max-height: 200px; height: auto; width: auto;" />
+            <img src="${process.env.NEXT_PUBLIC_URL}/icons/logo-256.png" alt="${process.env.NEXT_SITE_NAME || 'NextDocs'}" style="max-height: 200px; height: auto; width: auto;" />
           </div>
           <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             ✨ New Feature Request

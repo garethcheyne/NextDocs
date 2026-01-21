@@ -5,7 +5,7 @@ import { cacheGet, cacheSet } from '@/lib/redis'
 
 export interface SearchResult {
   id: string
-  type: 'document' | 'blog' | 'api-spec' | 'feature'
+  type: 'document' | 'blog' | 'api-spec' | 'feature-request' | 'release'
   title: string
   excerpt: string
   url: string
@@ -23,7 +23,7 @@ export interface SearchResult {
 export interface SearchOptions {
   limit?: number
   offset?: number
-  types?: Array<'document' | 'blog' | 'api-spec' | 'feature'>
+  types?: Array<'document' | 'blog' | 'api-spec' | 'feature' | 'feature-request' | 'release'>
   category?: string
   tags?: string[]
 }
@@ -38,7 +38,7 @@ export async function searchContent(
   const {
     limit = 10,
     offset = 0,
-    types = ['document', 'blog', 'api-spec', 'feature'],
+    types = ['document', 'blog', 'api-spec', 'feature', 'feature-request', 'release'],
     category,
     tags,
   } = options
@@ -403,7 +403,8 @@ export async function searchContent(
   }
 
   // Search feature requests
-  if (types.includes('feature')) {
+  // Accept both 'feature' (from API) and 'feature-request' (internal) for backwards compatibility
+  if (types.includes('feature') || types.includes('feature-request')) {
     let features: any[]
 
     if (tags && tags.length > 0) {
@@ -446,13 +447,49 @@ export async function searchContent(
     results.push(
       ...features.map((feature) => ({
         id: feature.id,
-        type: 'feature' as const,
+        type: 'feature-request' as const,
         title: feature.title,
         excerpt: feature.description?.substring(0, 200) || '',
         url: `/features/${feature.slug}`,
         tags: feature.tagIds || [],
         rank: parseFloat(feature.rank),
         highlight: feature.highlight,
+      }))
+    )
+  }
+
+  // Search releases
+  if (types.includes('release')) {
+    const releases: any[] = await prisma.$queryRaw`
+      SELECT
+        r.id,
+        r.title,
+        r.version,
+        r.content,
+        r."categoryId",
+        ts_rank(r."searchVector", to_tsquery('english', ${tsQuery})) as rank,
+        ts_headline('english', r.content, to_tsquery('english', ${tsQuery}),
+          'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight,
+        c.name as "categoryName"
+      FROM "Release" r
+      LEFT JOIN "FeatureCategory" c ON r."categoryId" = c.id
+      WHERE r."searchVector" @@ to_tsquery('english', ${tsQuery})
+      ORDER BY rank DESC
+      LIMIT ${limit}
+      OFFSET ${offset}
+    `
+
+    results.push(
+      ...releases.map((release) => ({
+        id: release.id,
+        type: 'release' as const,
+        title: release.title || `Release ${release.version}`,
+        excerpt: release.content?.substring(0, 200) || '',
+        url: `/releases/${release.version}`,
+        category: release.categoryName || undefined,
+        tags: [],
+        rank: parseFloat(release.rank),
+        highlight: release.highlight,
       }))
     )
   }

@@ -25,7 +25,7 @@ export function AnimatedLogo() {
         <div className="relative animate-float">
           <img
             src="/icons/logo-512.png"
-            alt="The Hive - Documentation Platform"
+            alt={`${process.env.NEXT_SITE_NAME || 'NextDocs'} - Documentation Platform`}
             className="w-[140px] h-[175px] sm:w-[200px] sm:h-[250px] md:w-[250px] md:h-[310px] lg:w-[350px] lg:h-[420px] object-contain hover:scale-105 transition-all duration-300 drop-shadow-2xl"
           />
 

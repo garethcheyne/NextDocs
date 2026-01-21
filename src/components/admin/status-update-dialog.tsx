@@ -29,7 +29,7 @@ interface StatusUpdateDialogProps {
     featureTitle: string
     featureDescription: string
     integrationType: 'github' | 'azure-devops' | null
-    autoCreateOnApproval: boolean
+
     hasExistingWorkItem: boolean
     open?: boolean
     onOpenChange?: (open: boolean) => void
@@ -50,7 +50,6 @@ export function StatusUpdateDialog({
     featureTitle,
     featureDescription,
     integrationType,
-    autoCreateOnApproval,
     hasExistingWorkItem,
     open: externalOpen,
     onOpenChange: externalOnOpenChange,
@@ -79,22 +78,10 @@ export function StatusUpdateDialog({
 
         setError(null)
 
-        // Check if we need to show work item customization dialog
-        const shouldCreateWorkItem = 
-            status === 'approved' && 
-            currentStatus !== 'approved' &&
-            autoCreateOnApproval &&
-            !hasExistingWorkItem &&
-            integrationType !== null;
+        // Note: Auto-creation removed - admins must manually create work items via "Create Work Item" button
+        // This ensures human review and customization for each work item
 
-        if (shouldCreateWorkItem) {
-            // Close status dialog and show work item dialog
-            setOpen(false)
-            setShowWorkItemDialog(true)
-            return
-        }
-
-        // Otherwise, proceed with normal status update
+        // Proceed with status update
         await updateStatus()
     }
 
@@ -243,6 +230,7 @@ export function StatusUpdateDialog({
                 open={showWorkItemDialog}
                 onOpenChange={setShowWorkItemDialog}
                 featureRequest={{
+                    id: featureId,
                     title: featureTitle,
                     description: featureDescription,
                 }}

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/auth';
 import { prisma } from '@/lib/db/prisma';
-import { encryptToken } from '@/lib/crypto/encryption';
 
 export async function PUT(
   request: NextRequest,
@@ -18,10 +17,24 @@ export async function PUT(
     const body = await request.json();
     const { integrationType, github, devops, syncSettings } = body;
 
+    // Check if integration type is enabled
+    if (integrationType === 'azure-devops' && process.env.DEVOPS_ENABLED !== 'true') {
+      return NextResponse.json(
+        { message: 'Azure DevOps integration is not enabled. Set DEVOPS_ENABLED=true in environment.' },
+        { status: 400 }
+      );
+    }
+
+    if (integrationType === 'github' && process.env.GITHUB_ENABLED !== 'true') {
+      return NextResponse.json(
+        { message: 'GitHub integration is not enabled. Set GITHUB_ENABLED=true in environment.' },
+        { status: 400 }
+      );
+    }
+
     // Prepare update data
     const updateData: any = {
       integrationType,
-      autoCreateOnApproval: syncSettings.autoCreateOnApproval,
       syncComments: syncSettings.syncComments,
       syncStatus: syncSettings.syncStatus,
     };
@@ -29,20 +42,9 @@ export async function PUT(
     if (integrationType === 'github') {
       updateData.githubOwner = github.owner;
       updateData.githubRepo = github.repo;
-      
-      // Only update PAT if provided (encrypted)
-      if (github.pat) {
-        updateData.githubPat = encryptToken(github.pat);
-      }
     } else if (integrationType === 'azure-devops') {
-      updateData.devopsOrg = devops.org;
       updateData.devopsProject = devops.project;
       updateData.devopsAreaPath = devops.areaPath || null;
-      
-      // Only update PAT if provided (encrypted)
-      if (devops.pat) {
-        updateData.devopsPat = encryptToken(devops.pat);
-      }
     }
 
     await prisma.featureCategory.update({

@@ -19,11 +19,24 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
         where: {
             id: resolvedParams.id,
         },
+        include: {
+            teamMemberships: {
+                include: {
+                    team: true,
+                },
+            },
+        },
     })
 
     if (!user) {
         notFound()
     }
+
+    // Get all available teams
+    const allTeams = await prisma.team.findMany({
+        where: { enabled: true },
+        orderBy: { name: 'asc' },
+    })
 
     return (
         <>
@@ -46,15 +59,33 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
             {/* Page Content */}
             <div className="flex-1 p-6 overflow-auto">
                 <div className="max-w-2xl">
-                    <EditUserForm user={{
-                        id: user.id,
-                        name: user.name,
-                        email: user.email,
-                        role: user.role,
-                        image: user.image,
-                        provider: user.provider,
-                        createdAt: user.createdAt.toISOString(),
-                    }} />
+                    <EditUserForm 
+                        user={{
+                            id: user.id,
+                            name: user.name,
+                            email: user.email,
+                            role: user.role,
+                            image: user.image,
+                            provider: user.provider,
+                            createdAt: user.createdAt.toISOString(),
+                            pushSubscription: user.pushSubscription,
+                            teamMemberships: user.teamMemberships.map(tm => ({
+                                id: tm.id,
+                                teamId: tm.teamId,
+                                teamName: tm.team.name,
+                                teamSlug: tm.team.slug,
+                                role: tm.role,
+                                subscribeToReleases: tm.subscribeToReleases,
+                            })),
+                        }}
+                        allTeams={allTeams.map(t => ({
+                            id: t.id,
+                            name: t.name,
+                            slug: t.slug,
+                            icon: t.icon,
+                            color: t.color,
+                        }))}
+                    />
                 </div>
             </div>
         </>

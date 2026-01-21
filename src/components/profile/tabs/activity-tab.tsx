@@ -76,7 +76,7 @@ export function ActivityTab({ userId }: ActivityTabProps) {
   const FeatureCard = ({ feature }: { feature: FeatureRequest }) => (
     <div className="p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
       <div className="flex items-start justify-between mb-2">
-        <Link 
+        <Link
           href={`/features/${feature.slug}`}
           className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1"
         >
@@ -88,13 +88,13 @@ export function ActivityTab({ userId }: ActivityTabProps) {
           <PriorityBadge priority={feature.priority} />
         </div>
       </div>
-      
+
       {feature.category && (
         <div className="mb-2">
           <CategoryBadge category={feature.category} />
         </div>
       )}
-      
+
       <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1">
@@ -117,7 +117,7 @@ export function ActivityTab({ userId }: ActivityTabProps) {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+        <Card >
           <CardContent className="p-6">
             <div className="text-center">
               <div className="animate-pulse space-y-4">
@@ -136,7 +136,7 @@ export function ActivityTab({ userId }: ActivityTabProps) {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+      <Card>
         <CardHeader>
           <CardTitle>Your Activity</CardTitle>
           <CardDescription>

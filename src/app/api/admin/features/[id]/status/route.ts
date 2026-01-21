@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/db/prisma'
-import { notifyFeatureStatusChange } from '@/lib/email/notification-service'
+import { notificationCoordinator } from '@/lib/notifications'
 import { createWorkItemOnApproval } from '@/lib/sync/devops-sync'
 
 // POST /api/admin/features/[id]/status - Update feature request status
@@ -75,38 +75,31 @@ export async function POST(
             },
         })
 
-        // Auto-create work item if status changed to approved
-        let workItemResult = null;
-        if (status === 'approved' && feature.status !== 'approved') {
-            try {
-                workItemResult = await createWorkItemOnApproval(id);
-                if (workItemResult.success) {
-                    console.log(`Work item created: ${workItemResult.externalId} - ${workItemResult.externalUrl}`);
-                } else {
-                    console.error(`Failed to create work item: ${workItemResult.error}`);
-                }
-            } catch (error) {
-                console.error('Error creating work item:', error);
-                // Don't fail the status update if work item creation fails
-            }
-        }
+        // NOTE: Auto-create work item disabled - admins now manually create via "Create Work Item" button
+        // This gives them control over work item type, custom fields, and timing
 
-        // Send email notifications to followers
-        notifyFeatureStatusChange(
-            id,
-            feature.status,
-            status,
-            reason,
+        // Send notifications to followers
+        notificationCoordinator.notifyFeatureStatusChange(
+            {
+                featureId: id,
+                featureTitle: updatedFeature.title,
+                oldStatus: feature.status,
+                newStatus: status,
+                reason,
+                changedBy: {
+                    id: session.user.id,
+                    name: session.user.name || session.user.email || 'Admin'
+                }
+            },
             session.user.id
         ).catch((error) => {
             console.error('Failed to send status change notifications:', error)
-            // Don't fail the request if email fails
+            // Don't fail the request if notifications fail
         })
 
         return NextResponse.json({
             feature: updatedFeature,
             message: 'Status updated successfully',
-            workItem: workItemResult,
         })
     } catch (error) {
         console.error('Error updating feature status:', error)

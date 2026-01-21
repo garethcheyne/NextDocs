@@ -83,7 +83,7 @@ function LoginForm() {
                   <div className="text-center lg:text-left space-y-6">
                     <h1 className={`text-6xl md:text-7xl lg:text-8xl font-black tracking-wider ${righteous.className}`}>
                       <span className="inline-block text-white dark:text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.1)]">
-                        THE HIVE
+                        {(process.env.NEXT_SITE_NAME || 'NEXTDOCS').toUpperCase()}
                       </span>
                     </h1>
 

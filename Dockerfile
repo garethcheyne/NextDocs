@@ -12,6 +12,13 @@ RUN npm install
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+# Accept VAPID key as build argument
+ARG NEXT_PUBLIC_VAPID_PUBLIC_KEY
+ENV NEXT_PUBLIC_VAPID_PUBLIC_KEY=$NEXT_PUBLIC_VAPID_PUBLIC_KEY
+
+# Provide dummy DATABASE_URL for build (real one injected at runtime)
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 

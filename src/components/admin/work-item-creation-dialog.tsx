@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,24 +21,39 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { X } from 'lucide-react';
+import { X, ChevronDown, ChevronUp } from 'lucide-react';
 import { MarkdownToolbar } from '@/components/markdown/markdown-toolbar';
 import { useMarkdownEditor } from '@/hooks/use-markdown-editor';
 import ReactMarkdown from 'react-markdown';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+
+interface CustomField {
+  name: string;
+  label: string;
+  type: 'string' | 'number' | 'date' | 'select' | 'multiline';
+  options?: string[];
+  defaultValue?: any;
+  required?: boolean;
+}
 
 interface WorkItemCreationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   featureRequest: {
+    id: string;
     title: string;
     description: string;
+    featureNumber?: string;  // Feature request number (e.g., "FR-123") for TheHive field
+    createdByEmail?: string; // Creator email for Requestor field
   };
   integrationType: 'github' | 'azure-devops' | null;
+  categoryId?: string;
   onConfirm: (data: {
     title: string;
     description: string;
     workItemType: string;
     tags: string[];
+    customFields: Record<string, any>;
   }) => void;
 }
 
@@ -47,6 +62,7 @@ export function WorkItemCreationDialog({
   onOpenChange,
   featureRequest,
   integrationType,
+  categoryId,
   onConfirm,
 }: WorkItemCreationDialogProps) {
   const [title, setTitle] = useState(featureRequest.title);
@@ -55,8 +71,55 @@ export function WorkItemCreationDialog({
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [showPreview, setShowPreview] = useState(false);
+  const [customFields, setCustomFields] = useState<Record<string, any>>({});
+  const [availableCustomFields, setAvailableCustomFields] = useState<CustomField[]>([]);
+  const [showCustomFields, setShowCustomFields] = useState(false);
+  const [isLoadingFields, setIsLoadingFields] = useState(false);
 
   const { textareaRef, handleInsert } = useMarkdownEditor(description, setDescription);
+
+  // Load custom fields when dialog opens and Azure DevOps is selected
+  useEffect(() => {
+    if (open && integrationType === 'azure-devops' && categoryId) {
+      loadCustomFields();
+    }
+  }, [open, integrationType, categoryId, workItemType]);
+
+  const loadCustomFields = async () => {
+    setIsLoadingFields(true);
+    try {
+      const response = await fetch(`/api/admin/categories/${categoryId}/custom-fields?workItemType=${workItemType}`);
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableCustomFields(data.fields || []);
+        // Initialize custom fields with default values and auto-populated values
+        const defaults: Record<string, any> = {};
+        data.fields?.forEach((field: CustomField) => {
+          if (field.defaultValue !== undefined) {
+            defaults[field.name] = field.defaultValue;
+          }
+        });
+        
+        // Auto-populate Custom.Requestor with creator email
+        if (featureRequest.createdByEmail) {
+          defaults['Custom.Requestor'] = featureRequest.createdByEmail;
+        }
+        
+        // Auto-populate Custom.TheHive with feature request number or ID
+        if (featureRequest.featureNumber) {
+          defaults['Custom.TheHive'] = featureRequest.featureNumber;
+        } else if (featureRequest.id) {
+          defaults['Custom.TheHive'] = featureRequest.id;
+        }
+        
+        setCustomFields(defaults);
+      }
+    } catch (error) {
+      console.error('Failed to load custom fields:', error);
+    } finally {
+      setIsLoadingFields(false);
+    }
+  };
 
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
@@ -76,18 +139,86 @@ export function WorkItemCreationDialog({
     }
   };
 
+  const handleCustomFieldChange = (fieldName: string, value: any) => {
+    setCustomFields(prev => ({ ...prev, [fieldName]: value }));
+  };
+
   const handleConfirm = () => {
     onConfirm({
       title,
       description,
       workItemType,
       tags,
+      customFields,
     });
   };
 
   const workItemTypes = integrationType === 'github'
     ? ['Issue', 'Bug', 'Feature Request', 'Task']
-    : ['User Story', 'Bug', 'Feature', 'Task', 'Epic'];
+    : ['User Story', 'Bug', 'Feature', 'Task', 'Epic', 'Issue'];
+
+  const renderCustomField = (field: CustomField) => {
+    const value = customFields[field.name] || '';
+
+    switch (field.type) {
+      case 'select':
+        return (
+          <Select 
+            value={value} 
+            onValueChange={(val) => handleCustomFieldChange(field.name, val)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={`Select ${field.label.toLowerCase()}...`} />
+            </SelectTrigger>
+            <SelectContent>
+              {field.options?.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      
+      case 'multiline':
+        return (
+          <Textarea
+            value={value}
+            onChange={(e) => handleCustomFieldChange(field.name, e.target.value)}
+            rows={3}
+            placeholder={`Enter ${field.label.toLowerCase()}...`}
+          />
+        );
+      
+      case 'number':
+        return (
+          <Input
+            type="number"
+            value={value}
+            onChange={(e) => handleCustomFieldChange(field.name, e.target.value)}
+            placeholder={`Enter ${field.label.toLowerCase()}...`}
+          />
+        );
+      
+      case 'date':
+        return (
+          <Input
+            type="date"
+            value={value}
+            onChange={(e) => handleCustomFieldChange(field.name, e.target.value)}
+          />
+        );
+      
+      default:
+        return (
+          <Input
+            value={value}
+            onChange={(e) => handleCustomFieldChange(field.name, e.target.value)}
+            placeholder={`Enter ${field.label.toLowerCase()}...`}
+          />
+        );
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -211,6 +342,33 @@ export function WorkItemCreationDialog({
               </div>
             )}
           </div>
+
+          {/* Custom Fields - Azure DevOps only */}
+          {integrationType === 'azure-devops' && availableCustomFields.length > 0 && (
+            <Collapsible open={showCustomFields} onOpenChange={setShowCustomFields}>
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" className="w-full flex items-center justify-between" type="button">
+                  <span>Custom Fields ({availableCustomFields.length})</span>
+                  {showCustomFields ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 mt-4 pt-4 border-t">
+                {isLoadingFields ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">Loading custom fields...</p>
+                ) : (
+                  availableCustomFields.map((field) => (
+                    <div key={field.name} className="space-y-2">
+                      <Label htmlFor={field.name}>
+                        {field.label}
+                        {field.required && <span className="text-red-500 ml-1">*</span>}
+                      </Label>
+                      {renderCustomField(field)}
+                    </div>
+                  ))
+                )}
+              </CollapsibleContent>
+            </Collapsible>
+          )}
         </div>
 
         <DialogFooter>
