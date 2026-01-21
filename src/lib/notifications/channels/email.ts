@@ -50,7 +50,7 @@ export class EmailNotificationChannel {
         try {
             await this.client.sendEmail({
                 to: emails,
-                subject: payload.title,
+                subject: process.env.NEXT_SITE_NAME ? `[${process.env.NEXT_SITE_NAME}] ${payload.title}` : payload.title,
                 body: htmlBody || this.buildDefaultEmailBody(payload),
                 isHtml: true,
             })

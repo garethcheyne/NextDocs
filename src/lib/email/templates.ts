@@ -88,13 +88,22 @@ export function buildFeatureStatusChangeEmail(
 
   return `
     <!DOCTYPE html>
-    <html lang="en">
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
       <meta name="x-apple-disable-message-reformatting">
+      <!--[if !mso]><!-->
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <!--<![endif]-->
       <title>Feature Status Update</title>
+      <!--[if mso]>
+      <style type="text/css">
+        body, table, td, a { font-family: Arial, sans-serif !important; }
+        .button { padding: 16px 32px !important; }
+      </style>
+      <![endif]-->
       <style>
         @media only screen and (max-width: 480px) {
           .container { width: 100% !important; margin: 0 !important; border-radius: 0 !important; }
@@ -104,11 +113,16 @@ export function buildFeatureStatusChangeEmail(
       </style>
     </head>
     <body style="${baseStyles} background-color: #f3f4f6; padding: 20px;">
+      <!--[if mso | IE]>
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" style="width:600px;">
+        <tr>
+          <td style="line-height:0px; font-size:0px; mso-line-height-rule:exactly;">
+      <![endif]-->
       <div style="${containerStyles}">
         <!-- Header -->
         <div style="${headerStyles}">
           <div style="${logoStyles}">
-            <img src="${process.env.NEXT_PUBLIC_URL}/icons/logo-256.png" alt="${process.env.NEXT_SITE_NAME || 'NextDocs'}" style="max-height: 200px; height: auto; width: auto;" />
+            <img src="${process.env.NEXT_PUBLIC_URL}/icons/logo-256.png" alt="${process.env.NEXT_SITE_NAME || 'NextDocs'}" style="max-height: 120px; height: auto; width: auto;" />
           </div>
           <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             ${statusEmoji[newStatus] || '📢'} Feature Status Updated
@@ -143,9 +157,13 @@ export function buildFeatureStatusChangeEmail(
             ` : ''}
           </div>
 
-          <a href="${featureUrl}" style="${buttonStyles}">
-            View Feature Request
-          </a>
+          <div style="text-align: center; margin: 32px 0;">
+            <a href="${featureUrl}" style="${buttonStyles}">
+              <!--[if mso]><i style="mso-font-width:150%;mso-text-raise:4px" hidden>&nbsp;</i><![endif]-->
+              View Feature Request
+              <!--[if mso]><i style="mso-font-width:150%" hidden>&nbsp;</i><![endif]-->
+            </a>
+          </div>
 
           <p style="color: #666; margin-top: 20px;">
             <strong>Feature Description:</strong><br />
@@ -164,7 +182,7 @@ export function buildFeatureStatusChangeEmail(
             <a href="${process.env.NEXT_PUBLIC_URL}/settings/notifications" style="color: #666;">Notification Settings</a>
           </p>
           <p style="margin: 16px 0 0 0; color: #9ca3af; font-weight: 500;">
-            CAT - Enterprise Documentation Platform
+            ${process.env.NEXT_SITE_NAME || 'NextDocs'}
           </p>
         </div>
       </div>
@@ -236,9 +254,11 @@ export function buildNewCommentEmail(
             </p>
           </div>
 
-          <a href="${featureUrl}" style="${buttonStyles}">
-            View Comment & Reply
-          </a>
+          <div style="text-align: center; margin: 32px 0;">
+            <a href="${featureUrl}" style="${buttonStyles}">
+              View Feature & Reply
+            </a>
+          </div>
         </div>
 
         <!-- Footer -->
@@ -252,7 +272,7 @@ export function buildNewCommentEmail(
             <a href="${process.env.NEXT_PUBLIC_URL}/settings/notifications" style="color: #666;">Notification Settings</a>
           </p>
           <p style="margin: 16px 0 0 0; color: #9ca3af; font-weight: 500;">
-            CAT - Enterprise Documentation Platform
+            ${process.env.NEXT_SITE_NAME || 'NextDocs'}
           </p>
         </div>
       </div>
@@ -344,9 +364,11 @@ export function buildReleaseNotificationEmail(options: {
           </div>
 
           ${documentUrl ? `
-            <a href="${documentUrl}" style="${buttonStyles}">
-              View Full Documentation
-            </a>
+            <div style="text-align: center; margin: 32px 0;">
+              <a href="${documentUrl}" style="${buttonStyles}">
+                View Full Documentation
+              </a>
+            </div>
           ` : ''}
         </div>
 
@@ -360,7 +382,7 @@ export function buildReleaseNotificationEmail(options: {
             <a href="${process.env.NEXT_PUBLIC_URL}/docs" style="color: #ff6b35;">Documentation</a>
           </p>
           <p style="margin: 16px 0 0 0; color: #9ca3af; font-weight: 500;">
-            CAT - Enterprise Documentation Platform
+            ${process.env.NEXT_SITE_NAME || 'NextDocs'}
           </p>
         </div>
       </div>
@@ -398,7 +420,7 @@ export function buildNewFeatureEmail(
         <!-- Header -->
         <div style="${headerStyles}">
           <div style="${logoStyles}">
-            <img src="${process.env.NEXT_PUBLIC_URL}/icons/logo-256.png" alt="${process.env.NEXT_SITE_NAME || 'NextDocs'}" style="max-height: 200px; height: auto; width: auto;" />
+            <img src="${process.env.NEXT_PUBLIC_URL}/icons/logo-256.png" alt="${process.env.NEXT_SITE_NAME || 'NextDocs'}" style="max-height: 120px; height: auto; width: auto;" />
           </div>
           <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             ✨ New Feature Request
@@ -428,9 +450,11 @@ export function buildNewFeatureEmail(
             </p>
           </div>
 
-          <a href="${featureUrl}" style="${buttonStyles}">
-            View Feature Request & Vote
-          </a>
+          <div style="text-align: center; margin: 32px 0;">
+            <a href="${featureUrl}" style="${buttonStyles}">
+              View Feature Request & Vote
+            </a>
+          </div>
 
           <p style="color: #666; margin-top: 20px; font-size: 14px;">
             This feature request is currently in <strong>proposal</strong> status.
@@ -449,7 +473,7 @@ export function buildNewFeatureEmail(
             <a href="${process.env.NEXT_PUBLIC_URL}/settings/notifications" style="color: #666;">Notification Settings</a>
           </p>
           <p style="margin: 16px 0 0 0; color: #9ca3af; font-weight: 500;">
-            CAT - Enterprise Documentation Platform
+            ${process.env.NEXT_SITE_NAME || 'NextDocs'}
           </p>
         </div>
       </div>

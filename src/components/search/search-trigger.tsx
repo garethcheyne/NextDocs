@@ -7,6 +7,9 @@ import { Input } from '@/components/ui/input'
 import { useDebounce } from '@/hooks/use-debounce'
 import { useRouter } from 'next/navigation'
 import DOMPurify from 'isomorphic-dompurify'
+import { CategoryBadge } from '@/components/badges/category-badge'
+import { SlugBadge } from '@/components/features/slug-badge'
+import { EnhancedMarkdown } from '@/components/markdown/enhanced-markdown'
 
 // Sanitize HTML to prevent XSS attacks
 function sanitizeHtml(html: string): string {
@@ -22,9 +25,15 @@ interface SearchResult {
     title: string
     excerpt: string
     url: string
-    category?: string
+    category?: {
+        id: string
+        name: string
+        color?: string | null
+        iconBase64?: string | null
+    }
     tags: string[]
     highlight?: string
+    slug?: string
 }
 
 export function SearchTrigger() {
@@ -319,7 +328,7 @@ export function SearchTrigger() {
                 {/* Results Dropdown */}
                 {isOpen && (query || results.length > 0) && (
                     <div className={`absolute top-full mt-2 rounded-lg shadow-lg border overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300 ${isExpanded
-                        ? 'w-full max-h-[calc(100vh-12rem)] bg-popover/95 backdrop-blur-xl shadow-2xl'
+                        ? 'w-full max-h-[calc(100vh-12rem)] bg-popover/95 backdrop-blur-xl shadow-2xl flex flex-col md:flex-row'
                         : 'w-full max-h-96 bg-popover backdrop-blur-xl flex'
                         }`}>
                         <div className={`flex flex-col ${isExpanded ? 'w-full md:w-1/2 md:border-r' : 'w-full'}`}>
@@ -362,44 +371,8 @@ export function SearchTrigger() {
                                 </button>
                             </div>
 
-                            {/* Keyboard Shortcuts Footer - Hidden on mobile */}
-                            <div className="hidden md:flex border-t px-3 py-2 bg-muted/30 text-xs text-muted-foreground items-center justify-between">
-                                <div className="flex gap-3">
-                                    <span className="flex items-center gap-1">
-                                        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium">
-                                            <span className="text-xs">↑↓</span>
-                                        </kbd>
-                                        Navigate
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium">
-                                            <span className="text-xs">↵</span>
-                                        </kbd>
-                                        Select
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium">
-                                            <span className="text-xs">ESC</span>
-                                        </kbd>
-                                        Close
-                                    </span>
-                                </div>
-                                {results.length > 0 && (
-                                    <span className="font-medium">
-                                        {results.length} result{results.length === 1 ? '' : 's'}
-                                    </span>
-                                )}
-                            </div>
-
-                            {/* Mobile: Simple result count */}
-                            {results.length > 0 && (
-                                <div className="md:hidden border-t px-3 py-2 bg-muted/30 text-xs text-muted-foreground text-center font-medium">
-                                    {results.length} result{results.length === 1 ? '' : 's'}
-                                </div>
-                            )}
-
                             {/* Results with custom scrollbar */}
-                            <div className="overflow-y-auto flex-1 custom-scrollbar">
+                            <div className="overflow-y-auto flex-1 custom-scrollbar min-h-0">
                                 {loading && (
                                     <div className="p-4 space-y-3">
                                         {[1, 2, 3].map((i) => (
@@ -465,8 +438,8 @@ export function SearchTrigger() {
                                                             </span>
                                                         </div>
                                                         {result.category && (
-                                                            <div className="text-xs text-muted-foreground mb-1">
-                                                                {result.category}
+                                                            <div className="mb-1">
+                                                                <CategoryBadge category={result.category} className="scale-75 origin-left" />
                                                             </div>
                                                         )}
                                                         {result.highlight && (
@@ -487,6 +460,42 @@ export function SearchTrigger() {
                                     </div>
                                 )}
                             </div>
+
+                            {/* Keyboard Shortcuts Footer - Hidden on mobile */}
+                            <div className="hidden md:flex border-t px-3 py-2 bg-muted/30 text-xs text-muted-foreground items-center justify-between">
+                                <div className="flex gap-3">
+                                    <span className="flex items-center gap-1">
+                                        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium">
+                                            <span className="text-xs">↑↓</span>
+                                        </kbd>
+                                        Navigate
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium">
+                                            <span className="text-xs">↵</span>
+                                        </kbd>
+                                        Select
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium">
+                                            <span className="text-xs">ESC</span>
+                                        </kbd>
+                                        Close
+                                    </span>
+                                </div>
+                                {results.length > 0 && (
+                                    <span className="font-medium">
+                                        {results.length} result{results.length === 1 ? '' : 's'}
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* Mobile: Simple result count */}
+                            {results.length > 0 && (
+                                <div className="md:hidden border-t px-3 py-2 bg-muted/30 text-xs text-muted-foreground text-center font-medium">
+                                    {results.length} result{results.length === 1 ? '' : 's'}
+                                </div>
+                            )}
                         </div>
 
                         {/* Preview Panel - Shows when expanded on desktop only */}
@@ -497,14 +506,19 @@ export function SearchTrigger() {
                                         <h3 className="text-lg font-semibold text-foreground leading-tight">
                                             {hoveredResult.title}
                                         </h3>
-                                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary shrink-0 border border-primary/20">
-                                            {getTypeLabel(hoveredResult.type)}
-                                        </span>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            {hoveredResult.type === 'feature-request' && hoveredResult.slug && (
+                                                <SlugBadge slug={hoveredResult.slug} />
+                                            )}
+                                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+                                                {getTypeLabel(hoveredResult.type)}
+                                            </span>
+                                        </div>
                                     </div>
                                     {hoveredResult.category && (
-                                        <p className="text-sm text-muted-foreground mb-2">
-                                            Category: {hoveredResult.category}
-                                        </p>
+                                        <div className="mb-3">
+                                            <CategoryBadge category={hoveredResult.category} />
+                                        </div>
                                     )}
                                     {hoveredResult.tags && hoveredResult.tags.length > 0 && (
                                         <div className="flex flex-wrap gap-1 mb-4">
@@ -520,11 +534,13 @@ export function SearchTrigger() {
                                     )}
                                 </div>
 
-                                <div className="max-w-none">
+                                <div className="max-w-none prose prose-sm dark:prose-invert">
                                     {hoveredResult.highlight ? (
                                         <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(hoveredResult.highlight) }} />
                                     ) : hoveredResult.excerpt ? (
-                                        <p className="text-sm text-muted-foreground">{hoveredResult.excerpt}</p>
+                                        <EnhancedMarkdown className="text-sm text-muted-foreground">
+                                            {hoveredResult.excerpt}
+                                        </EnhancedMarkdown>
                                     ) : (
                                         <p className="text-sm text-muted-foreground italic">No preview available</p>
                                     )}

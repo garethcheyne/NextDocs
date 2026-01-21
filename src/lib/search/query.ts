@@ -9,10 +9,16 @@ export interface SearchResult {
   title: string
   excerpt: string
   url: string
-  category?: string
+  category?: {
+    id: string
+    name: string
+    color?: string | null
+    iconBase64?: string | null
+  }
   tags: string[]
   rank: number
   highlight?: string
+  slug?: string
   repository?: {
     id: string
     name: string
@@ -410,17 +416,23 @@ export async function searchContent(
     if (tags && tags.length > 0) {
       features = await prisma.$queryRaw`
         SELECT 
-          id,
-          title,
-          slug,
-          description,
-          "tagIds",
-          ts_rank("searchVector", to_tsquery('english', ${tsQuery})) as rank,
-          ts_headline('english', description, to_tsquery('english', ${tsQuery}),
+          fr.id,
+          fr.title,
+          fr.slug,
+          fr.description,
+          fr."tagIds",
+          fr."categoryId",
+          c.id as "category_id",
+          c.name as "category_name",
+          c.color as "category_color",
+          c."iconBase64" as "category_iconBase64",
+          ts_rank(fr."searchVector", to_tsquery('english', ${tsQuery})) as rank,
+          ts_headline('english', fr.description, to_tsquery('english', ${tsQuery}),
             'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight
-        FROM "FeatureRequest"
-        WHERE "searchVector" @@ to_tsquery('english', ${tsQuery})
-          AND "tagIds" && ARRAY[${Prisma.join(tags)}]::text[]
+        FROM "FeatureRequest" fr
+        LEFT JOIN "FeatureCategory" c ON fr."categoryId" = c.id
+        WHERE fr."searchVector" @@ to_tsquery('english', ${tsQuery})
+          AND fr."tagIds" && ARRAY[${Prisma.join(tags)}]::text[]
         ORDER BY rank DESC
         LIMIT ${limit}
         OFFSET ${offset}
@@ -428,16 +440,22 @@ export async function searchContent(
     } else {
       features = await prisma.$queryRaw`
         SELECT 
-          id,
-          title,
-          slug,
-          description,
-          "tagIds",
-          ts_rank("searchVector", to_tsquery('english', ${tsQuery})) as rank,
-          ts_headline('english', description, to_tsquery('english', ${tsQuery}),
+          fr.id,
+          fr.title,
+          fr.slug,
+          fr.description,
+          fr."tagIds",
+          fr."categoryId",
+          c.id as "category_id",
+          c.name as "category_name",
+          c.color as "category_color",
+          c."iconBase64" as "category_iconBase64",
+          ts_rank(fr."searchVector", to_tsquery('english', ${tsQuery})) as rank,
+          ts_headline('english', fr.description, to_tsquery('english', ${tsQuery}),
             'MaxWords=30, MinWords=15, ShortWord=3, MaxFragments=1') as highlight
-        FROM "FeatureRequest"
-        WHERE "searchVector" @@ to_tsquery('english', ${tsQuery})
+        FROM "FeatureRequest" fr
+        LEFT JOIN "FeatureCategory" c ON fr."categoryId" = c.id
+        WHERE fr."searchVector" @@ to_tsquery('english', ${tsQuery})
         ORDER BY rank DESC
         LIMIT ${limit}
         OFFSET ${offset}
@@ -451,6 +469,13 @@ export async function searchContent(
         title: feature.title,
         excerpt: feature.description?.substring(0, 200) || '',
         url: `/features/${feature.slug}`,
+        slug: feature.slug,
+        category: feature.category_id ? {
+          id: feature.category_id,
+          name: feature.category_name,
+          color: feature.category_color,
+          iconBase64: feature.category_iconBase64,
+        } : undefined,
         tags: feature.tagIds || [],
         rank: parseFloat(feature.rank),
         highlight: feature.highlight,

@@ -15,6 +15,7 @@ interface FeatureBannerProps {
     completedRequests?: number
     // Detail page props
     title?: string
+    slug?: string
     status?: string
     priority?: string | null
     category?: { id: string; name: string; color?: string | null; icon?: string | null; iconBase64?: string | null } | null
@@ -32,6 +33,7 @@ export function FeatureBanner({
     totalRequests,
     completedRequests,
     title,
+    slug,
     status,
     priority,
     category,
@@ -53,7 +55,12 @@ export function FeatureBanner({
                         <div className="flex flex-col lg:flex-row items-start lg:justify-between gap-6 lg:gap-8">
                             <div className="flex-1 space-y-4 w-full">
                                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">{title}</h1>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 flex-wrap">
+                                    {slug && (
+                                        <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-mono font-semibold bg-brand-orange/10 text-brand-orange border border-brand-orange/20">
+                                            #{slug}
+                                        </span>
+                                    )}
                                     {category && typeof category === 'object' && category.name && (
                                         <CategoryBadge category={category} />
                                     )}

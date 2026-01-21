@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { formatDate } from '@/lib/utils/date-format'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -82,7 +83,7 @@ export default function EditUserForm({ user, allTeams }: { user: User; allTeams:
             router.refresh()
         } catch (error) {
             console.error('Error updating user:', error)
-            alert('Failed to update user')
+            toast.error('Failed to update user')
         } finally {
             setIsSubmitting(false)
         }
@@ -116,10 +117,12 @@ export default function EditUserForm({ user, allTeams }: { user: User; allTeams:
                 throw new Error('Failed to send notification')
             }
 
-            alert(`Test notification sent! ${testFeatureRequestId ? `Will open: ${url}` : ''}`)
+            toast.success('Test notification sent!', {
+                description: testFeatureRequestId ? `Will open: ${url}` : undefined,
+            })
         } catch (error) {
             console.error('Error sending push:', error)
-            alert('Failed to send test notification')
+            toast.error('Failed to send test notification')
         } finally {
             setIsSendingPush(false)
         }
