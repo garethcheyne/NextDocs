@@ -586,6 +586,13 @@ model FeatureRequest {
   syncStatus      String?   // 'not_synced', 'syncing', 'synced', 'error'
   syncError       String?   @db.Text // Last sync error message
   
+  // Two-way sync tracking
+  localUpdatedAt    DateTime  @updatedAt // Last update in The Hive
+  externalUpdatedAt DateTime? // Last known update in external system
+  lastSyncedTitle   String?   @db.Text // Last synced title for conflict detection
+  lastSyncedDesc    String?   @db.Text // Last synced description for conflict detection
+  syncConflict      Boolean   @default(false) // True if both sides changed
+  
   // Engagement metrics (denormalized for performance)
   voteCount       Int       @default(0)
   commentCount    Int       @default(0)

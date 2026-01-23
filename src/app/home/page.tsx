@@ -96,15 +96,6 @@ interface DashboardData {
   newFeatures: FeatureRequest[]
 }
 
-const statusColors: Record<string, string> = {
-  proposal: 'bg-yellow-500',
-  approved: 'bg-purple-500',
-  'in-progress': 'bg-blue-500',
-  completed: 'bg-green-500',
-  declined: 'bg-red-500',
-  'on-hold': 'bg-orange-500',
-}
-
 function formatDate(date: string | Date | null) {
   if (!date) return ''
   return new Date(date).toLocaleDateString('en-US', {
@@ -128,7 +119,15 @@ export default function HomePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/dashboard')
+        // Add timeout to prevent hanging
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
+        const response = await fetch('/api/dashboard', {
+          signal: controller.signal,
+        })
+        clearTimeout(timeoutId)
+
         if (!response.ok) {
           if (response.status === 401) {
             router.push('/login?callbackUrl=/home')
@@ -139,7 +138,12 @@ export default function HomePage() {
         const data = await response.json()
         setData(data)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred')
+        if (err instanceof Error && err.name === 'AbortError') {
+          setError('Request timed out. Please try again.')
+        } else {
+          setError(err instanceof Error ? err.message : 'An error occurred')
+        }
+        console.error('Dashboard fetch error:', err)
       } finally {
         setIsLoading(false)
       }
@@ -316,7 +320,6 @@ export default function HomePage() {
                     <FeatureRequestCard
                       key={feature.id}
                       feature={feature}
-                      statusColors={statusColors}
                       isAnimated={true}
                     />
                   ))}
@@ -354,7 +357,6 @@ export default function HomePage() {
                     <FeatureActivityCard
                       key={feature.id}
                       feature={feature}
-                      statusColors={statusColors}
                       isAnimated={true}
                     />
                   ))}

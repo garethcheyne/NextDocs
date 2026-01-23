@@ -93,6 +93,7 @@ async function syncAllFeatures() {
 
     let totalSynced = 0;
     let totalSkipped = 0;
+    let totalUsersCreated = 0;
     let errors = 0;
 
     // Process in batches to avoid overwhelming APIs
@@ -106,10 +107,11 @@ async function syncAllFeatures() {
             const result = await syncExternalComments(feature.id);
             totalSynced += result.synced;
             totalSkipped += result.skipped;
+            totalUsersCreated += result.created;
 
             if (result.synced > 0) {
               console.log(
-                `✓ Synced ${result.synced} comments for feature ${feature.id} (${feature.category?.name})`
+                `✓ Synced ${result.synced} comments for feature ${feature.id} (${feature.category?.name})${result.created > 0 ? `, created ${result.created} users` : ''}`
               );
             }
           } catch (error) {
@@ -127,7 +129,7 @@ async function syncAllFeatures() {
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(
-      `✓ Comment sync completed in ${duration}s: ${totalSynced} synced, ${totalSkipped} skipped, ${errors} errors`
+      `✓ Comment sync completed in ${duration}s: ${totalSynced} synced, ${totalSkipped} skipped, ${totalUsersCreated} users created, ${errors} errors`
     );
   } catch (error) {
     console.error('Error in scheduled comment sync:', error);
@@ -140,10 +142,11 @@ async function syncAllFeatures() {
 export async function triggerManualSync(): Promise<{
   synced: number;
   skipped: number;
+  usersCreated: number;
   features: number;
 }> {
   console.log('Manual sync triggered');
-  
+
   const features = await prisma.featureRequest.findMany({
     where: {
       externalId: { not: null },
@@ -156,16 +159,19 @@ export async function triggerManualSync(): Promise<{
 
   let totalSynced = 0;
   let totalSkipped = 0;
+  let totalUsersCreated = 0;
 
   for (const feature of features) {
     const result = await syncExternalComments(feature.id);
     totalSynced += result.synced;
     totalSkipped += result.skipped;
+    totalUsersCreated += result.created;
   }
 
   return {
     synced: totalSynced,
     skipped: totalSkipped,
+    usersCreated: totalUsersCreated,
     features: features.length,
   };
 }

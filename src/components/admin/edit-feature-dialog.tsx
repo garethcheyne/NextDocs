@@ -13,11 +13,8 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { MarkdownToolbar } from '@/components/markdown/markdown-toolbar'
-import { useMarkdownEditor } from '@/hooks/use-markdown-editor'
-import { EnhancedMarkdown } from '@/components/markdown/enhanced-markdown'
+import { RichTextEditor } from '@/components/editor/rich-text-editor'
 
 interface EditFeatureDialogProps {
     featureId: string
@@ -46,9 +43,6 @@ export function EditFeatureDialog({
     const [description, setDescription] = useState(currentDescription)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
-    const [showPreview, setShowPreview] = useState(false)
-
-    const { textareaRef, handleInsert } = useMarkdownEditor(description, setDescription)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -123,50 +117,14 @@ export function EditFeatureDialog({
                         </div>
 
                         <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                                <Label htmlFor="description">Description</Label>
-                                <div className="flex gap-2 text-xs">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPreview(false)}
-                                        className={`px-2 py-1 rounded ${!showPreview ? 'bg-muted' : ''}`}
-                                    >
-                                        Write
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPreview(true)}
-                                        className={`px-2 py-1 rounded ${showPreview ? 'bg-muted' : ''}`}
-                                    >
-                                        Preview
-                                    </button>
-                                </div>
-                            </div>
-                            {!showPreview && (
-                                <MarkdownToolbar onInsert={handleInsert} disabled={isSubmitting} />
-                            )}
-                            {showPreview ? (
-                                <div className="p-3 border rounded-md min-h-[200px]">
-                                    {description ? (
-                                        <EnhancedMarkdown className="prose prose-sm max-w-none dark:prose-invert [&>*]:text-foreground/90 dark:[&>*]:text-foreground/90">
-                                            {description}
-                                        </EnhancedMarkdown>
-                                    ) : (
-                                        <p className="text-muted-foreground italic">Nothing to preview</p>
-                                    )}
-                                </div>
-                            ) : (
-                                <Textarea
-                                    ref={textareaRef}
-                                    id="description"
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    disabled={isSubmitting || isPending}
-                                    rows={8}
-                                    className="resize-none font-mono text-sm"
-                                    placeholder="Enter feature description..."
-                                />
-                            )}
+                            <Label htmlFor="description">Description</Label>
+                            <RichTextEditor
+                                content={description}
+                                onChange={setDescription}
+                                placeholder="Describe the feature request in detail..."
+                                editable={!isSubmitting && !isPending}
+                                className="min-h-[200px]"
+                            />
                         </div>
 
                         {error && (

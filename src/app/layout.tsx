@@ -12,7 +12,7 @@ import { PushNotificationPrompt } from '@/components/pwa/push-notification-promp
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: `${process.env.NEXT_SITE_NAME || 'NextDocs'} - Knowledge Hub`,
+  title: `${process.env.NEXT_PUBLIC_SITE_NAME || 'NextDocs'} - Knowledge Hub`,
   description: '🐝 Knowledge Hub for Enterprise Solutions, Microsoft Technologies & Business Applications',
   icons: {
     icon: [

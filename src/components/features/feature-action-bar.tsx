@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
     DropdownMenu,
@@ -14,7 +15,8 @@ import {
     DropdownMenuSubContent,
     DropdownMenuSubTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Badge } from '@/components/ui/badge'
+import { StatusBadge } from '@/components/badges/status-badge'
+import { PriorityBadge } from '@/components/badges/priority-badge'
 import {
     Edit,
     MoreVertical,
@@ -29,7 +31,8 @@ import {
     AlertTriangle,
     ChevronDown,
     File,
-    Settings
+    Settings,
+    LinkIcon
 } from 'lucide-react'
 import { EditFeatureDialog } from '@/components/admin/edit-feature-dialog'
 import { StatusUpdateDialog } from '@/components/admin/status-update-dialog'
@@ -107,6 +110,7 @@ export function FeatureActionBar({
     const [notesDialogOpen, setNotesDialogOpen] = useState(false)
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
     const [workItemDialogOpen, setWorkItemDialogOpen] = useState(false)
+    const [unlinkDialogOpen, setUnlinkDialogOpen] = useState(false)
 
     const isAdmin = userRole === 'admin'
 
@@ -239,22 +243,29 @@ export function FeatureActionBar({
         }
     }
 
-    const priorityColors: Record<string, string> = {
-        low: 'bg-gray-500',
-        medium: 'bg-blue-500',
-        high: 'bg-orange-500',
-        critical: 'bg-red-500',
+    const handleUnlinkWorkItem = async () => {
+        setIsLoading(true)
+        try {
+            const response = await fetch(`/api/admin/features/${featureId}/unlink-work-item`, {
+                method: 'POST',
+            })
+            if (response.ok) {
+                setUnlinkDialogOpen(false)
+                toast.success('Work item unlinked successfully')
+                router.refresh()
+            } else {
+                const data = await response.json()
+                toast.error(data.error || 'Failed to unlink work item')
+                console.error('Failed to unlink work item:', data.error)
+            }
+        } catch (error) {
+            toast.error('Failed to unlink work item')
+            console.error('Failed to unlink work item:', error)
+        } finally {
+            setIsLoading(false)
+        }
     }
 
-    const statusColors: Record<string, string> = {
-        PENDING: 'bg-yellow-500',
-        UNDER_REVIEW: 'bg-blue-500',
-        APPROVED: 'bg-purple-500',
-        IN_PROGRESS: 'bg-indigo-500',
-        COMPLETED: 'bg-green-500',
-        REJECTED: 'bg-red-500',
-        ON_HOLD: 'bg-orange-500',
-    }
     {/* Create Work Item Button - Show when approved but no work item exists */ }
     {
         isAdmin && currentStatus === 'approved' && !hasExistingWorkItem && integrationType && (
@@ -290,10 +301,8 @@ export function FeatureActionBar({
                 {isAdmin && (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" disabled={isLoading}>
-                                <Badge className={`${statusColors[currentStatus]} text-white mr-2`}>
-                                    {currentStatus.replace('_', ' ')}
-                                </Badge>
+                            <Button variant="outline" size="sm" disabled={isLoading} className="gap-2">
+                                <StatusBadge status={currentStatus} />
                                 <ChevronDown className="w-4 h-4" />
                             </Button>
                         </DropdownMenuTrigger>
@@ -309,10 +318,8 @@ export function FeatureActionBar({
                 {isAdmin && (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" disabled={isLoading}>
-                                <Badge className={`${priorityColors[priority]} text-white mr-2`}>
-                                    {priority}
-                                </Badge>
+                            <Button variant="outline" size="sm" disabled={isLoading} className="gap-2">
+                                <PriorityBadge priority={priority} />
                                 <ChevronDown className="w-4 h-4" />
                             </Button>
                         </DropdownMenuTrigger>
@@ -380,10 +387,19 @@ export function FeatureActionBar({
                                         </DropdownMenuItem>
                                     )}
                                     {hasExistingWorkItem && (
-                                        <DropdownMenuItem onClick={handleSyncWorkItem}>
-                                            <GitBranch className="w-4 h-4 mr-2" />
-                                            Sync Work Item
-                                        </DropdownMenuItem>
+                                        <>
+                                            <DropdownMenuItem onClick={handleSyncWorkItem}>
+                                                <GitBranch className="w-4 h-4 mr-2" />
+                                                Sync Work Item
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem 
+                                                onClick={() => setUnlinkDialogOpen(true)}
+                                                className="text-orange-600"
+                                            >
+                                                <LinkIcon className="w-4 h-4 mr-2" />
+                                                Unlink Work Item
+                                            </DropdownMenuItem>
+                                        </>
                                     )}
                                     <DropdownMenuSeparator />
                                 </>
@@ -445,6 +461,7 @@ export function FeatureActionBar({
                     description: featureDescription,
                     createdByEmail,
                     featureNumber,
+                    status: currentStatus,
                 }}
                 integrationType={integrationType}
                 categoryId={categoryId}
@@ -486,6 +503,30 @@ export function FeatureActionBar({
                             disabled={isLoading}
                         >
                             {isLoading ? 'Deleting...' : 'Delete'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog open={unlinkDialogOpen} onOpenChange={setUnlinkDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Unlink Work Item?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will remove the reference to the {integrationType === 'azure-devops' ? 'Azure DevOps' : 'GitHub'} work item from this feature request.
+                            The work item will NOT be deleted from {integrationType === 'azure-devops' ? 'Azure DevOps' : 'GitHub'}.
+                            <br /><br />
+                            This is useful if you linked the wrong work item or want to create a new one.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleUnlinkWorkItem}
+                            className="bg-orange-600 hover:bg-orange-700"
+                            disabled={isLoading}
+                        >
+                            {isLoading ? 'Unlinking...' : 'Unlink'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

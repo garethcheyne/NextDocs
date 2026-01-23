@@ -30,10 +30,10 @@ export const STATUS_COLORS: Record<string, StatusColorConfig> = {
     hover: 'hover:border-yellow-500/50',
   },
   approved: {
-    bg: 'bg-purple-500',
+    bg: 'bg-green-600',
     text: 'text-white',
-    border: 'border-purple-500',
-    hover: 'hover:border-purple-500/50',
+    border: 'border-green-600',
+    hover: 'hover:border-green-600/50',
   },
   'in-progress': {
     bg: 'bg-blue-500',
@@ -100,7 +100,7 @@ export function getStatusColors(status: string): StatusColorConfig {
  */
 export const defaultStatusColors: Record<string, string> = {
   proposal: 'bg-yellow-500',
-  approved: 'bg-purple-500',
+  approved: 'bg-green-600',
   'in-progress': 'bg-blue-500',
   completed: 'bg-green-500',
   declined: 'bg-red-500',

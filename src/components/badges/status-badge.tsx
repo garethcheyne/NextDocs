@@ -58,7 +58,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
         <Badge
             variant="outline"
             className={cn(
-                'px-2 py-0.5 text-xs font-medium capitalize transition-colors flex items-center gap-1',
+                'h-6 px-2 text-xs font-medium capitalize transition-colors flex items-center gap-1',
                 config.styles,
                 className
             )}

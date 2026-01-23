@@ -21,10 +21,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { X, ChevronDown, ChevronUp } from 'lucide-react';
-import { MarkdownToolbar } from '@/components/markdown/markdown-toolbar';
-import { useMarkdownEditor } from '@/hooks/use-markdown-editor';
-import ReactMarkdown from 'react-markdown';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { StatusBadge } from '@/components/badges/status-badge';
+import { X, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
+import { RichTextEditor } from '@/components/editor/rich-text-editor';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface CustomField {
@@ -45,6 +45,7 @@ interface WorkItemCreationDialogProps {
     description: string;
     featureNumber?: string;  // Feature request number (e.g., "FR-123") for TheHive field
     createdByEmail?: string; // Creator email for Requestor field
+    status?: string; // Feature request status
   };
   integrationType: 'github' | 'azure-devops' | null;
   categoryId?: string;
@@ -70,13 +71,10 @@ export function WorkItemCreationDialog({
   const [workItemType, setWorkItemType] = useState('User Story');
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
-  const [showPreview, setShowPreview] = useState(false);
   const [customFields, setCustomFields] = useState<Record<string, any>>({});
   const [availableCustomFields, setAvailableCustomFields] = useState<CustomField[]>([]);
   const [showCustomFields, setShowCustomFields] = useState(false);
   const [isLoadingFields, setIsLoadingFields] = useState(false);
-
-  const { textareaRef, handleInsert } = useMarkdownEditor(description, setDescription);
 
   // Load custom fields when dialog opens and Azure DevOps is selected
   useEffect(() => {
@@ -231,6 +229,17 @@ export function WorkItemCreationDialog({
           </DialogDescription>
         </DialogHeader>
 
+        {featureRequest.status && featureRequest.status.toUpperCase() !== 'APPROVED' && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Status Requirement</AlertTitle>
+            <AlertDescription>
+              Feature request must be <strong>approved</strong> before creating a work item.
+              Current status: <StatusBadge status={featureRequest.status || ''} className="ml-1" />
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="space-y-4 py-4">
           {/* Title */}
           <div className="space-y-2">
@@ -264,47 +273,13 @@ export function WorkItemCreationDialog({
 
           {/* Description */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="description">Description</Label>
-              <div className="flex gap-2 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setShowPreview(false)}
-                  className={`px-2 py-1 rounded ${!showPreview ? 'bg-muted' : ''}`}
-                >
-                  Write
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowPreview(true)}
-                  className={`px-2 py-1 rounded ${showPreview ? 'bg-muted' : ''}`}
-                >
-                  Preview
-                </button>
-              </div>
-            </div>
-            {!showPreview && (
-              <MarkdownToolbar onInsert={handleInsert} />
-            )}
-            {showPreview ? (
-              <div className="prose prose-sm max-w-none dark:prose-invert p-3 border rounded-md min-h-[200px]">
-                {description ? (
-                  <ReactMarkdown>{description}</ReactMarkdown>
-                ) : (
-                  <p className="text-muted-foreground italic">Nothing to preview</p>
-                )}
-              </div>
-            ) : (
-              <Textarea
-                ref={textareaRef}
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={8}
-                className="font-mono text-sm"
-                placeholder="Enter description..."
-              />
-            )}
+            <Label htmlFor="description">Description</Label>
+            <RichTextEditor
+              content={description}
+              onChange={setDescription}
+              placeholder="Enter description..."
+              className="min-h-[200px]"
+            />
           </div>
 
           {/* Tags */}
@@ -375,7 +350,11 @@ export function WorkItemCreationDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleConfirm} className="bg-brand-orange hover:bg-brand-orange/90">
+          <Button
+            onClick={handleConfirm}
+            className="bg-brand-orange hover:bg-brand-orange/90"
+            disabled={!!featureRequest.status && featureRequest.status.toUpperCase() !== 'APPROVED'}
+          >
             Create Work Item
           </Button>
         </DialogFooter>

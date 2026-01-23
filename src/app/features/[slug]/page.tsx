@@ -22,6 +22,9 @@ import { EnhancedMarkdown } from '@/components/markdown/enhanced-markdown'
 import { RestrictedAccess } from '@/components/auth/restricted-access'
 import { checkFeatureAccess } from '@/lib/auth/access-control'
 import { AuthorBadge } from '@/components/badges/author-badge'
+import { StatusBadge } from '@/components/badges/status-badge'
+import { PriorityBadge } from '@/components/badges/priority-badge'
+import { CategoryBadge } from '@/components/badges/category-badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { SlugBadge } from '@/components/features/slug-badge'
 
@@ -165,9 +168,26 @@ export default async function FeatureRequestPage({
                 <div className="border-b bg-muted/30 px-4 sm:px-6 lg:px-8 py-6">
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
+                            {/* Title First */}
+                            <h1 className="text-3xl font-bold mb-3">{feature.title}</h1>
+
+                            {/* Compact Badge Row */}
                             <div className="flex items-center gap-2 flex-wrap mb-2">
+                                {/* Status - Most Important */}
+                                <StatusBadge status={feature.status} />
+
+                                {/* Priority - Only if set */}
+                                <PriorityBadge priority={feature.priority} />
+
+                                {/* Category */}
+                                <CategoryBadge category={feature.category} />
+
+                                {/* Slug - Compact */}
+                                <SlugBadge slug={feature.slug} />
+
+                                {/* Special States */}
                                 {feature.isPinned && (
-                                    <Badge variant="secondary" className="gap-1">
+                                    <Badge variant="secondary" className="gap-1 text-xs">
                                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                             <path d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" />
                                         </svg>
@@ -176,32 +196,9 @@ export default async function FeatureRequestPage({
                                 )}
 
                                 {feature.isArchived && (
-                                    <Badge variant="secondary">Archived</Badge>
-                                )}
-                                
-                                <SlugBadge slug={feature.slug} />
-
-                                <Badge className={`${statusColors[feature.status]} text-white`}>
-                                    {feature.status.replace('_', ' ')}
-                                </Badge>
-                                <Badge className={`${statusColors[feature.status]} text-white opacity-80`}>
-                                    {feature.priority}
-                                </Badge>
-
-                                {feature.category && (
-                                    <Badge variant="outline" className="gap-1">
-                                        {feature.category.iconBase64 && (
-                                            <img
-                                                src={feature.category.iconBase64}
-                                                alt=""
-                                                className="w-3 h-3"
-                                            />
-                                        )}
-                                        {feature.category.name}
-                                    </Badge>
+                                    <Badge variant="secondary" className="text-xs">Archived</Badge>
                                 )}
                             </div>
-                            <h1 className="text-3xl font-bold mb-2">{feature.title}</h1>
                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                 <span>
                                     <AuthorBadge authorSlug={feature.createdByEmail} />
@@ -337,9 +334,7 @@ export default async function FeatureRequestPage({
                                 <CardContent className="space-y-3 text-sm">
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Status</span>
-                                        <Badge className={`${statusColors[feature.status]} text-white text-xs`}>
-                                            {feature.status.replace('_', ' ')}
-                                        </Badge>
+                                        <StatusBadge status={feature.status} />
                                     </div>
                                     <Separator />
                                     <div className="flex justify-between">
@@ -485,11 +480,7 @@ export default async function FeatureRequestPage({
                                         <div className="space-y-3">
                                             {feature.statusHistory.slice(0, 5).map((history, index) => (
                                                 <div key={history.id} className="text-sm">
-                                                    <Badge
-                                                        className={`${statusColors[history.newStatus]} text-white text-xs`}
-                                                    >
-                                                        {history.newStatus.replace('_', ' ')}
-                                                    </Badge>
+                                                    <StatusBadge status={history.newStatus} />
                                                     <div className="text-xs text-muted-foreground mt-1">
                                                         {formatDate(history.createdAt)}
                                                     </div>

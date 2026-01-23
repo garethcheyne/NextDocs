@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 import { AlertTriangle, ArrowUp, Minus, ArrowDown } from 'lucide-react'
 
 interface PriorityBadgeProps {
-    priority: string | null
+    priority: string | null | undefined
     className?: string
 }
 
@@ -47,7 +47,7 @@ export function PriorityBadge({ priority, className }: PriorityBadgeProps) {
         <Badge
             variant="outline"
             className={cn(
-                'px-2 py-0.5 text-xs font-medium capitalize transition-colors flex items-center gap-1',
+                'h-6 px-2 text-xs font-medium capitalize transition-colors flex items-center gap-1',
                 config.styles,
                 className
             )}

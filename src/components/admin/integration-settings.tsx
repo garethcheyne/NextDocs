@@ -8,8 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Github, Box, Loader2 } from 'lucide-react';
+import { Github, Box, Loader2, RefreshCw } from 'lucide-react';
 
 interface IntegrationSettingsProps {
   category: {
@@ -66,10 +67,36 @@ export default function IntegrationSettings({ category, devopsEnabled = false, g
   // Azure DevOps state (org comes from DEVOPS_ORG_URL env var)
   const [devopsProject, setDevopsProject] = useState(category.devopsProject || '');
   const [devopsAreaPath, setDevopsAreaPath] = useState(category.devopsAreaPath || '');
+  const [availableAreaPaths, setAvailableAreaPaths] = useState<string[]>([]);
+  const [isLoadingAreaPaths, setIsLoadingAreaPaths] = useState(false);
 
   // Sync settings
   const [syncComments, setSyncComments] = useState(category.syncComments);
   const [syncStatus, setSyncStatus] = useState(category.syncStatus);
+
+  // Fetch area paths when project changes
+  const fetchAreaPaths = async () => {
+    if (!devopsProject) {
+      setAvailableAreaPaths([]);
+      return;
+    }
+
+    setIsLoadingAreaPaths(true);
+    try {
+      const response = await fetch(`/api/admin/devops/area-paths?project=${encodeURIComponent(devopsProject)}`);
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableAreaPaths(data.areaPaths || []);
+      } else {
+        toast.error('Failed to fetch area paths from Azure DevOps');
+      }
+    } catch (error) {
+      console.error('Error fetching area paths:', error);
+      toast.error('Failed to fetch area paths');
+    } finally {
+      setIsLoadingAreaPaths(false);
+    }
+  };
 
   // Update state when category changes
   useEffect(() => {
@@ -81,6 +108,13 @@ export default function IntegrationSettings({ category, devopsEnabled = false, g
     setSyncComments(category.syncComments);
     setSyncStatus(category.syncStatus);
   }, [category]);
+
+  // Auto-fetch area paths when project changes
+  useEffect(() => {
+    if (devopsProject && activeTab === 'azure-devops') {
+      fetchAreaPaths();
+    }
+  }, [devopsProject, activeTab]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -205,15 +239,57 @@ export default function IntegrationSettings({ category, devopsEnabled = false, g
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="devops-area">Area Path (Optional)</Label>
-                  <Input
-                    id="devops-area"
-                    placeholder="MyProject\Features"
-                    value={devopsAreaPath}
-                    onChange={(e) => setDevopsAreaPath(e.target.value)}
-                  />
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="devops-area">Area Path (Optional)</Label>
+                    {availableAreaPaths.length > 0 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={fetchAreaPaths}
+                        disabled={isLoadingAreaPaths}
+                      >
+                        <RefreshCw className={`w-3 h-3 mr-1 ${isLoadingAreaPaths ? 'animate-spin' : ''}`} />
+                        Refresh
+                      </Button>
+                    )}
+                  </div>
+                  {availableAreaPaths.length > 0 ? (
+                    <Select value={devopsAreaPath} onValueChange={setDevopsAreaPath}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select area path..." />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[300px]">
+                        <SelectItem value="">None (Project Root)</SelectItem>
+                        {availableAreaPaths.map((path) => (
+                          <SelectItem key={path} value={path}>
+                            {path}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      id="devops-area"
+                      placeholder="MyProject\Features"
+                      value={devopsAreaPath}
+                      onChange={(e) => setDevopsAreaPath(e.target.value)}
+                      disabled={isLoadingAreaPaths}
+                    />
+                  )}
                   <p className="text-sm text-muted-foreground">
-                    Default area path for work items. Leave empty to use project root.
+                    {isLoadingAreaPaths ? (
+                      <span className="flex items-center gap-1">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Loading area paths from Azure DevOps...
+                      </span>
+                    ) : availableAreaPaths.length > 0 ? (
+                      <>Select a valid area path from your Azure DevOps project. Leave empty to use project root.</>
+                    ) : devopsProject ? (
+                      <>Enter project name above to load available area paths, or manually enter a path.</>
+                    ) : (
+                      <>Default area path for work items. Leave empty to use project root.</>
+                    )}
                   </p>
                 </div>
 

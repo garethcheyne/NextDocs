@@ -479,6 +479,11 @@ export const authConfig = {
         session.user.role = token.role as string
         session.user.provider = token.provider as string
         
+        // Preserve image from token (provider's image URL)
+        if (token.picture) {
+          session.user.image = token.picture as string
+        }
+
         // For Azure AD users, groups are stored in database, not in session
         // For other providers, include groups from token if they exist
         if (token.provider === 'microsoft-entra-id') {
@@ -488,6 +493,7 @@ export const authConfig = {
           (session.user as any).groups = token.groups as string[] || [];
         }
       }
+
       return session
     },
   },

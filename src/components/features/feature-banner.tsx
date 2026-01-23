@@ -8,6 +8,7 @@ import { FollowButton } from '@/components/features/follow-button'
 import { StatusBadge } from '../badges/status-badge'
 import { PriorityBadge } from '../badges/priority-badge'
 import { CategoryBadge } from '../badges/category-badge'
+import { FeatureSlugBadge } from '../badges/feature-slug-badge'
 import { formatDate } from '@/lib/utils/date-format'
 
 interface FeatureBannerProps {
@@ -56,14 +57,10 @@ export function FeatureBanner({
                             <div className="flex-1 space-y-4 w-full">
                                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">{title}</h1>
                                 <div className="flex items-center gap-3 flex-wrap">
-                                    {slug && (
-                                        <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-mono font-semibold bg-brand-orange/10 text-brand-orange border border-brand-orange/20">
-                                            #{slug}
-                                        </span>
-                                    )}
                                     {category && typeof category === 'object' && category.name && (
                                         <CategoryBadge category={category} />
                                     )}
+                                    {slug && <FeatureSlugBadge slug={slug} />}
                                     {status && <StatusBadge status={status} />}
                                     {priority && <PriorityBadge priority={priority} />}
 

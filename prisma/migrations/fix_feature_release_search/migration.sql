@@ -12,14 +12,14 @@ BEGIN
     END IF;
 END $$;
 
--- Create GIN indexes for fast full-text search
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "FeatureRequest_searchVector_idx"
+-- Create GIN indexes for fast full-text search (without CONCURRENTLY for migration compatibility)
+CREATE INDEX IF NOT EXISTS "FeatureRequest_searchVector_idx"
 ON "FeatureRequest" USING GIN("searchVector");
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "Release_searchVector_idx"
+CREATE INDEX IF NOT EXISTS "Release_searchVector_idx"
 ON "Release" USING GIN("searchVector");
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "APISpec_searchVector_idx"
+CREATE INDEX IF NOT EXISTS "APISpec_searchVector_idx"
 ON "APISpec" USING GIN("searchVector");
 
 -- Initialize search vectors for existing feature requests

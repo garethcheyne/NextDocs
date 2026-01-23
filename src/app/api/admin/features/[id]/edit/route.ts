@@ -49,12 +49,15 @@ export async function PATCH(
       );
     }
 
+    const now = new Date();
+
     // Update the feature request
     const updatedFeature = await prisma.featureRequest.update({
       where: { id: resolvedParams.id },
       data: {
         title: title.trim(),
         description: description.trim(),
+        localUpdatedAt: now,
       },
     });
 
@@ -69,9 +72,28 @@ export async function PATCH(
             description: description.trim(),
           }
         );
+        
+        // Track successful sync
+        await prisma.featureRequest.update({
+          where: { id: resolvedParams.id },
+          data: {
+            lastSyncAt: now,
+            lastSyncedTitle: title.trim(),
+            lastSyncedDesc: description.trim(),
+            syncStatus: 'synced',
+            syncError: null,
+          }
+        });
       } catch (error) {
         console.error('Failed to update external work item:', error);
-        // Don't fail the whole operation if external sync fails
+        // Track sync error but don't fail the whole operation
+        await prisma.featureRequest.update({
+          where: { id: resolvedParams.id },
+          data: {
+            syncStatus: 'error',
+            syncError: error instanceof Error ? error.message : 'Unknown sync error'
+          }
+        });
       }
     }
 

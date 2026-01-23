@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { StatusBadge } from '@/components/badges/status-badge'
 import { WorkItemCreationDialog } from './work-item-creation-dialog'
 
 interface StatusUpdateDialogProps {
@@ -149,7 +150,7 @@ export function StatusUpdateDialog({
                             <div className="space-y-2">
                                 <Label htmlFor="status">New Status</Label>
                                 <Select value={status} onValueChange={setStatus}>
-                                    <SelectTrigger id="status">
+                                    <SelectTrigger id="status" className="h-auto">
                                         <SelectValue placeholder="Select a status" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -159,8 +160,8 @@ export function StatusUpdateDialog({
                                                 value={option.value}
                                                 disabled={option.value === currentStatus}
                                             >
-                                                <div className="flex flex-col">
-                                                    <span className="font-medium">{option.label}</span>
+                                                <div className="flex items-center gap-2 py-1">
+                                                    <StatusBadge status={option.value} />
                                                     <span className="text-xs text-muted-foreground">
                                                         {option.description}
                                                     </span>
@@ -169,8 +170,8 @@ export function StatusUpdateDialog({
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <p className="text-xs text-muted-foreground">
-                                    Current status: <span className="font-medium capitalize">{currentStatus.replace('_', ' ')}</span>
+                                <p className="text-xs text-muted-foreground flex items-center gap-2">
+                                    Current status: <StatusBadge status={currentStatus} />
                                 </p>
                             </div>
 

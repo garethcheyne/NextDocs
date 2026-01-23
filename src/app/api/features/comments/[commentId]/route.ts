@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/db/prisma'
+import { updateExternalComment } from '@/lib/sync/devops-sync'
 
 export async function PATCH(
   request: NextRequest,
@@ -8,7 +9,7 @@ export async function PATCH(
 ) {
   try {
     const session = await auth()
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -25,9 +26,15 @@ export async function PATCH(
       return NextResponse.json({ error: 'Comment is too long (max 5000 characters)' }, { status: 400 })
     }
 
-    // Get the comment to verify ownership
+    // Get the comment to verify ownership and check sync status
     const existingComment = await prisma.featureComment.findUnique({
       where: { id: commentId },
+      include: {
+        commentSync: true,
+        feature: {
+          include: { category: true },
+        },
+      },
     })
 
     if (!existingComment) {
@@ -51,6 +58,30 @@ export async function PATCH(
         },
       },
     })
+
+    // Sync edit to external system if comment was previously synced
+    if (
+      existingComment.commentSync &&
+      existingComment.feature.category?.syncComments
+    ) {
+      try {
+        // Get user's DevOps token from session for delegation (if available)
+        const userDevOpsToken = (session as any).devopsAccessToken as string | undefined
+
+        await updateExternalComment(
+          commentId,
+          content.trim(),
+          session.user.name || session.user.email || 'Unknown',
+          session.user.email || undefined,
+          existingComment.createdAt,
+          new Date(),
+          userDevOpsToken
+        )
+      } catch (error) {
+        console.error('Failed to sync comment edit to external system:', error)
+        // Don't fail the request if external sync fails
+      }
+    }
 
     return NextResponse.json({ comment })
   } catch (error) {

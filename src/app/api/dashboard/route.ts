@@ -240,15 +240,42 @@ export async function GET(request: NextRequest) {
       take: 5,
     })
 
-    // Fetch author data for blog posts
+    // Fetch author data for blog posts (with timeout protection)
+    // Only fetch minimal author data to avoid slow queries
     const authorSlugs = blogPosts.map((post) => post.author).filter(Boolean) as string[]
-    const authorsDataMap = await getAuthorsData(authorSlugs)
+    let blogAuthorsObject: Record<string, any> = {}
+    
+    try {
+      // Fetch only basic author info from the Author table without related content
+      const authors = await prisma.author.findMany({
+        where: {
+          OR: authorSlugs.map(slug => ({
+            email: { contains: slug.replace(/-/g, '.'), mode: 'insensitive' as const }
+          }))
+        },
+        select: {
+          name: true,
+          email: true,
+          title: true,
+          avatar: true,
+        },
+        take: 20, // Limit results
+      })
 
-    // Convert Map to plain object for JSON serialization
-    const blogAuthorsObject: Record<string, any> = {}
-    authorsDataMap.forEach((value, key) => {
-      blogAuthorsObject[key] = value
-    })
+      // Create a simple map without expensive document/blogPost lookups
+      authors.forEach((author) => {
+        const slug = author.email?.split('@')[0] || author.name.toLowerCase().replace(/\s+/g, '-')
+        blogAuthorsObject[slug] = {
+          name: author.name,
+          email: author.email,
+          role: author.title,
+          avatar: author.avatar,
+        }
+      })
+    } catch (authorError) {
+      console.error('Error fetching blog authors (non-fatal):', authorError)
+      // Continue without author data rather than failing the entire request
+    }
 
     return NextResponse.json({
       user: {

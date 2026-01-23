@@ -312,195 +312,269 @@
   .redoc-wrap div[role="button"] {
     color: hsl(var(--foreground)) !important;
   }
+}
 
-  /* Pulse animation for logo */
-  @keyframes pulse-slow {
-    0%, 100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.9;
-      transform: scale(1.02);
-    }
+/* Pulse animation for logo */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
   }
-
-  .animate-pulse-slow {
-    animation: pulse-slow 4s ease-in-out infinite;
-  }
-
-  /* Floating animation for icon arc */
-  @keyframes float {
-    0%, 100% {
-      transform: translateY(0px) rotate(0deg);
-    }
-    33% {
-      transform: translateY(-6px) rotate(1deg);
-    }
-    66% {
-      transform: translateY(3px) rotate(-1deg);
-    }
-  }
-
-  .animate-float {
-    animation: float 4s ease-in-out infinite;
-  }
-
-  .animate-float:nth-child(2n) {
-    animation-delay: 1s;
-    animation-duration: 5s;
-  }
-
-  .animate-float:nth-child(3n) {
-    animation-delay: 2s;
-    animation-duration: 4.5s;
-  }
-
-  /* Scary floating animation for logos */
-  @keyframes float-scary {
-    0% {
-      transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
-      opacity: 0.3;
-    }
-    15% {
-      transform: translateY(-20px) translateX(10px) rotate(5deg) scale(1.1);
-      opacity: 0.6;
-    }
-    30% {
-      transform: translateY(-10px) translateX(-15px) rotate(-3deg) scale(0.9);
-      opacity: 0.4;
-    }
-    45% {
-      transform: translateY(5px) translateX(8px) rotate(7deg) scale(1.05);
-      opacity: 0.7;
-    }
-    60% {
-      transform: translateY(-25px) translateX(-5px) rotate(-2deg) scale(0.95);
-      opacity: 0.3;
-    }
-    75% {
-      transform: translateY(8px) translateX(12px) rotate(4deg) scale(1.08);
-      opacity: 0.8;
-    }
-    90% {
-      transform: translateY(-15px) translateX(-8px) rotate(-6deg) scale(1.02);
-      opacity: 0.5;
-    }
-    100% {
-      transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
-      opacity: 0.3;
-    }
-  }
-
-  .animate-float-scary {
-    animation: float-scary 20s ease-in-out infinite;
-  }
-
-  /* Radial gradient utility */
-  .bg-gradient-radial {
-    background: radial-gradient(var(--tw-gradient-stops));
-  }
-
-  /* Scary hover effects for buttons */
-  .scary-hover:hover {
-    animation: scary-shake 0.5s ease-in-out;
-    box-shadow: 0 0 20px rgba(255, 107, 53, 0.6);
-  }
-
-  @keyframes scary-shake {
-    0%, 100% { transform: translateX(0); }
-    10% { transform: translateX(-2px) rotate(0.5deg); }
-    20% { transform: translateX(2px) rotate(-0.5deg); }
-    30% { transform: translateX(-2px) rotate(0.5deg); }
-    40% { transform: translateX(2px) rotate(-0.5deg); }
-    50% { transform: translateX(-1px) rotate(0.5deg); }
-    60% { transform: translateX(1px) rotate(-0.5deg); }
-    70% { transform: translateX(-1px) rotate(0.5deg); }
-    80% { transform: translateX(1px) rotate(-0.5deg); }
-    90% { transform: translateX(-1px) rotate(0.5deg); }
-  }
-
-  /* Spooky cursor */
-  body {
-    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="8" fill="%23ff6b35" opacity="0.8"/></svg>') 16 16, auto;
-  }
-
-  /* Animated Icon Arc Component Styles */
-  .icon-arc-item {
-    position: absolute;
-    transform: translate(-50%, -50%);
-    transition: all 0.3s;
-    z-index: 20;
-    left: calc(50% + var(--icon-x, 0px));
-    top: calc(50% + var(--icon-y, 0px));
-    animation-delay: var(--icon-delay, 0s);
-  }
-
-  .icon-arc-item:hover {
-    transform: translate(-50%, -50%) scale(1.25);
-  }
-
-  .glow-effect-primary {
-    position: absolute;
-    inset: 0;
-    width: 600px;
-    height: 600px;
-    background: linear-gradient(to bottom right, rgba(249, 115, 22, 0.2), rgba(249, 115, 22, 0.2));
-    filter: blur(48px);
-    z-index: -10;
-    animation: pulse 2s ease-in-out infinite;
-  }
-
-  .glow-effect-secondary {
-    position: absolute;
-    inset: 0;
-    width: 600px;
-    height: 600px;
-    background: linear-gradient(to bottom right, rgba(249, 115, 22, 0.1), rgba(249, 115, 22, 0.1));
-    filter: blur(100px);
-    z-index: -20;
-    animation: pulse 2s ease-in-out infinite;
-    animation-delay: var(--glow-delay, 1s);
-  }
-
-  /* Override prose styles for UI components */
-  .prose .not-prose img,
-  .prose [class*="badge"] img,
-  .prose [class*="circle"] img,
-  .prose [class*="avatar"] img,
-  .prose [class*="icon"] img,
-  .prose .card img,
-  .prose .rounded-full img,
-  .prose [class*="logo"] img,
-  .prose [data-category-badge] img,
-  .prose [data-ui-component] img {
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-  }
-
-  /* Specific override for category badges */
-  .prose :where(.category-badge img, 
-                .category-icon img,
-                .rounded-lg > img,
-                .bg-brand-orange img,
-                .p-2 img,
-                [class*="w-5"] img,
-                [class*="h-5"] img):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-  }
-
-  /* Override for all small UI icons in prose content */
-  .prose :where(img[class*="w-"]):not(:where([class~="not-prose"], [class~="not-prose"] *)),
-  .prose :where(img[class*="h-"]):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-  }
-
-  /* Preserve prose margins only for content images (larger than icons) */
-  .prose :where(img:not([class*="w-"], [class*="h-"])):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    margin-top: 2em;
-    margin-bottom: 2em;
+  50% {
+    opacity: 0.9;
+    transform: scale(1.02);
   }
 }
 
+.animate-pulse-slow {
+  animation: pulse-slow 4s ease-in-out infinite;
+}
+
+/* Floating animation for icon arc */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-6px) rotate(1deg);
+  }
+  66% {
+    transform: translateY(3px) rotate(-1deg);
+  }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-float:nth-child(2n) {
+  animation-delay: 1s;
+  animation-duration: 5s;
+}
+
+.animate-float:nth-child(3n) {
+  animation-delay: 2s;
+  animation-duration: 4.5s;
+}
+
+/* Scary floating animation for logos */
+@keyframes float-scary {
+  0% {
+    transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
+    opacity: 0.3;
+  }
+  15% {
+    transform: translateY(-20px) translateX(10px) rotate(5deg) scale(1.1);
+    opacity: 0.6;
+  }
+  30% {
+    transform: translateY(-10px) translateX(-15px) rotate(-3deg) scale(0.9);
+    opacity: 0.4;
+  }
+  45% {
+    transform: translateY(5px) translateX(8px) rotate(7deg) scale(1.05);
+    opacity: 0.7;
+  }
+  60% {
+    transform: translateY(-25px) translateX(-5px) rotate(-2deg) scale(0.95);
+    opacity: 0.3;
+  }
+  75% {
+    transform: translateY(8px) translateX(12px) rotate(4deg) scale(1.08);
+    opacity: 0.8;
+  }
+  90% {
+    transform: translateY(-15px) translateX(-8px) rotate(-6deg) scale(1.02);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
+    opacity: 0.3;
+  }
+}
+
+.animate-float-scary {
+  animation: float-scary 20s ease-in-out infinite;
+}
+
+/* Radial gradient utility */
+.bg-gradient-radial {
+  background: radial-gradient(var(--tw-gradient-stops));
+}
+
+/* Scary hover effects for buttons */
+.scary-hover:hover {
+  animation: scary-shake 0.5s ease-in-out;
+  box-shadow: 0 0 20px rgba(255, 107, 53, 0.6);
+}
+
+@keyframes scary-shake {
+  0%, 100% { transform: translateX(0); }
+  10% { transform: translateX(-2px) rotate(0.5deg); }
+  20% { transform: translateX(2px) rotate(-0.5deg); }
+  30% { transform: translateX(-2px) rotate(0.5deg); }
+  40% { transform: translateX(2px) rotate(-0.5deg); }
+  50% { transform: translateX(-1px) rotate(0.5deg); }
+  60% { transform: translateX(1px) rotate(-0.5deg); }
+  70% { transform: translateX(-1px) rotate(0.5deg); }
+  80% { transform: translateX(1px) rotate(-0.5deg); }
+  90% { transform: translateX(-1px) rotate(0.5deg); }
+}
+
+/* Spooky cursor */
+body {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="8" fill="%23ff6b35" opacity="0.8"/></svg>') 16 16, auto;
+}
+
+/* Animated Icon Arc Component Styles */
+.icon-arc-item {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  transition: all 0.3s;
+  z-index: 20;
+  left: calc(50% + var(--icon-x, 0px));
+  top: calc(50% + var(--icon-y, 0px));
+  animation-delay: var(--icon-delay, 0s);
+}
+
+.icon-arc-item:hover {
+  transform: translate(-50%, -50%) scale(1.25);
+}
+
+.glow-effect-primary {
+  position: absolute;
+  inset: 0;
+  width: 600px;
+  height: 600px;
+  background: linear-gradient(to bottom right, rgba(249, 115, 22, 0.2), rgba(249, 115, 22, 0.2));
+  filter: blur(48px);
+  z-index: -10;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.glow-effect-secondary {
+  position: absolute;
+  inset: 0;
+  width: 600px;
+  height: 600px;
+  background: linear-gradient(to bottom right, rgba(249, 115, 22, 0.1), rgba(249, 115, 22, 0.1));
+  filter: blur(100px);
+  z-index: -20;
+  animation: pulse 2s ease-in-out infinite;
+  animation-delay: var(--glow-delay, 1s);
+}
+
+/* Override prose styles for UI components */
+.prose .not-prose img,
+.prose [class*="badge"] img,
+.prose [class*="circle"] img,
+.prose [class*="avatar"] img,
+.prose [class*="icon"] img,
+.prose .card img,
+.prose .rounded-full img,
+.prose [class*="logo"] img,
+.prose [data-category-badge] img,
+.prose [data-ui-component] img {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Specific override for category badges */
+.prose :where(.category-badge img, 
+              .category-icon img,
+              .rounded-lg > img,
+              .bg-brand-orange img,
+              .p-2 img,
+              [class*="w-5"] img,
+              [class*="h-5"] img):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Override for all small UI icons in prose content */
+.prose :where(img[class*="w-"]):not(:where([class~="not-prose"], [class~="not-prose"] *)),
+.prose :where(img[class*="h-"]):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Preserve prose margins only for content images (larger than icons) */
+.prose :where(img:not([class*="w-"], [class*="h-"])):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+  margin-top: 2em;
+  margin-bottom: 2em;
+}
+
+/* TipTap Editor Styles */
+.ProseMirror {
+  outline: none;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: hsl(var(--muted-foreground));
+  pointer-events: none;
+  height: 0;
+}
+
+.ProseMirror h2 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.ProseMirror h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin-top: 1.25em;
+  margin-bottom: 0.5em;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.ProseMirror ul {
+  list-style-type: disc;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal;
+}
+
+.ProseMirror li {
+  margin: 0.25rem 0;
+}
+
+.ProseMirror code {
+  background-color: hsl(var(--muted));
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+  font-family: 'Courier New', monospace;
+}
+
+.ProseMirror a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ProseMirror a:hover {
+  text-decoration-thickness: 2px;
+}
+
+.ProseMirror p {
+  margin: 0.5rem 0;
+}
+
+.ProseMirror strong {
+  font-weight: 600;
+}
+
+.ProseMirror em {
+  font-style: italic;
+}

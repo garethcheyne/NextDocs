@@ -6,8 +6,7 @@ import { useRouter } from 'next/navigation'
 import { MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
-import { MarkdownInput } from '@/components/markdown/markdown-input'
-import { commentTemplates } from '@/lib/markdown-templates'
+import { RichTextEditor } from '@/components/editor/rich-text-editor'
 
 interface CommentFormProps {
     featureId: string
@@ -92,19 +91,17 @@ export function CommentForm({ featureId }: CommentFormProps) {
                             Add a comment
                         </label>
 
-                        <MarkdownInput
-                            value={content}
+                        <RichTextEditor
+                            content={content}
                             onChange={setContent}
-                            placeholder="Share your thoughts, ask questions, or provide feedback...
-
-💡 Tip: You can paste images directly from your clipboard (Ctrl+V)!"
-                            disabled={isSubmitting || isPending}
-                            rows={4}
-                            maxLength={5000}
-                            showCharCount={true}
-                            templates={commentTemplates}
-                            showHelp={true}
+                            placeholder="Share your thoughts, ask questions, or provide feedback..."
+                            editable={!isSubmitting && !isPending}
+                            className="min-h-[150px]"
                         />
+
+                        <p className="text-xs text-muted-foreground">
+                            Use the toolbar to format your text with bold, italics, lists, and links
+                        </p>
 
                         {error && (
                             <p className="text-sm text-destructive">{error}</p>

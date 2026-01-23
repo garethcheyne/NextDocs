@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/db/prisma';
 import { decryptToken } from '@/lib/crypto/encryption';
+import { marked } from 'marked';
+import { mentionsToDevOps, extractMentionedUserIds } from '@/lib/mentions/mention-utils';
 
 interface CreateWorkItemResult {
   success: boolean;
@@ -161,8 +163,9 @@ async function createAzureDevOpsWorkItem(
     // Use custom work item type or default to User Story
     const workItemType = customization?.workItemType || 'User Story';
 
-    // Use custom description or default
-    const description = customization?.description || featureRequest.description;
+    // Use custom description or default, convert markdown to HTML
+    const descriptionMarkdown = customization?.description || featureRequest.description;
+    const description = await marked(descriptionMarkdown);
 
     // Start with basic fields
     const fields: any[] = [
@@ -326,6 +329,16 @@ export async function createWorkItemOnApproval(
           externalType: category.integrationType,
         },
       });
+
+      // Sync all existing comments to the newly created work item
+      if (category.syncComments && category.integrationType === 'azure-devops') {
+        try {
+          await syncExistingCommentsToDevOps(featureRequestId, result.externalId, category);
+        } catch (error) {
+          console.error('Failed to sync existing comments:', error);
+          // Don't fail the work item creation if comment sync fails
+        }
+      }
     } else if (result.error) {
       // Store sync error
       await prisma.featureRequest.update({
@@ -418,7 +431,10 @@ async function updateAzureDevOpsWorkItem(
     fields.push({ op: 'replace', path: '/fields/System.Title', value: updates.title });
   }
   if (updates.description) {
-    fields.push({ op: 'replace', path: '/fields/System.Description', value: updates.description });
+    // Convert markdown to HTML for Azure DevOps
+    const { marked } = await import('marked');
+    const htmlDescription = marked(updates.description);
+    fields.push({ op: 'replace', path: '/fields/System.Description', value: htmlDescription });
   }
 
   const response = await fetch(
@@ -505,20 +521,59 @@ function markdownToHtml(markdown: string): string {
   return html;
 }
 
+interface AddCommentResult {
+  success: boolean;
+  externalCommentId?: string;
+  error?: string;
+}
+
 export async function addExternalComment(
   externalId: string,
   category: any,
   commentText: string,
   authorName: string,
-  authorEmail?: string
-): Promise<void> {
-  if (category.integrationType === 'github') {
-    // GitHub supports Markdown - post directly
-    await addGitHubComment(externalId, category, commentText);
-  } else if (category.integrationType === 'azure-devops') {
-    // Azure DevOps uses HTML - convert markdown to HTML
-    const htmlComment = markdownToHtml(commentText);
-    await addAzureDevOpsComment(externalId, category, htmlComment, authorEmail);
+  authorEmail?: string,
+  createdAt?: Date,
+  updatedAt?: Date,
+  userDevOpsToken?: string // User's own token for delegation
+): Promise<AddCommentResult> {
+  try {
+    if (category.integrationType === 'github') {
+      // GitHub supports Markdown - post directly
+      const result = await addGitHubComment(externalId, category, commentText);
+      return result;
+    } else if (category.integrationType === 'azure-devops') {
+      // Azure DevOps uses HTML - convert markdown to HTML
+      const htmlComment = await marked(commentText);
+
+      // If user has their own DevOps token, post directly as them (no attribution wrapper needed)
+      if (userDevOpsToken) {
+        const result = await addAzureDevOpsCommentAsUser(
+          externalId,
+          category,
+          htmlComment,
+          userDevOpsToken
+        );
+        return result;
+      }
+
+      // Fallback: Use service principal with author attribution in comment
+      const fullComment = buildDevOpsCommentHtml(
+        authorName,
+        authorEmail || '',
+        htmlComment,
+        createdAt || new Date(),
+        updatedAt || createdAt || new Date()
+      );
+      const result = await addAzureDevOpsComment(externalId, category, fullComment);
+      return result;
+    }
+    return { success: false, error: 'Unknown integration type' };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
 }
 
@@ -529,9 +584,9 @@ async function addGitHubComment(
   issueNumber: string,
   category: any,
   comment: string
-): Promise<void> {
+): Promise<AddCommentResult> {
   if (!category.githubPat || !category.githubOwner || !category.githubRepo) {
-    throw new Error('GitHub configuration incomplete');
+    return { success: false, error: 'GitHub configuration incomplete' };
   }
 
   const pat = decryptToken(category.githubPat);
@@ -552,27 +607,79 @@ async function addGitHubComment(
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Failed to add GitHub comment: ${error}`);
+    return { success: false, error: `Failed to add GitHub comment: ${error}` };
+  }
+
+  const data = await response.json();
+  return { success: true, externalCommentId: data.id.toString() };
+}
+
+/**
+ * Add a comment to an Azure DevOps work item using the user's own token (delegation)
+ * This posts the comment as the actual user, not the service principal
+ */
+async function addAzureDevOpsCommentAsUser(
+  workItemId: string,
+  category: any,
+  comment: string,
+  userAccessToken: string
+): Promise<AddCommentResult> {
+  if (!process.env.DEVOPS_ORG_URL) {
+    return { success: false, error: 'Azure DevOps org URL not configured' };
+  }
+
+  if (!category.devopsProject) {
+    return { success: false, error: 'Azure DevOps project name not configured for category' };
+  }
+
+  try {
+    const response = await fetch(
+      `${process.env.DEVOPS_ORG_URL}/${category.devopsProject}/_apis/wit/workitems/${workItemId}/comments?api-version=7.0-preview.3`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${userAccessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: comment }),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      // If user token fails (no DevOps access), return specific error for fallback handling
+      if (response.status === 401 || response.status === 403) {
+        return { success: false, error: 'USER_NO_DEVOPS_ACCESS' };
+      }
+      return { success: false, error: `Failed to add Azure DevOps comment: ${error}` };
+    }
+
+    const data = await response.json();
+    return { success: true, externalCommentId: data.id.toString() };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
 }
 
 /**
- * Add a comment to an Azure DevOps work item
+ * Add a comment to an Azure DevOps work item using service principal
  */
 async function addAzureDevOpsComment(
   workItemId: string,
   category: any,
-  comment: string,
-  authorEmail?: string
-): Promise<void> {
+  comment: string
+): Promise<AddCommentResult> {
   // Validate OAuth environment configuration
-  if (!process.env.DEVOPS_ORG_URL || !process.env.DEVOPS_CLIENT_ID || 
+  if (!process.env.DEVOPS_ORG_URL || !process.env.DEVOPS_CLIENT_ID ||
       !process.env.DEVOPS_CLIENT_SECRET || !process.env.DEVOPS_TENANT_ID) {
-    throw new Error('Azure DevOps OAuth configuration missing in environment');
+    return { success: false, error: 'Azure DevOps OAuth configuration missing in environment' };
   }
 
   if (!category.devopsProject) {
-    throw new Error('Azure DevOps project name not configured for category');
+    return { success: false, error: 'Azure DevOps project name not configured for category' };
   }
 
   // Get OAuth token
@@ -592,8 +699,11 @@ async function addAzureDevOpsComment(
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Failed to add Azure DevOps comment: ${error}`);
+    return { success: false, error: `Failed to add Azure DevOps comment: ${error}` };
   }
+
+  const data = await response.json();
+  return { success: true, externalCommentId: data.id.toString() };
 }
 
 /**
@@ -601,7 +711,7 @@ async function addAzureDevOpsComment(
  */
 export async function syncExternalComments(
   featureRequestId: string
-): Promise<{ synced: number; skipped: number }> {
+): Promise<{ synced: number; skipped: number; created: number }> {
   try {
     const feature = await prisma.featureRequest.findUnique({
       where: { id: featureRequestId },
@@ -609,10 +719,17 @@ export async function syncExternalComments(
     });
 
     if (!feature || !feature.externalId || !feature.category) {
-      return { synced: 0, skipped: 0 };
+      return { synced: 0, skipped: 0, created: 0 };
     }
 
-    let externalComments: Array<{ id: string; body: string; author: string; authorEmail?: string; createdAt: Date }> = [];
+    let externalComments: Array<{
+      id: string;
+      body: string;
+      author: string;
+      authorEmail?: string;
+      createdAt: Date;
+      modifiedAt?: Date;
+    }> = [];
 
     if (feature.category.integrationType === 'github') {
       externalComments = await getGitHubComments(feature.externalId, feature.category);
@@ -622,6 +739,7 @@ export async function syncExternalComments(
 
     let synced = 0;
     let skipped = 0;
+    let created = 0; // Track newly created users
 
     for (const extComment of externalComments) {
       // Check if comment already exists (by external ID)
@@ -630,9 +748,36 @@ export async function syncExternalComments(
           featureId: featureRequestId,
           externalCommentId: extComment.id,
         },
+        include: { commentSync: true },
       });
 
       if (existing) {
+        // Check if the comment was modified and needs updating
+        if (extComment.modifiedAt && existing.commentSync) {
+          const lastSynced = existing.commentSync.lastSyncedAt;
+          if (extComment.modifiedAt > lastSynced) {
+            // Update the local comment with edited content
+            const content = feature.category.integrationType === 'azure-devops'
+              ? htmlToMarkdown(extComment.body)
+              : extComment.body;
+
+            await prisma.featureComment.update({
+              where: { id: existing.id },
+              data: {
+                content,
+                updatedAt: extComment.modifiedAt,
+              },
+            });
+
+            await prisma.commentSync.update({
+              where: { id: existing.commentSync.id },
+              data: { lastSyncedAt: new Date() },
+            });
+
+            synced++;
+            continue;
+          }
+        }
         skipped++;
         continue;
       }
@@ -645,23 +790,25 @@ export async function syncExternalComments(
         });
       }
 
-      // If user not found by email, try to find or create by display name
+      // If user not found by email, try to find by display name
       if (!user) {
         user = await prisma.user.findFirst({
           where: { name: extComment.author },
         });
+      }
 
-        // If still not found, create the user (they're in the org, just not in NextDocs yet)
-        if (!user && extComment.authorEmail) {
-          user = await prisma.user.create({
-            data: {
-              email: extComment.authorEmail,
-              name: extComment.author,
-              role: 'user',
-              emailVerified: new Date(),
-            },
-          });
-        }
+      // If still not found, create the user (they're in the Azure AD tenant)
+      if (!user && extComment.authorEmail) {
+        user = await prisma.user.create({
+          data: {
+            email: extComment.authorEmail,
+            name: extComment.author,
+            role: 'user',
+            provider: 'azuread', // Mark as Azure AD user
+            emailVerified: new Date(),
+          },
+        });
+        created++;
       }
 
       // If we still don't have a user (no email provided), skip this comment
@@ -676,7 +823,8 @@ export async function syncExternalComments(
         ? htmlToMarkdown(extComment.body)
         : extComment.body;
 
-      await prisma.featureComment.create({
+      // Create the comment
+      const newComment = await prisma.featureComment.create({
         data: {
           featureId: featureRequestId,
           content,
@@ -684,16 +832,37 @@ export async function syncExternalComments(
           externalCommentId: extComment.id,
           externalSource: feature.category.integrationType,
           createdAt: extComment.createdAt,
+          updatedAt: extComment.modifiedAt || extComment.createdAt,
+        },
+      });
+
+      // Create CommentSync record to track this sync
+      await prisma.commentSync.create({
+        data: {
+          commentId: newComment.id,
+          externalCommentId: extComment.id,
+          externalType: feature.category.integrationType!,
+          syncDirection: 'from-external',
+          lastSyncedAt: new Date(),
+        },
+      });
+
+      // Update feature comment count
+      await prisma.featureRequest.update({
+        where: { id: featureRequestId },
+        data: {
+          commentCount: { increment: 1 },
+          lastActivityAt: new Date(),
         },
       });
 
       synced++;
     }
 
-    return { synced, skipped };
+    return { synced, skipped, created };
   } catch (error) {
     console.error('Error syncing external comments:', error);
-    return { synced: 0, skipped: 0 };
+    return { synced: 0, skipped: 0, created: 0 };
   }
 }
 
@@ -703,7 +872,7 @@ export async function syncExternalComments(
 async function getGitHubComments(
   issueNumber: string,
   category: any
-): Promise<Array<{ id: string; body: string; author: string; authorEmail?: string; createdAt: Date }>> {
+): Promise<Array<{ id: string; body: string; author: string; authorEmail?: string; createdAt: Date; modifiedAt?: Date }>> {
   if (!category.githubPat || !category.githubOwner || !category.githubRepo) {
     return [];
   }
@@ -726,13 +895,14 @@ async function getGitHubComments(
   }
 
   const comments = await response.json();
-  
+
   return comments.map((c: any) => ({
     id: c.id.toString(),
     body: c.body,
     author: c.user?.login || 'Unknown',
     authorEmail: c.user?.email || undefined,
     createdAt: new Date(c.created_at),
+    modifiedAt: c.updated_at ? new Date(c.updated_at) : undefined,
   }));
 }
 
@@ -742,9 +912,9 @@ async function getGitHubComments(
 async function getAzureDevOpsComments(
   workItemId: string,
   category: any
-): Promise<Array<{ id: string; body: string; author: string; authorEmail?: string; createdAt: Date }>> {
+): Promise<Array<{ id: string; body: string; author: string; authorEmail?: string; createdAt: Date; modifiedAt?: Date }>> {
   // Validate OAuth environment configuration
-  if (!process.env.DEVOPS_ORG_URL || !process.env.DEVOPS_CLIENT_ID || 
+  if (!process.env.DEVOPS_ORG_URL || !process.env.DEVOPS_CLIENT_ID ||
       !process.env.DEVOPS_CLIENT_SECRET || !process.env.DEVOPS_TENANT_ID) {
     return [];
   }
@@ -771,13 +941,14 @@ async function getAzureDevOpsComments(
     }
 
     const data = await response.json();
-    
+
     return (data.comments || []).map((c: any) => ({
       id: c.id.toString(),
       body: c.text,
       author: c.createdBy?.displayName || 'Unknown',
       authorEmail: c.createdBy?.uniqueName || c.createdBy?.mailAddress || undefined,
       createdAt: new Date(c.createdDate),
+      modifiedAt: c.modifiedDate ? new Date(c.modifiedDate) : undefined,
     }));
   } catch (error) {
     console.error('Error fetching Azure DevOps comments:', error);
@@ -785,3 +956,384 @@ async function getAzureDevOpsComments(
   }
 }
 
+/**
+ * Update an existing comment in Azure DevOps using user's token (delegation)
+ */
+async function updateAzureDevOpsCommentAsUser(
+  workItemId: string,
+  commentId: string,
+  category: any,
+  newContent: string,
+  userAccessToken: string
+): Promise<AddCommentResult> {
+  if (!process.env.DEVOPS_ORG_URL) {
+    return { success: false, error: 'Azure DevOps org URL not configured' };
+  }
+
+  if (!category.devopsProject) {
+    return { success: false, error: 'Azure DevOps project name not configured for category' };
+  }
+
+  try {
+    const response = await fetch(
+      `${process.env.DEVOPS_ORG_URL}/${category.devopsProject}/_apis/wit/workItems/${workItemId}/comments/${commentId}?api-version=7.0-preview.3`,
+      {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${userAccessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: newContent }),
+      }
+    );
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        return { success: false, error: 'USER_NO_DEVOPS_ACCESS' };
+      }
+      const error = await response.text();
+      return { success: false, error: `Failed to update Azure DevOps comment: ${error}` };
+    }
+
+    return { success: true, externalCommentId: commentId };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * Update an existing comment in Azure DevOps using service principal
+ */
+async function updateAzureDevOpsComment(
+  workItemId: string,
+  commentId: string,
+  category: any,
+  newContent: string
+): Promise<AddCommentResult> {
+  if (!process.env.DEVOPS_ORG_URL || !process.env.DEVOPS_CLIENT_ID ||
+      !process.env.DEVOPS_CLIENT_SECRET || !process.env.DEVOPS_TENANT_ID) {
+    return { success: false, error: 'Azure DevOps OAuth configuration missing in environment' };
+  }
+
+  if (!category.devopsProject) {
+    return { success: false, error: 'Azure DevOps project name not configured for category' };
+  }
+
+  const accessToken = await getDevOpsAccessToken();
+
+  const response = await fetch(
+    `${process.env.DEVOPS_ORG_URL}/${category.devopsProject}/_apis/wit/workItems/${workItemId}/comments/${commentId}?api-version=7.0-preview.3`,
+    {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text: newContent }),
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.text();
+    return { success: false, error: `Failed to update Azure DevOps comment: ${error}` };
+  }
+
+  return { success: true, externalCommentId: commentId };
+}
+
+/**
+ * Update an existing comment in GitHub
+ */
+async function updateGitHubComment(
+  commentId: string,
+  category: any,
+  newContent: string
+): Promise<AddCommentResult> {
+  if (!category.githubPat || !category.githubOwner || !category.githubRepo) {
+    return { success: false, error: 'GitHub configuration incomplete' };
+  }
+
+  const pat = decryptToken(category.githubPat);
+
+  const response = await fetch(
+    `https://api.github.com/repos/${category.githubOwner}/${category.githubRepo}/issues/comments/${commentId}`,
+    {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${pat}`,
+        Accept: 'application/vnd.github.v3+json',
+        'User-Agent': 'NextDocs-Integration',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ body: newContent }),
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.text();
+    return { success: false, error: `Failed to update GitHub comment: ${error}` };
+  }
+
+  return { success: true, externalCommentId: commentId };
+}
+
+/**
+ * Update an external comment when edited locally
+ */
+export async function updateExternalComment(
+  localCommentId: string,
+  newContent: string,
+  authorName: string,
+  authorEmail?: string,
+  createdAt?: Date,
+  updatedAt?: Date,
+  userDevOpsToken?: string
+): Promise<AddCommentResult> {
+  try {
+    // Get the comment with its sync info and feature
+    const comment = await prisma.featureComment.findUnique({
+      where: { id: localCommentId },
+      include: {
+        commentSync: true,
+        feature: {
+          include: { category: true },
+        },
+      },
+    });
+
+    if (!comment || !comment.commentSync || !comment.feature.externalId) {
+      return { success: false, error: 'Comment not synced to external system' };
+    }
+
+    const category = comment.feature.category;
+    if (!category) {
+      return { success: false, error: 'Category not found' };
+    }
+
+    let result: AddCommentResult;
+
+    if (category.integrationType === 'github') {
+      result = await updateGitHubComment(
+        comment.commentSync.externalCommentId,
+        category,
+        newContent
+      );
+    } else if (category.integrationType === 'azure-devops') {
+      const htmlComment = await marked(newContent);
+
+      // If user has their own DevOps token, update as them
+      if (userDevOpsToken) {
+        result = await updateAzureDevOpsCommentAsUser(
+          comment.feature.externalId,
+          comment.commentSync.externalCommentId,
+          category,
+          htmlComment,
+          userDevOpsToken
+        );
+
+        // If user token fails, fall back to service principal
+        if (!result.success && result.error === 'USER_NO_DEVOPS_ACCESS') {
+          const fullComment = buildDevOpsCommentHtml(
+            authorName,
+            authorEmail || '',
+            htmlComment,
+            createdAt || comment.createdAt,
+            updatedAt || new Date()
+          );
+          result = await updateAzureDevOpsComment(
+            comment.feature.externalId,
+            comment.commentSync.externalCommentId,
+            category,
+            fullComment
+          );
+        }
+      } else {
+        // No user token - use service principal with attribution
+        const fullComment = buildDevOpsCommentHtml(
+          authorName,
+          authorEmail || '',
+          htmlComment,
+          createdAt || comment.createdAt,
+          updatedAt || new Date()
+        );
+        result = await updateAzureDevOpsComment(
+          comment.feature.externalId,
+          comment.commentSync.externalCommentId,
+          category,
+          fullComment
+        );
+      }
+    } else {
+      return { success: false, error: 'Unknown integration type' };
+    }
+
+    // Update sync timestamp
+    if (result.success) {
+      await prisma.commentSync.update({
+        where: { id: comment.commentSync.id },
+        data: { lastSyncedAt: new Date() },
+      });
+    }
+
+    return result;
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * Escape HTML special characters to prevent XSS
+ */
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/**
+ * Format a date for display in DevOps comments
+ */
+function formatCommentDate(date: Date, wasEdited: boolean, editedAt?: Date): string {
+  const createdStr = date.toLocaleString('en-AU', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+
+  if (wasEdited && editedAt) {
+    const editedStr = editedAt.toLocaleString('en-AU', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+    return `${createdStr} (edited ${editedStr})`;
+  }
+
+  return createdStr;
+}
+
+/**
+ * Build HTML comment text for Azure DevOps
+ */
+function buildDevOpsCommentHtml(
+  authorName: string,
+  authorEmail: string,
+  content: string,
+  createdAt: Date,
+  updatedAt: Date
+): string {
+  const escapedName = escapeHtml(authorName || authorEmail);
+  const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'NextDocs';
+  
+  // Create mention for the author
+  const authorMention = `<a href="#" data-vss-mention="version:2.0,${authorEmail}">@${escapedName}</a>`;
+
+  return `<div>
+    <strong>On Behalf of ${authorMention} (${siteName})</strong>
+    <br/><br/>
+    ${content}
+  </div>`;
+}
+
+/**
+ * Sync all existing comments from feature request to newly created Azure DevOps work item
+ */
+async function syncExistingCommentsToDevOps(
+  featureRequestId: string,
+  workItemId: string,
+  category: any
+): Promise<void> {
+  // Get all existing comments that haven't been synced yet
+  const comments = await prisma.featureComment.findMany({
+    where: {
+      featureId: featureRequestId,
+      isDeleted: false,
+      // Only sync comments that don't already have a CommentSync record
+      commentSync: null,
+    },
+    include: { user: true },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  if (comments.length === 0) {
+    return;
+  }
+
+  const accessToken = await getDevOpsAccessToken();
+
+  // Build user email map for mention conversion
+  const userIds = comments.flatMap(c => extractMentionedUserIds(c.content));
+  const uniqueUserIds = [...new Set(userIds)];
+  const users = await prisma.user.findMany({
+    where: { id: { in: uniqueUserIds } },
+    select: { id: true, email: true },
+  });
+  const userEmailMap = new Map(users.map(u => [u.id, u.email]));
+
+  // Add each comment to DevOps
+  for (const comment of comments) {
+    try {
+      // Convert mentions to DevOps format, then markdown to HTML
+      const contentWithDevOpsMentions = mentionsToDevOps(comment.content, userEmailMap);
+      const htmlContent = await marked(contentWithDevOpsMentions);
+
+      const commentText = buildDevOpsCommentHtml(
+        comment.user.name || '',
+        comment.user.email,
+        htmlContent,
+        comment.createdAt,
+        comment.updatedAt
+      );
+
+      const response = await fetch(
+        `${process.env.DEVOPS_ORG_URL}/${category.devopsProject}/_apis/wit/workItems/${workItemId}/comments?api-version=7.0-preview.3`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ text: commentText }),
+        }
+      );
+
+      if (!response.ok) {
+        console.error(`Failed to sync comment ${comment.id} to DevOps:`, await response.text());
+        continue;
+      }
+
+      const devOpsComment = await response.json();
+
+      // Create CommentSync record to track this sync
+      await prisma.commentSync.create({
+        data: {
+          commentId: comment.id,
+          externalCommentId: devOpsComment.id.toString(),
+          externalType: 'azure-devops',
+          syncDirection: 'to-external',
+          lastSyncedAt: new Date(),
+        },
+      });
+
+      // Update the comment with the external ID
+      await prisma.featureComment.update({
+        where: { id: comment.id },
+        data: {
+          externalCommentId: devOpsComment.id.toString(),
+          externalSource: 'nextdocs', // Originated from NextDocs
+        },
+      });
+
+    } catch (error) {
+      console.error(`Error syncing comment ${comment.id}:`, error);
+      // Continue with other comments even if one fails
+    }
+  }
+}

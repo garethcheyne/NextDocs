@@ -1,9 +1,10 @@
 import Link from 'next/link'
 import { ThumbsUp, MessageSquare, Lightbulb } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { AnimatedCard } from '@/components/ui/animated-card'
-import { defaultStatusColors, getStatusBgClass, getStatusHoverClass } from '@/lib/status-colors'
+import { getStatusHoverClass } from '@/lib/status-colors'
+import { StatusBadge } from '@/components/badges/status-badge'
+import { PriorityBadge } from '@/components/badges/priority-badge'
 
 interface Category {
     id: string
@@ -31,12 +32,11 @@ interface FeatureRequestCardProps {
             comments: number
         }
     }
-    statusColors?: Record<string, string>
     isExtended?: boolean
     isAnimated?: boolean
 }
 
-export function FeatureRequestCard({ feature, statusColors = defaultStatusColors, isExtended = false, isAnimated = false }: FeatureRequestCardProps) {
+export function FeatureRequestCard({ feature, isExtended = false, isAnimated = false }: FeatureRequestCardProps) {
     const CardWrapper = isAnimated ? AnimatedCard : Card
 
     if (isExtended) {
@@ -59,14 +59,8 @@ export function FeatureRequestCard({ feature, statusColors = defaultStatusColors
                                     </p>
                                 )}
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <Badge className={`${getStatusBgClass(feature.status)} text-white text-xs`}>
-                                        {feature.status}
-                                    </Badge>
-                                    {feature.priority && (
-                                        <Badge variant="outline" className="text-xs">
-                                            {feature.priority}
-                                        </Badge>
-                                    )}
+                                    <StatusBadge status={feature.status} />
+                                    <PriorityBadge priority={feature.priority} />
                                     {feature.category && (
                                         <span
                                             className="text-xs"
@@ -113,9 +107,7 @@ export function FeatureRequestCard({ feature, statusColors = defaultStatusColors
                         <div className="flex-1 min-w-0">
                             <h4 className="font-medium line-clamp-1">{feature.title}</h4>
                             <div className="flex items-center gap-2 mt-1">
-                                <Badge className={`${statusColors[feature.status] || 'bg-gray-500'} text-white text-xs`}>
-                                    {feature.status}
-                                </Badge>
+                                <StatusBadge status={feature.status} />
                                 {feature.category && (
                                     <span
                                         className="text-xs"

@@ -4,8 +4,9 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { AnimatedCard } from '@/components/ui/animated-card'
 import { StatusBadge } from '@/components/badges/status-badge'
+import { PriorityBadge } from '@/components/badges/priority-badge'
 import { CategoryBadge } from '@/components/badges/category-badge'
-import { defaultStatusColors, getStatusHoverClass } from '@/lib/status-colors'
+import { getStatusHoverClass } from '@/lib/status-colors'
 
 interface Category {
     id: string
@@ -31,12 +32,11 @@ interface FeatureActivityCardProps {
             comments: number
         }
     }
-    statusColors?: Record<string, string>
     isExtended?: boolean
     isAnimated?: boolean
 }
 
-export function FeatureActivityCard({ feature, statusColors = defaultStatusColors, isExtended = false, isAnimated = false }: FeatureActivityCardProps) {
+export function FeatureActivityCard({ feature, isExtended = false, isAnimated = false }: FeatureActivityCardProps) {
     const CardWrapper = isAnimated ? AnimatedCard : Card
     const hoverClass = getStatusHoverClass(feature.status)
 
@@ -68,11 +68,7 @@ export function FeatureActivityCard({ feature, statusColors = defaultStatusColor
                                 )}
                                 <div className="flex items-center gap-2 flex-wrap">
                                     <StatusBadge status={feature.status} />
-                                    {feature.priority && (
-                                        <Badge variant="outline" className="text-xs">
-                                            {feature.priority}
-                                        </Badge>
-                                    )}
+                                    <PriorityBadge priority={feature.priority} />
                                     {feature.category && (
                                         <CategoryBadge category={feature.category} />
                                     )}

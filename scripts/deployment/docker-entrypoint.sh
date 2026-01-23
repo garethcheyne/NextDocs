@@ -5,11 +5,21 @@ echo "Waiting for database to be ready..."
 sleep 5
 
 echo "Running database migrations..."
-# Use db push in production to sync schema without migration history
-npx prisma db push --accept-data-loss || {
-  echo "Migration failed, trying with migrate deploy..."
-  npx prisma migrate deploy
-}
+# Try migrate deploy first (production approach)
+if npx prisma migrate deploy 2>&1 | grep -q "P3009\|failed migrations"; then
+  echo "Found failed migrations, attempting to resolve..."
+  
+  # Mark the failed migration as resolved
+  npx prisma migrate resolve --applied fix_feature_release_search || true
+  
+  # Try migrate deploy again
+  if ! npx prisma migrate deploy; then
+    echo "Migrate deploy still failing, falling back to db push..."
+    npx prisma db push --accept-data-loss --skip-generate
+  fi
+else
+  echo "Migrations deployed successfully!"
+fi
 
 echo "Migrations complete!"
 

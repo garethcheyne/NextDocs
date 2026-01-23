@@ -138,6 +138,7 @@ export const POST = withWriteAuth(async (request) => {
                 description,
                 categoryId: categoryId || null,
                 tagIds: tags || [],
+                priority: 'medium',
                 createdBy: user.id,
                 createdByName: user.name || user.email || 'Unknown',
                 createdByEmail: user.email || '',

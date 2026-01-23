@@ -23,6 +23,7 @@ import DOMPurify from 'isomorphic-dompurify'
 import { extractReleaseBlocks, splitByReleasePlaceholders } from '@/lib/markdown/release-block-preprocessor'
 import { ReleaseNotificationBlock } from './release-notification-block'
 import { cn } from '@/lib/utils'
+import { Mention } from '@/lib/mentions/mention-utils'
 
 const DEFAULT_PROSE_CLASSES = `prose prose-slate dark:prose-invert max-w-none 
     prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-foreground prose-headings:scroll-mt-20
@@ -309,6 +310,13 @@ export function EnhancedMarkdown({ children, className, repositorySlug, document
             />
         },
         a({ href, children }: any) {
+            // Check if this is a mention link
+            if (href?.startsWith('user:')) {
+                const userId = href.replace('user:', '')
+                const displayName = typeof children === 'string' ? children : String(children)
+                return <Mention userId={userId} displayName={displayName} />
+            }
+
             const isExternal = href?.startsWith('http')
             let transformedHref = href
 

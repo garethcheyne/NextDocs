@@ -105,18 +105,61 @@ export async function POST(
 
     // Sync comment to external work item if configured
     if (
-      featureRequest.externalId && 
+      featureRequest.externalId &&
       featureRequest.category?.syncComments &&
       featureRequest.category?.integrationType
     ) {
       try {
-        await addExternalComment(
+        // Get user's DevOps token from session for delegation (if available)
+        const userDevOpsToken = (session as any).devopsAccessToken as string | undefined
+
+        let syncResult = await addExternalComment(
           featureRequest.externalId,
           featureRequest.category,
           content.trim(),
           session.user.name || session.user.email || 'Unknown',
-          session.user.email || undefined
+          session.user.email || undefined,
+          comment.createdAt,
+          comment.updatedAt,
+          userDevOpsToken
         );
+
+        // If user token failed due to no DevOps access, retry with service principal
+        if (!syncResult.success && syncResult.error === 'USER_NO_DEVOPS_ACCESS') {
+          console.log('User does not have DevOps access, falling back to service principal')
+          syncResult = await addExternalComment(
+            featureRequest.externalId,
+            featureRequest.category,
+            content.trim(),
+            session.user.name || session.user.email || 'Unknown',
+            session.user.email || undefined,
+            comment.createdAt,
+            comment.updatedAt
+            // No token = use service principal
+          );
+        }
+
+        // Track the sync if successful
+        if (syncResult.success && syncResult.externalCommentId) {
+          await prisma.commentSync.create({
+            data: {
+              commentId: comment.id,
+              externalCommentId: syncResult.externalCommentId,
+              externalType: featureRequest.category.integrationType,
+              syncDirection: 'to-external',
+              lastSyncedAt: new Date(),
+            },
+          });
+
+          // Update comment with external ID
+          await prisma.featureComment.update({
+            where: { id: comment.id },
+            data: {
+              externalCommentId: syncResult.externalCommentId,
+              externalSource: 'nextdocs',
+            },
+          });
+        }
       } catch (error) {
         console.error('Failed to sync comment to external system:', error);
         // Don't fail the request if external sync fails

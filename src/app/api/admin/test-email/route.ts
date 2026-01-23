@@ -60,6 +60,11 @@ export async function POST(request: NextRequest) {
         createdBy: 'test-user-id',
         createdByEmail: email,
         externalId: null,
+        localUpdatedAt: new Date(),
+        externalUpdatedAt: null,
+        lastSyncedTitle: null,
+        lastSyncedDesc: null,
+        syncConflict: false,
         creator: {
           id: 'test-user-id',
           name: 'Test User',
