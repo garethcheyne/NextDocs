@@ -151,6 +151,70 @@ You can also reference external images:
 - **Formats**: PNG for screenshots/diagrams, JPG for photos, SVG for logos/icons
 - **Relative paths**: Use `./img/` for same folder, `../img/` for parent folder
 
+## Videos :play:
+
+NextDocs supports embedding videos directly in your markdown content!
+
+### Local Videos
+
+Store videos in a `videos/` directory and reference them like images:
+
+```markdown
+![Demo video](./videos/demo.mp4)
+![Tutorial](./videos/tutorial.webm "How to use the feature")
+```
+
+**Recommended structure**:
+```
+docs/
+├── getting-started/
+│   ├── index.md
+│   └── videos/
+│       ├── setup-demo.mp4
+│       └── first-steps.webm
+├── guides/
+│   ├── tutorial.md
+│   └── videos/
+│       └── workflow-demo.mp4
+```
+
+### External Videos
+
+You can also link to external videos:
+
+```markdown
+![Watch on YouTube](https://example.com/videos/tutorial.mp4)
+```
+
+### Supported Formats
+
+- **MP4** (`.mp4`) - Most compatible, widely supported
+- **WebM** (`.webm`) - Modern, excellent compression
+- **Ogg** (`.ogg`) - Patent-free format
+- **AVI** (`.avi`) - Legacy format support
+- **MKV** (`.mkv`) - Matroska format
+- **MOV** (`.mov`) - QuickTime format
+- **FLV** (`.flv`) - Flash video format
+- **MPEG** (`.mpg`, `.mpeg`) - MPEG format
+
+### Best Practices
+
+- **Use MP4 for best compatibility**: MP4 is supported across all browsers and devices
+- **Keep file sizes reasonable**: Compress videos to 50-100MB per file for good performance
+- **Provide meaningful captions**: Use the caption text after the closing bracket
+- **Optimize for web**: Use lower resolution (720p or lower) and appropriate bitrate
+- **Test accessibility**: Ensure videos have captions for hearing-impaired viewers
+- **Store locally**: Keep videos in `videos/` folder next to your markdown when possible
+- **Use relative paths**: Reference videos with `./videos/filename.mp4`
+
+### Interactive Playback
+
+Videos embedded in NextDocs include:
+- **Play/pause controls** - Full HTML5 video player controls
+- **Full-screen mode** - Click the expand icon to watch in full screen
+- **Responsive sizing** - Videos adapt to different screen sizes
+- **Secure access** - Videos require authentication and are protected from unauthorized access
+
 ## Blockquotes
 
 ```markdown

@@ -46,24 +46,24 @@ docs/
 │   ├── index.md
 │   ├── installation.md
 │   ├── quick-start.md
-│   └── img/                # Images for this section
-│       └── setup.png
+│   ├── img/                # Images for this section
+│   └── videos/             # Videos for this section
 ├── user-guide/
 │   ├── _meta.json
 │   ├── index.md
 │   ├── features.md
 │   ├── advanced.md
-│   └── img/
-│       └── dashboard.png
+│   ├── img/
+│   └── videos/
 └── api-reference/
     ├── _meta.json
     ├── index.md
     ├── endpoints.md
-    └── img/
-        └── workflow.png
+    ├── img/
+    └── videos/
 ```
 
-**Best Practice**: Store images in an `img/` folder within each documentation section.
+**Best Practice**: Store images in an `img/` folder and videos in a `videos/` folder within each documentation section.
 
 ## Naming Conventions :file-text:
 

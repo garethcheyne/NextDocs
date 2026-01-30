@@ -46,6 +46,9 @@ interface User {
     active: boolean
     image: string | null
     createdAt: Date
+    analyticsSessions: Array<{
+        lastActivityAt: Date
+    }>
     _count: {
         repositories: number
     }
@@ -289,13 +292,14 @@ export function UsersTable({ users: initialUsers, currentUserId, allTeams }: Use
                             <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Provider</th>
                             <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Repos</th>
                             <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Joined</th>
+                            <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Last Login</th>
                             <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {users.length === 0 ? (
                             <tr>
-                                <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">
+                                <td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">
                                     No users found
                                 </td>
                             </tr>
@@ -366,8 +370,16 @@ export function UsersTable({ users: initialUsers, currentUserId, allTeams }: Use
                                             month: '2-digit',
                                             year: 'numeric'
                                         })}
-                                    </td>
-                                    <td className="p-4 text-right">
+                                    </td>                                    <td className="p-4 text-muted-foreground">
+                                        {user.analyticsSessions[0]?.lastActivityAt
+                                            ? new Date(user.analyticsSessions[0].lastActivityAt).toLocaleDateString('en-US', {
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                year: 'numeric'
+                                              })
+                                            : '—'
+                                        }
+                                    </td>                                    <td className="p-4 text-right">
                                         <div className="flex items-center justify-end gap-1">
                                             <Button
                                                 variant="ghost"

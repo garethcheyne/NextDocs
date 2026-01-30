@@ -29,7 +29,7 @@ export function ThemeAwareLogo({ width = 48, height = 48, className = '' }: Them
     return (
         <Image
             src="/icons/logo-256.png"
-            alt={process.env.NEXT_SITE_NAME || 'NextDocs'}
+            alt={process.env.NEXT_PUBLIC_SITE_NAME || 'NextDocs'}
             width={width}
             height={height}
             className={className}

@@ -6,16 +6,29 @@
 export interface EmailOptions {
     to: string | string[]
     cc?: string | string[]
+    bcc?: string | string[]
     subject: string
     body: string
     isHtml?: boolean
     importance?: 'low' | 'normal' | 'high'
 }
 
+// Email validation regex (RFC 5322 simplified)
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+// Rate limiting configuration
+const RATE_LIMIT_WINDOW_MS = 60000 // 1 minute
+const MAX_EMAILS_PER_WINDOW = 100
+
 export class RestEmailClient {
     private apiUrl: string
     private debugMode: boolean
     private debugRecipient: string
+    private maxRecipientsPerBatch: number = 100
+    
+    // Rate limiting state
+    private emailsSentInWindow: number = 0
+    private windowStartTime: number = Date.now()
 
     constructor() {
         this.apiUrl = process.env.EMAIL_REST_API || ''
@@ -41,6 +54,52 @@ export class RestEmailClient {
         return !!this.apiUrl
     }
 
+    /**
+     * Validate email format
+     */
+    private isValidEmail(email: string): boolean {
+        return EMAIL_REGEX.test(email.trim())
+    }
+
+    /**
+     * Check and update rate limiting
+     */
+    private checkRateLimit(recipientCount: number): void {
+        const now = Date.now()
+        
+        // Reset window if expired
+        if (now - this.windowStartTime > RATE_LIMIT_WINDOW_MS) {
+            this.emailsSentInWindow = 0
+            this.windowStartTime = now
+        }
+
+        // Check if adding this batch would exceed limit
+        if (this.emailsSentInWindow + recipientCount > MAX_EMAILS_PER_WINDOW) {
+            const waitTime = RATE_LIMIT_WINDOW_MS - (now - this.windowStartTime)
+            throw new Error(
+                `Rate limit exceeded: ${this.emailsSentInWindow}/${MAX_EMAILS_PER_WINDOW} emails sent in current window. ` +
+                `Wait ${Math.ceil(waitTime / 1000)}s before sending more.`
+            )
+        }
+
+        // Update counter
+        this.emailsSentInWindow += recipientCount
+    }
+
+    /**
+     * Process and validate recipients
+     */
+    private processRecipients(emails: string | string[]): string[] {
+        const emailArray = Array.isArray(emails) ? emails : [emails]
+        
+        // Filter and validate - silently drop invalid emails
+        const validEmails = emailArray
+            .map(email => email.trim())
+            .filter(email => email && this.isValidEmail(email))
+
+        return validEmails
+    }
+
     async sendEmail(options: EmailOptions): Promise<void> {
         if (!this.isReady()) {
             console.warn('REST Email client not ready. Skipping email.')
@@ -48,7 +107,7 @@ export class RestEmailClient {
         }
 
         try {
-            // Prepare recipients
+            // Prepare and validate recipients
             let recipients: string[]
 
             if (this.debugMode) {
@@ -57,27 +116,39 @@ export class RestEmailClient {
                 console.log(`🐛 DEBUG MODE: Redirecting email to ${this.debugRecipient}`)
                 console.log(`   Original recipients would have been:`, Array.isArray(options.to) ? options.to : [options.to])
             } else {
-                // Normal mode: use actual recipients
-                recipients = Array.isArray(options.to) ? options.to : [options.to]
+                // Normal mode: validate and process recipients
+                recipients = this.processRecipients(options.to)
             }
-
-            // Add CC recipients if provided and not in debug mode
-            if (options.cc && !this.debugMode) {
-                const ccRecipients = Array.isArray(options.cc) ? options.cc : [options.cc]
-                recipients.push(...ccRecipients)
-            }
-
-            // Filter out empty emails
-            recipients = recipients.filter(email => email && email.trim())
 
             if (recipients.length === 0) {
-                console.warn('No valid email recipients found')
+                console.warn('No valid email recipients found after validation')
                 return
             }
 
+            // Check max recipients limit
+            const totalRecipients = recipients.length + 
+                (options.cc ? this.processRecipients(options.cc).length : 0) + 
+                (options.bcc ? this.processRecipients(options.bcc).length : 0)
+
+            if (totalRecipients > this.maxRecipientsPerBatch) {
+                throw new Error(
+                    `Recipient limit exceeded: ${totalRecipients} recipients (max ${this.maxRecipientsPerBatch} per batch). ` +
+                    `Consider splitting into multiple batches.`
+                )
+            }
+
+            // Check rate limiting
+            this.checkRateLimit(totalRecipients)
+
+            // Validate and process CC/BCC
+            const cc = options.cc && !this.debugMode ? this.processRecipients(options.cc) : undefined
+            const bcc = options.bcc && !this.debugMode ? this.processRecipients(options.bcc) : undefined
+
             // Prepare email payload
             const payload = {
-                to: recipients,
+                to: recipients,                
+                cc: cc && cc.length > 0 ? cc : undefined,
+                bcc: bcc && bcc.length > 0 ? bcc : undefined,
                 subject: options.subject,
                 body: options.body,
                 'api-key': process.env.EMAIL_API_KEY || ''
@@ -85,12 +156,16 @@ export class RestEmailClient {
 
             console.log('📤 Sending email via REST API:', {
                 to: recipients.length > 1 ? `${recipients.length} recipients` : recipients[0],
+                cc: cc ? `${cc.length} CC` : 'none',
+                bcc: bcc ? `${bcc.length} BCC` : 'none',
+                total: totalRecipients,
                 subject: options.subject,
-                debugMode: this.debugMode
+                debugMode: this.debugMode,
+                rateLimit: `${this.emailsSentInWindow}/${MAX_EMAILS_PER_WINDOW}`
             })
 
             // Send email via REST API with retry logic
-            await this.sendWithRetry(payload, recipients.length)
+            await this.sendWithRetry(payload, totalRecipients)
 
         } catch (error) {
             console.error('❌ Failed to send email via REST API:', error)
@@ -123,14 +198,14 @@ export class RestEmailClient {
                 if (!response.ok) {
                     const errorText = await response.text()
                     const error = new Error(`Email API returned ${response.status}: ${errorText}`)
-                    
+
                     // Don't retry on certain status codes
                     if (response.status === 400 || response.status === 401 || response.status === 403) {
                         throw error
                     }
-                    
+
                     lastError = error
-                    
+
                     // Wait before retry (exponential backoff)
                     if (attempt < maxRetries) {
                         const delay = Math.pow(2, attempt - 1) * 1000 // 1s, 2s, 4s...
@@ -138,7 +213,7 @@ export class RestEmailClient {
                         await new Promise(resolve => setTimeout(resolve, delay))
                         continue
                     }
-                    
+
                     throw error
                 }
 
@@ -147,7 +222,7 @@ export class RestEmailClient {
 
             } catch (error) {
                 lastError = error as Error
-                
+
                 // Handle specific errors
                 if (error instanceof Error && error.name === 'AbortError') {
                     console.warn(`⏰ Request timeout on attempt ${attempt}`)
@@ -157,7 +232,7 @@ export class RestEmailClient {
                 } else {
                     console.warn(`⚠️ Attempt ${attempt} failed:`, error instanceof Error ? error.message : error)
                 }
-                
+
                 if (attempt < maxRetries) {
                     const delay = Math.pow(2, attempt - 1) * 1000
                     console.log(`⏳ Waiting ${delay}ms before retry...`)

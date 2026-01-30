@@ -79,6 +79,10 @@ scripts/check-*.ts
 public/img/**
 !public/img/.gitkeep
 
+# Uploaded images and videos (user content)
+public/uploads/**
+!public/uploads/.gitkeep
+
 
 prisma/seed-standalone.js
 

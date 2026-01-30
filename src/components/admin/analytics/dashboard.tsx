@@ -15,11 +15,21 @@ interface MetricsData {
     documentReads: number
     searches: number
     featureViews: number
+    avgSessionDuration: number
+    bounceRate: number
+    newUsers: number
+    returningUsers: number
   }
   topPages: Array<{ path: string; views: number }>
   topDocuments: Array<{ resourceId: string; views: number; avgDuration: number | null; avgScrollDepth: number | null }>
   topUsers: Array<{ userId: string; name: string; email: string; activityCount: number }>
   timeline: Array<{ date: string; pageViews: number; sessions: number; users: number }>
+  topReferrers: Array<{ referrer: string; count: number }>
+  deviceBreakdown: Array<{ device: string; count: number }>
+  browserBreakdown: Array<{ browser: string; count: number }>
+  osBreakdown: Array<{ os: string; count: number }>
+  searchAnalytics: Array<{ query: string; searches: number; avgResults: number; hasNoResults: boolean }>
+  peakHours: Array<{ hour: number; events: number }>
 }
 
 interface RealtimeEvent {
@@ -38,11 +48,19 @@ export function AnalyticsDashboard() {
   const [metrics, setMetrics] = useState<MetricsData | null>(null)
   const [realtimeEvents, setRealtimeEvents] = useState<RealtimeEvent[]>([])
   const [loading, setLoading] = useState(true)
-  const [dateRange] = useState(() => {
+  const [timeRange, setTimeRange] = useState<7 | 30 | 60 | 90>(30)
+  const [dateRange, setDateRange] = useState(() => {
     const to = new Date()
     const from = new Date(to.getTime() - 30 * 24 * 60 * 60 * 1000)
     return { from: from.toISOString(), to: to.toISOString() }
   })
+
+  // Update date range when time range selection changes
+  useEffect(() => {
+    const to = new Date()
+    const from = new Date(to.getTime() - timeRange * 24 * 60 * 60 * 1000)
+    setDateRange({ from: from.toISOString(), to: to.toISOString() })
+  }, [timeRange])
 
   // Fetch metrics
   useEffect(() => {
@@ -137,6 +155,52 @@ export function AnalyticsDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Time Range Selector */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Analytics Overview</h2>
+          <p className="text-sm text-muted-foreground">Monitor your platform's performance and user activity</p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setTimeRange(7)}
+            className={`px-3 py-1.5 text-sm rounded-md transition-colors ${timeRange === 7
+              ? 'bg-brand-orange text-white'
+              : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+              }`}
+          >
+            7 Days
+          </button>
+          <button
+            onClick={() => setTimeRange(30)}
+            className={`px-3 py-1.5 text-sm rounded-md transition-colors ${timeRange === 30
+              ? 'bg-brand-orange text-white'
+              : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+              }`}
+          >
+            30 Days
+          </button>
+          <button
+            onClick={() => setTimeRange(60)}
+            className={`px-3 py-1.5 text-sm rounded-md transition-colors ${timeRange === 60
+              ? 'bg-brand-orange text-white'
+              : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+              }`}
+          >
+            60 Days
+          </button>
+          <button
+            onClick={() => setTimeRange(90)}
+            className={`px-3 py-1.5 text-sm rounded-md transition-colors ${timeRange === 90
+              ? 'bg-brand-orange text-white'
+              : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+              }`}
+          >
+            90 Days
+          </button>
+        </div>
+      </div>
+
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 hover:border-blue-500/40 transition-colors">
@@ -184,11 +248,64 @@ export function AnalyticsDashboard() {
         </Card>
       </div>
 
+      {/* Additional Metrics Row */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs font-medium">Avg Session</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {Math.floor(metrics.summary.avgSessionDuration / 60000)}m {Math.floor((metrics.summary.avgSessionDuration % 60000) / 1000)}s
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Average time per session</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs font-medium">Bounce Rate</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics.summary.bounceRate}%</div>
+            <p className="text-xs text-muted-foreground mt-1">Single page sessions</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs font-medium">New Users</CardTitle>
+            <Users className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{metrics.summary.newUsers.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground mt-1">First time visitors</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs font-medium">Returning Users</CardTitle>
+            <Users className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{metrics.summary.returningUsers.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {metrics.summary.returningUsers + metrics.summary.newUsers > 0
+                ? Math.round((metrics.summary.returningUsers / (metrics.summary.returningUsers + metrics.summary.newUsers)) * 100)
+                : 0}% return rate
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Activity Timeline - Full Width */}
       <Card>
         <CardHeader>
           <CardTitle>Activity Timeline</CardTitle>
-          <CardDescription>Daily page views, sessions, and users over the last 30 days</CardDescription>
+          <CardDescription>Daily page views, sessions, and users over the last {timeRange} days</CardDescription>
         </CardHeader>
         <CardContent>
           {metrics.timeline && metrics.timeline.length > 0 ? (
@@ -198,81 +315,140 @@ export function AnalyticsDashboard() {
                 <span>Last {metrics.timeline.length} days</span>
                 <span>Total: {metrics.timeline.reduce((sum, d) => sum + d.pageViews, 0).toLocaleString()} views</span>
               </div>
-              
+
               {/* Line chart */}
               <div className="relative h-64">
-                <svg className="w-full h-full" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="rgb(249, 115, 22)" stopOpacity="0.3" />
-                      <stop offset="100%" stopColor="rgb(249, 115, 22)" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  {(() => {
-                    const maxValue = Math.max(...metrics.timeline.map(d => d.pageViews), 1)
-                    const width = 100 / (metrics.timeline.length - 1 || 1)
-                    
-                    // Create path data for line
-                    const pathData = metrics.timeline.map((day, index) => {
-                      const x = index * width
-                      const y = 100 - (day.pageViews / maxValue) * 100
-                      return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`
-                    }).join(' ')
-                    
-                    // Create area fill path
-                    const areaData = `${pathData} L 100 100 L 0 100 Z`
-                    
-                    return (
-                      <>
-                        {/* Filled area under line */}
-                        <path
-                          d={areaData}
-                          fill="url(#lineGradient)"
-                          vectorEffect="non-scaling-stroke"
-                        />
-                        {/* Line */}
-                        <path
-                          d={pathData}
-                          fill="none"
-                          stroke="rgb(249, 115, 22)"
-                          strokeWidth="2"
-                          vectorEffect="non-scaling-stroke"
-                        />
-                      </>
-                    )
-                  })()}
-                </svg>
-                
-                {/* Hover points overlay */}
-                <div className="absolute inset-0 flex items-end">
-                  {metrics.timeline.map((day, index) => {
-                    const maxValue = Math.max(...metrics.timeline.map(d => d.pageViews), 1)
-                    const heightPercent = (day.pageViews / maxValue) * 100
-                    
-                    return (
-                      <div key={index} className="flex-1 flex flex-col items-center h-full justify-end" style={{ paddingBottom: `${heightPercent}%` }}>
-                        <div className="relative group">
-                          <div className="w-2 h-2 rounded-full bg-orange-500 border-2 border-white cursor-pointer transform transition-transform hover:scale-150" />
-                          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 border border-gray-700">
-                            <div className="font-semibold">{new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
-                            <div className="text-orange-400">{day.pageViews} views</div>
-                            <div className="text-purple-400">{day.sessions} sessions</div>
-                            <div className="text-green-400">{day.users} users</div>
+                {(() => {
+                  // Calculate global max across all metrics for consistent scaling
+                  const maxValue = Math.max(
+                    ...metrics.timeline.map(d => Math.max(d.pageViews, d.sessions, d.users)),
+                    1
+                  )
+
+                  // Create data points for all three metrics
+                  const pageViewPoints = metrics.timeline.map((day, index) => ({
+                    x: (index / Math.max(metrics.timeline.length - 1, 1)) * 100,
+                    y: 100 - (day.pageViews / maxValue) * 85,
+                    value: day.pageViews,
+                    date: day.date,
+                    sessions: day.sessions,
+                    users: day.users
+                  }))
+
+                  const sessionPoints = metrics.timeline.map((day, index) => ({
+                    x: (index / Math.max(metrics.timeline.length - 1, 1)) * 100,
+                    y: 100 - (day.sessions / maxValue) * 85,
+                    value: day.sessions
+                  }))
+
+                  const userPoints = metrics.timeline.map((day, index) => ({
+                    x: (index / Math.max(metrics.timeline.length - 1, 1)) * 100,
+                    y: 100 - (day.users / maxValue) * 85,
+                    value: day.users
+                  }))
+
+                  // Create path data for each metric
+                  const pageViewPath = pageViewPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
+                  const sessionPath = sessionPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
+                  const userPath = userPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
+
+                  const pageViewArea = `${pageViewPath} L 100 100 L 0 100 Z`
+
+                  return (
+                    <>
+                      <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                        <defs>
+                          <linearGradient id="orangeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="rgb(249, 115, 22)" stopOpacity="0.2" />
+                            <stop offset="100%" stopColor="rgb(249, 115, 22)" stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
+
+                        {/* Area fill for page views */}
+                        <path d={pageViewArea} fill="url(#orangeGradient)" />
+
+                        {/* Lines for all three metrics */}
+                        <path d={pageViewPath} fill="none" stroke="rgb(249, 115, 22)" strokeWidth="0.5" vectorEffect="non-scaling-stroke" />
+                        <path d={sessionPath} fill="none" stroke="rgb(168, 85, 247)" strokeWidth="0.5" vectorEffect="non-scaling-stroke" />
+                        <path d={userPath} fill="none" stroke="rgb(34, 197, 94)" strokeWidth="0.5" vectorEffect="non-scaling-stroke" />
+                      </svg>
+
+                      {/* Hover points overlay - Page Views (Orange) */}
+                      <div className="absolute inset-0">
+                        {pageViewPoints.map((point, index) => (
+                          <div
+                            key={`pv-${index}`}
+                            className="absolute group"
+                            style={{
+                              left: `${point.x}%`,
+                              top: `${point.y}%`,
+                              transform: 'translate(-50%, -50%)'
+                            }}
+                          >
+                            <div className="w-2 h-2 rounded-full bg-orange-500 border-2 border-white dark:border-gray-950 cursor-pointer transition-transform hover:scale-150" />
+                            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 border border-gray-700">
+                              <div className="font-semibold">{new Date(point.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                              <div className="text-orange-400">{point.value} views</div>
+                              <div className="text-purple-400">{point.sessions} sessions</div>
+                              <div className="text-green-400">{point.users} users</div>
+                            </div>
                           </div>
-                        </div>
+                        ))}
+
+                        {/* Sessions (Purple) */}
+                        {sessionPoints.map((point, index) => (
+                          <div
+                            key={`s-${index}`}
+                            className="absolute group"
+                            style={{
+                              left: `${point.x}%`,
+                              top: `${point.y}%`,
+                              transform: 'translate(-50%, -50%)'
+                            }}
+                          >
+                            <div className="w-2 h-2 rounded-full bg-purple-500 border-2 border-white dark:border-gray-950 cursor-pointer transition-transform hover:scale-150" />
+                            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 border border-gray-700">
+                              <div className="font-semibold">{new Date(pageViewPoints[index].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                              <div className="text-orange-400">{pageViewPoints[index].value} views</div>
+                              <div className="text-purple-400">{point.value} sessions</div>
+                              <div className="text-green-400">{pageViewPoints[index].users} users</div>
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* Users (Green) */}
+                        {userPoints.map((point, index) => (
+                          <div
+                            key={`u-${index}`}
+                            className="absolute group"
+                            style={{
+                              left: `${point.x}%`,
+                              top: `${point.y}%`,
+                              transform: 'translate(-50%, -50%)'
+                            }}
+                          >
+                            <div className="w-2 h-2 rounded-full bg-green-500 border-2 border-white dark:border-gray-950 cursor-pointer transition-transform hover:scale-150" />
+                            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 border border-gray-700">
+                              <div className="font-semibold">{new Date(pageViewPoints[index].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                              <div className="text-orange-400">{pageViewPoints[index].value} views</div>
+                              <div className="text-purple-400">{pageViewPoints[index].sessions} sessions</div>
+                              <div className="text-green-400">{point.value} users</div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    )
-                  })}
-                </div>
+                    </>
+                  )
+                })()}
               </div>
-              
+
               {/* X-axis labels */}
               <div className="flex justify-between text-xs text-gray-500">
                 {metrics.timeline.filter((_, index) => index % Math.ceil(metrics.timeline.length / 5) === 0).map((day, index) => (
                   <span key={index}>{new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                 ))}
               </div>
-              
+
               <div className="flex items-center justify-center gap-6 text-xs">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-orange-500 rounded" />
@@ -378,6 +554,192 @@ export function AnalyticsDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Device, Browser, OS Breakdown */}
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Device Types</CardTitle>
+            <CardDescription>Breakdown by device</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {metrics.deviceBreakdown.map((device) => {
+                const total = metrics.deviceBreakdown.reduce((sum, d) => sum + d.count, 0)
+                const percentage = total > 0 ? Math.round((device.count / total) * 100) : 0
+                return (
+                  <div key={device.device}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm capitalize flex items-center gap-2">
+                        {device.device === 'mobile' && <Smartphone className="h-4 w-4" />}
+                        {device.device === 'tablet' && <Tablet className="h-4 w-4" />}
+                        {device.device === 'desktop' && <Monitor className="h-4 w-4" />}
+                        {device.device}
+                      </span>
+                      <span className="text-sm font-medium">{percentage}%</span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div
+                        className="bg-brand-orange h-2 rounded-full transition-all"
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Browsers</CardTitle>
+            <CardDescription>Browser usage</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {metrics.browserBreakdown.map((browser) => {
+                const total = metrics.browserBreakdown.reduce((sum, b) => sum + b.count, 0)
+                const percentage = total > 0 ? Math.round((browser.count / total) * 100) : 0
+                return (
+                  <div key={browser.browser} className="flex items-center justify-between">
+                    <span className="text-sm">{browser.browser}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-24 bg-muted rounded-full h-2">
+                        <div
+                          className="bg-blue-500 h-2 rounded-full"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium w-12 text-right">{percentage}%</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Operating Systems</CardTitle>
+            <CardDescription>OS distribution</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {metrics.osBreakdown.map((os) => {
+                const total = metrics.osBreakdown.reduce((sum, o) => sum + o.count, 0)
+                const percentage = total > 0 ? Math.round((os.count / total) * 100) : 0
+                return (
+                  <div key={os.os} className="flex items-center justify-between">
+                    <span className="text-sm">{os.os}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-24 bg-muted rounded-full h-2">
+                        <div
+                          className="bg-purple-500 h-2 rounded-full"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium w-12 text-right">{percentage}%</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Search Analytics & Peak Hours */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Top Search Queries</CardTitle>
+            <CardDescription>Most searched terms</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {metrics.searchAnalytics.slice(0, 20).map((search, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <span className="text-sm font-mono text-muted-foreground">{index + 1}</span>
+                    <span className="text-sm truncate">{search.query}</span>
+                    {search.hasNoResults && (
+                      <Badge variant="destructive" className="text-xs">0 results</Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">{search.searches} searches</Badge>
+                    {!search.hasNoResults && (
+                      <span className="text-xs text-muted-foreground">~{search.avgResults} results</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {metrics.searchAnalytics.length === 0 && (
+                <p className="text-sm text-muted-foreground">No search data yet</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Peak Activity Hours</CardTitle>
+            <CardDescription>Traffic by hour of day (UTC)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {metrics.peakHours.map((hour) => {
+                const maxEvents = Math.max(...metrics.peakHours.map(h => h.events), 1)
+                const percentage = (hour.events / maxEvents) * 100
+                return (
+                  <div key={hour.hour} className="flex items-center gap-2">
+                    <span className="text-xs font-mono w-12">{String(hour.hour).padStart(2, '0')}:00</span>
+                    <div className="flex-1 bg-muted rounded-full h-6 relative">
+                      <div
+                        className="bg-gradient-to-r from-orange-500 to-brand-orange h-6 rounded-full transition-all flex items-center justify-end pr-2"
+                        style={{ width: `${percentage}%` }}
+                      >
+                        {percentage > 15 && (
+                          <span className="text-xs font-medium text-white">{hour.events}</span>
+                        )}
+                      </div>
+                    </div>
+                    {percentage <= 15 && (
+                      <span className="text-xs text-muted-foreground w-12">{hour.events}</span>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Top Referrers */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Top Referrers</CardTitle>
+          <CardDescription>Where your traffic comes from</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 md:grid-cols-2">
+            {metrics.topReferrers.map((referrer, index) => (
+              <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <span className="text-sm truncate">{referrer.referrer}</span>
+                </div>
+                <Badge variant="secondary">{referrer.count.toLocaleString()}</Badge>
+              </div>
+            ))}
+            {metrics.topReferrers.length === 0 && (
+              <p className="text-sm text-muted-foreground col-span-2">No referrer data yet</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Realtime Events */}
       <Card >

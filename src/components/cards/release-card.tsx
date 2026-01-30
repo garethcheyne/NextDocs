@@ -4,7 +4,26 @@ import { Badge } from '@/components/ui/badge'
 import { CategoryBadge } from '@/components/badges/category-badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AnimatedCard } from '@/components/ui/animated-card'
-import { EnhancedMarkdown } from '@/components/markdown/enhanced-markdown'
+
+function stripMarkdown(md: string): string {
+    return md
+        .replace(/```[\s\S]*?```/g, '')       // fenced code blocks
+        .replace(/`([^`]*)`/g, '$1')           // inline code
+        .replace(/!\[[^\]]*\]\([^)]*\)/g, '')  // images
+        .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') // links → text
+        .replace(/^#{1,6}\s+/gm, '')           // headings
+        .replace(/(\*\*|__)(.*?)\1/g, '$2')    // bold
+        .replace(/(\*|_)(.*?)\1/g, '$2')       // italic
+        .replace(/~~(.*?)~~/g, '$1')           // strikethrough
+        .replace(/^\s*[-*+]\s+/gm, '')         // unordered lists
+        .replace(/^\s*\d+\.\s+/gm, '')         // ordered lists
+        .replace(/^\s*>/gm, '')                // blockquotes
+        .replace(/^---+$/gm, '')               // horizontal rules
+        .replace(/<[^>]+>/g, '')               // HTML tags
+        .replace(/\n{2,}/g, ' ')               // collapse multiple newlines
+        .replace(/\n/g, ' ')                   // remaining newlines → spaces
+        .trim()
+}
 
 interface Category {
     id: string
@@ -31,7 +50,6 @@ interface ReleaseCardProps {
         category: Category | null
         teams?: Team[]
     }
-    href?: string
     isNew?: boolean
     isExtended?: boolean
     isAnimated?: boolean
@@ -45,13 +63,13 @@ function formatDate(date: string | Date) {
     })
 }
 
-export function ReleaseCard({ release, href = '/releases', isNew = false, isExtended = false, isAnimated = false }: ReleaseCardProps) {
+export function ReleaseCard({ release, isNew = false, isExtended = false, isAnimated = false }: ReleaseCardProps) {
     const CardWrapper = isAnimated ? AnimatedCard : Card
-    const releaseHref = `/releases#${release.version}`
+    const releaseHref = `/releases/${release.id}`
 
     if (isExtended) {
         return (
-            <Link href={releaseHref} id={release.version}>
+            <Link href={releaseHref} className="block">
                 <CardWrapper 
                     className="hover:border-primary/50 transition-colors cursor-pointer"
                     isAnimated={isAnimated}
@@ -71,8 +89,8 @@ export function ReleaseCard({ release, href = '/releases', isNew = false, isExte
                             )}
                         </div>
                         
-                        <div className="prose prose-sm max-w-none dark:prose-invert mb-4">
-                            <EnhancedMarkdown>{release.content}</EnhancedMarkdown>
+                        <div className="text-sm text-muted-foreground mb-4 line-clamp-3">
+                            {stripMarkdown(release.content)}
                         </div>
                         
                         <div className="flex items-center flex-wrap gap-4 text-sm text-muted-foreground pt-3 border-t">
@@ -111,8 +129,8 @@ export function ReleaseCard({ release, href = '/releases', isNew = false, isExte
     }
 
     return (
-        <Link href={href}>
-            <CardWrapper 
+        <Link href={releaseHref}>
+            <CardWrapper
                 className="hover:border-green-500/50 transition-colors cursor-pointer"
                 isAnimated={isAnimated}
                 decorativeIcon={<Megaphone className="w-32 h-32" />}
@@ -130,9 +148,9 @@ export function ReleaseCard({ release, href = '/releases', isNew = false, isExte
                             <Badge className="bg-green-500 text-white text-xs">NEW</Badge>
                         )}
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                        {release.content.slice(0, 150)}{release.content.length > 150 ? '...' : ''}
-                    </p>
+                    <div className="text-sm text-muted-foreground line-clamp-2">
+                        {stripMarkdown(release.content)}
+                    </div>
                     <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                         {release.category && (
                             <CategoryBadge category={release.category} />

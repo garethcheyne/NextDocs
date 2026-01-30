@@ -25,7 +25,7 @@ export default async function BlogsGuidePage() {
       ]}
       content={content}
     >
-      <EnhancedMarkdown>{content}</EnhancedMarkdown>
+      <EnhancedMarkdown contentType="documentation">{content}</EnhancedMarkdown>
     </ContentDetailLayout>
   )
 }

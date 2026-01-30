@@ -15,81 +15,81 @@ model User {
   lastName      String?
   email         String    @unique
   emailVerified DateTime?
-  password      String?   // Only for local accounts
+  password      String? // Only for local accounts
   image         String?
   role          String    @default("user") // user, admin, editor
-  provider      String?   // azuread, credentials
-  active        Boolean   @default(true)  // Account active status
+  provider      String? // azuread, credentials
+  active        Boolean   @default(true) // Account active status
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
-  pushSubscription Json?  // Web push subscription data
+
+  pushSubscription Json? // Web push subscription data
 
   // Email Notification Preferences
-  emailNotifications            Boolean   @default(true)  // Master toggle for all emails
-  notifyOnFeatureStatusChange   Boolean   @default(true)  // Status changes on followed features
-  notifyOnFeatureComment        Boolean   @default(true)  // Comments on followed features
-  notifyOnNewFeature            Boolean   @default(false) // All new feature submissions
-  notifyOnFeatureVote           Boolean   @default(false) // Votes on created features
-  
-  accounts      Account[]
-  sessions      Session[]
-  userGroups    UserGroup[]
-  repositories  Repository[] // Repositories created by user
-  ssoProviders  SSOProvider[] @relation("SSOProviderCreator")
-  apiSpecs      APISpec[] @relation("APISpecCreator")
-  
+  emailNotifications          Boolean @default(true) // Master toggle for all emails
+  notifyOnFeatureStatusChange Boolean @default(true) // Status changes on followed features
+  notifyOnFeatureComment      Boolean @default(true) // Comments on followed features
+  notifyOnNewFeature          Boolean @default(false) // All new feature submissions
+  notifyOnFeatureVote         Boolean @default(false) // Votes on created features
+
+  accounts     Account[]
+  sessions     Session[]
+  userGroups   UserGroup[]
+  repositories Repository[] // Repositories created by user
+  ssoProviders SSOProvider[] @relation("SSOProviderCreator")
+  apiSpecs     APISpec[]     @relation("APISpecCreator")
+
   // Feature Request Relations
-  featureRequests       FeatureRequest[] @relation("FeatureRequestCreator")
-  featureVotes          FeatureVote[] @relation("FeatureVotes")
-  featureComments       FeatureComment[] @relation("FeatureComments")
-  deletedComments       FeatureComment[] @relation("DeletedComments")
-  featureFollowers      FeatureFollower[] @relation("FeatureFollowers")
-  statusChanges         FeatureStatusHistory[] @relation("StatusChanges")
-  internalNotes         FeatureInternalNote[] @relation("InternalNotes")
-  featureMerges         FeatureMerge[] @relation("FeatureMerger")
-  
+  featureRequests  FeatureRequest[]       @relation("FeatureRequestCreator")
+  featureVotes     FeatureVote[]          @relation("FeatureVotes")
+  featureComments  FeatureComment[]       @relation("FeatureComments")
+  deletedComments  FeatureComment[]       @relation("DeletedComments")
+  featureFollowers FeatureFollower[]      @relation("FeatureFollowers")
+  statusChanges    FeatureStatusHistory[] @relation("StatusChanges")
+  internalNotes    FeatureInternalNote[]  @relation("InternalNotes")
+  featureMerges    FeatureMerge[]         @relation("FeatureMerger")
+
   // Content Engagement Relations
-  contentVotes          ContentVote[] @relation("ContentVotes")
-  contentFollows        ContentFollow[] @relation("ContentFollows")
-  
+  contentVotes   ContentVote[]   @relation("ContentVotes")
+  contentFollows ContentFollow[] @relation("ContentFollows")
+
   // Page Viewer Relations
-  pageViewers           PageViewer[] @relation("PageViewers")
-  
+  pageViewers PageViewer[] @relation("PageViewers")
+
   // Analytics Relations
-  analyticsEvents       AnalyticsEvent[] @relation("AnalyticsEvents")
-  analyticsSessions     AnalyticsSession[] @relation("AnalyticsSessions")
-  
+  analyticsEvents   AnalyticsEvent[]   @relation("AnalyticsEvents")
+  analyticsSessions AnalyticsSession[] @relation("AnalyticsSessions")
+
   // Notification Settings
-  notificationSettings  UserNotificationSettings? @relation("UserNotificationSettings")
-  
+  notificationSettings UserNotificationSettings? @relation("UserNotificationSettings")
+
   // API Key Relations
-  apiKeys               APIKey[] @relation("UserAPIKeys")
+  apiKeys APIKey[] @relation("UserAPIKeys")
 
   // Team Membership Relations
-  teamMemberships       UserTeamMembership[] @relation("UserTeamMemberships")
+  teamMemberships UserTeamMembership[] @relation("UserTeamMemberships")
 
   // Release Relations
-  createdReleases       Release[] @relation("UserReleases")
+  createdReleases Release[] @relation("UserReleases")
 }
 
 model APIKey {
-  id          String   @id @default(uuid())
-  name        String   // Required: Human readable name
-  description String?  // Optional: Why this token was created
-  keyHash     String   @unique // Hashed version of the 64-char token
-  keyPreview  String   // First 8 chars for display (e.g., "abc12345...")
-  permissions String   @default("read") // "read" or "write"
+  id          String    @id @default(uuid())
+  name        String // Required: Human readable name
+  description String? // Optional: Why this token was created
+  keyHash     String    @unique // Hashed version of the 64-char token
+  keyPreview  String // First 8 chars for display (e.g., "abc12345...")
+  permissions String    @default("read") // "read" or "write"
   expiresAt   DateTime // Required expiry date
   lastUsedAt  DateTime? // Track when key was last used
-  isActive    Boolean  @default(true) // Can be deactivated without deletion
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  isActive    Boolean   @default(true) // Can be deactivated without deletion
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
   // Relations
   createdById String
-  createdBy   User     @relation("UserAPIKeys", fields: [createdById], references: [id], onDelete: Cascade)
-  
+  createdBy   User   @relation("UserAPIKeys", fields: [createdById], references: [id], onDelete: Cascade)
+
   @@index([keyHash])
   @@index([createdById])
   @@index([expiresAt])
@@ -97,20 +97,20 @@ model APIKey {
 }
 
 model Author {
-  id            String    @id @default(uuid())
-  email         String    @unique // Primary key for cross-repo identification
-  name          String
-  title         String?
-  bio           String?
-  avatar        String?
-  linkedin      String?
-  github        String?
-  website       String?
-  location      String?
-  joinedDate    DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
+  id         String    @id @default(uuid())
+  email      String    @unique // Primary key for cross-repo identification
+  name       String
+  title      String?
+  bio        String?
+  avatar     String?
+  linkedin   String?
+  github     String?
+  website    String?
+  location   String?
+  joinedDate DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
   @@index([email])
 }
 
@@ -127,9 +127,9 @@ model Account {
   scope             String?
   id_token          String? @db.Text
   session_state     String?
-  
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([provider, providerAccountId])
 }
 
@@ -145,7 +145,7 @@ model VerificationToken {
   identifier String
   token      String   @unique
   expires    DateTime
-  
+
   @@unique([identifier, token])
 }
 
@@ -154,211 +154,211 @@ model UserGroup {
   userId      String
   groupName   String
   lastUpdated DateTime @default(now())
-  
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, groupName])
   @@index([userId])
 }
 
 model Repository {
-  id              String    @id @default(uuid())
-  name            String
-  slug            String    @unique
-  description     String?
-  source          String    // 'github' or 'azure'
-  
+  id          String  @id @default(uuid())
+  name        String
+  slug        String  @unique
+  description String?
+  source      String // 'github' or 'azure'
+
   // Azure DevOps
-  organization    String?
-  project         String?
-  repositoryId    String?
-  
+  organization String?
+  project      String?
+  repositoryId String?
+
   // GitHub
-  owner           String?
-  repo            String?
-  
+  owner String?
+  repo  String?
+
   // Common
-  branch          String    @default("main")
-  basePath        String    @default("/")
-  
+  branch   String @default("main")
+  basePath String @default("/")
+
   // Encrypted credentials
-  patEncrypted    String?   @db.Text // Encrypted PAT
-  
+  patEncrypted String? @db.Text // Encrypted PAT
+
   // Sync settings
-  enabled         Boolean   @default(true)
-  syncFrequency   Int       @default(3600) // Seconds
-  syncImages      Boolean   @default(false) // Sync images to /public/img/
-  lastSyncAt      DateTime?
-  lastSyncStatus  String?   // 'success', 'failed', 'in_progress'
-  
+  enabled        Boolean   @default(true)
+  syncFrequency  Int       @default(3600) // Seconds
+  syncImages     Boolean   @default(false) // Sync images to /public/img/
+  lastSyncAt     DateTime?
+  lastSyncStatus String? // 'success', 'failed', 'in_progress'
+
   // Webhook
-  webhookSecret   String?
-  webhookEnabled  Boolean   @default(false)
-  
+  webhookSecret  String?
+  webhookEnabled Boolean @default(false)
+
   // Metadata
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  createdBy       String
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+
   // Relations
-  creator         User      @relation(fields: [createdBy], references: [id])
-  syncLogs        SyncLog[]
-  webhookEvents   WebhookEvent[]
-  apiSpecs        APISpec[]
-  documents       Document[]
-  blogPosts       BlogPost[]
+  creator          User               @relation(fields: [createdBy], references: [id])
+  syncLogs         SyncLog[]
+  webhookEvents    WebhookEvent[]
+  apiSpecs         APISpec[]
+  documents        Document[]
+  blogPosts        BlogPost[]
   categoryMetadata CategoryMetadata[]
-  images          RepositoryImage[]
-  
+  images           RepositoryImage[]
+
   @@index([enabled])
   @@index([source])
 }
 
 model SyncLog {
-  id            String    @id @default(uuid())
-  repositoryId  String
-  status        String    // 'success', 'failed', 'partial'
-  filesChanged  Int       @default(0)
-  filesAdded    Int       @default(0)
-  filesDeleted  Int       @default(0)
-  error         String?   @db.Text
-  startedAt     DateTime  @default(now())
-  completedAt   DateTime?
-  duration      Int?      // Milliseconds
-  
-  repository    Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
-  changes       DocumentChange[]
-  
+  id           String    @id @default(uuid())
+  repositoryId String
+  status       String // 'success', 'failed', 'partial'
+  filesChanged Int       @default(0)
+  filesAdded   Int       @default(0)
+  filesDeleted Int       @default(0)
+  error        String?   @db.Text
+  startedAt    DateTime  @default(now())
+  completedAt  DateTime?
+  duration     Int? // Milliseconds
+
+  repository Repository       @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  changes    DocumentChange[]
+
   @@index([repositoryId])
   @@index([status])
   @@index([startedAt])
 }
 
 model DocumentChange {
-  id            String    @id @default(uuid())
-  syncLogId     String
-  changeType    String    // 'added', 'modified', 'deleted'
-  documentType  String    // 'document' or 'blog'
-  filePath      String
-  title         String
-  
+  id           String @id @default(uuid())
+  syncLogId    String
+  changeType   String // 'added', 'modified', 'deleted'
+  documentType String // 'document' or 'blog'
+  filePath     String
+  title        String
+
   // Store old and new content hashes for modified files
-  oldHash       String?
-  newHash       String?
-  
+  oldHash String?
+  newHash String?
+
   // Content diff summary
-  linesAdded    Int       @default(0)
-  linesRemoved  Int       @default(0)
-  
-  createdAt     DateTime  @default(now())
-  
-  syncLog       SyncLog   @relation(fields: [syncLogId], references: [id], onDelete: Cascade)
-  
+  linesAdded   Int @default(0)
+  linesRemoved Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  syncLog SyncLog @relation(fields: [syncLogId], references: [id], onDelete: Cascade)
+
   @@index([syncLogId])
   @@index([changeType])
   @@index([documentType])
 }
 
 model CategoryMetadata {
-  id            String    @id @default(uuid())
-  repositoryId  String
-  categorySlug  String    // e.g., "dynamics-365-bc" or "eway/payment-methods"
-  title         String    // e.g., "Dynamics 365 BC"
-  icon          String?   // Lucide icon name
-  description   String?   @db.Text
-  order         Int       @default(0)
-  parentSlug    String?   // Parent category slug for hierarchical navigation
-  level         Int       @default(0) // 0 = root, 1 = first level, etc.
-  
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  repository    Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
-  
+  id           String  @id @default(uuid())
+  repositoryId String
+  categorySlug String // e.g., "dynamics-365-bc" or "eway/payment-methods"
+  title        String // e.g., "Dynamics 365 BC"
+  icon         String? // Lucide icon name
+  description  String? @db.Text
+  order        Int     @default(0)
+  parentSlug   String? // Parent category slug for hierarchical navigation
+  level        Int     @default(0) // 0 = root, 1 = first level, etc.
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
   @@unique([repositoryId, categorySlug])
   @@index([repositoryId])
   @@index([parentSlug])
 }
 
 model WebhookEvent {
-  id            String     @id @default(uuid())
-  repositoryId  String
-  eventType     String     // 'push', 'pull_request', etc.
-  payload       String     @db.Text // JSON payload
-  signature     String?
-  verified      Boolean    @default(false)
-  processed     Boolean    @default(false)
-  createdAt     DateTime   @default(now())
-  processedAt   DateTime?
-  
-  repository    Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
-  
+  id           String    @id @default(uuid())
+  repositoryId String
+  eventType    String // 'push', 'pull_request', etc.
+  payload      String    @db.Text // JSON payload
+  signature    String?
+  verified     Boolean   @default(false)
+  processed    Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  processedAt  DateTime?
+
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
   @@index([repositoryId])
   @@index([processed])
   @@index([createdAt])
 }
 
 model SSOProvider {
-  id                      String    @id @default(uuid())
-  name                    String    // Display name (e.g., "Azure AD", "Google Workspace")
-  slug                    String    @unique // URL-friendly identifier
-  provider                String    // 'azure-ad', 'google', 'okta', 'github'
-  enabled                 Boolean   @default(true)
-  
+  id       String  @id @default(uuid())
+  name     String // Display name (e.g., "Azure AD", "Google Workspace")
+  slug     String  @unique // URL-friendly identifier
+  provider String // 'azure-ad', 'google', 'okta', 'github'
+  enabled  Boolean @default(true)
+
   // OAuth Configuration (encrypted)
-  clientIdEncrypted       String    @db.Text
-  clientSecretEncrypted   String    @db.Text
-  tenantId                String?   // For Azure AD
-  
+  clientIdEncrypted     String  @db.Text
+  clientSecretEncrypted String  @db.Text
+  tenantId              String? // For Azure AD
+
   // Access Control
-  domainRestriction       String?   // Comma-separated allowed domains
-  roleMapping             String?   @db.Text // JSON mapping of provider roles to app roles
-  
+  domainRestriction String? // Comma-separated allowed domains
+  roleMapping       String? @db.Text // JSON mapping of provider roles to app roles
+
   // Metadata
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-  createdBy               String    // User ID who configured
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String // User ID who configured
+
   // Relations
-  creator                 User      @relation("SSOProviderCreator", fields: [createdBy], references: [id])
-  
+  creator User @relation("SSOProviderCreator", fields: [createdBy], references: [id])
+
   @@index([enabled])
   @@index([provider])
 }
 
 model APISpec {
-  id              String    @id @default(uuid())
-  name            String    // API name (e.g., "NextDocs API")
-  slug            String    // URL-friendly identifier (not unique - multiple versions)
-  description     String?   @db.Text
-  version         String    // e.g., "1.0.0"
-  specPath        String    // Path to spec file in repository
-  specContent     String    @default("") @db.Text // Actual YAML/JSON content
-  renderer        String    @default("swagger-ui") // 'swagger-ui' or 'redoc'
-  category        String?   // Optional categorization
-  enabled         Boolean   @default(true)
-  
+  id          String  @id @default(uuid())
+  name        String // API name (e.g., "NextDocs API")
+  slug        String // URL-friendly identifier (not unique - multiple versions)
+  description String? @db.Text
+  version     String // e.g., "1.0.0"
+  specPath    String // Path to spec file in repository
+  specContent String  @default("") @db.Text // Actual YAML/JSON content
+  renderer    String  @default("swagger-ui") // 'swagger-ui' or 'redoc'
+  category    String? // Optional categorization
+  enabled     Boolean @default(true)
+
   // Repository integration (optional)
-  repositoryId    String?
-  filePath        String?   // Path within repository
-  
+  repositoryId String?
+  filePath     String? // Path within repository
+
   // Auto-sync configuration
-  autoSync        Boolean   @default(false)
-  syncFrequency   Int       @default(3600) // Seconds between syncs
-  lastSyncAt      DateTime?
-  
+  autoSync      Boolean   @default(false)
+  syncFrequency Int       @default(3600) // Seconds between syncs
+  lastSyncAt    DateTime?
+
   // Metadata
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  createdBy       String    // User ID who created
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String // User ID who created
+
   // Search
-  searchVector    Unsupported("tsvector")? // For full-text search
-  
+  searchVector Unsupported("tsvector")? // For full-text search
+
   // Relations
-  repository      Repository? @relation(fields: [repositoryId], references: [id], onDelete: SetNull)
-  creator         User      @relation("APISpecCreator", fields: [createdBy], references: [id])
-  
+  repository Repository? @relation(fields: [repositoryId], references: [id], onDelete: SetNull)
+  creator    User        @relation("APISpecCreator", fields: [createdBy], references: [id])
+
   @@unique([slug, version]) // Allow multiple versions of same API
   @@index([enabled])
   @@index([category])
@@ -366,40 +366,40 @@ model APISpec {
 }
 
 model Document {
-  id              String    @id @default(uuid())
-  repositoryId    String
-  
+  id           String @id @default(uuid())
+  repositoryId String
+
   // File information
-  filePath        String    // Path in repository (e.g., /docs/getting-started.md)
-  fileName        String    // File name
-  title           String    // Extracted from frontmatter or filename
-  slug            String    // URL-friendly path
-  
+  filePath String // Path in repository (e.g., /docs/getting-started.md)
+  fileName String // File name
+  title    String // Extracted from frontmatter or filename
+  slug     String // URL-friendly path
+
   // Content
-  content         String    @db.Text // Full markdown content
-  excerpt         String?   @db.Text // Summary/description
-  
+  content String  @db.Text // Full markdown content
+  excerpt String? @db.Text // Summary/description
+
   // Frontmatter metadata
-  category        String?
-  tags            String[]  @default([])
-  author          String?   // Author name or email
-  publishedAt     DateTime?
-  updatedAt       DateTime  @updatedAt
-  
+  category    String?
+  tags        String[]  @default([])
+  author      String? // Author name or email
+  publishedAt DateTime?
+  updatedAt   DateTime  @updatedAt
+
   // Access control
-  restricted      Boolean   @default(false) // Whether content is restricted
-  restrictedRoles String[]  @default([])    // Roles that can access restricted content
-  
+  restricted      Boolean  @default(false) // Whether content is restricted
+  restrictedRoles String[] @default([]) // Roles that can access restricted content
+
   // Search optimization
-  searchVector    Unsupported("tsvector")? // For full-text search
-  
+  searchVector Unsupported("tsvector")? // For full-text search
+
   // Sync metadata
-  sourceHash      String    // SHA hash of source content
-  lastSyncedAt    DateTime  @default(now())
-  
+  sourceHash   String // SHA hash of source content
+  lastSyncedAt DateTime @default(now())
+
   // Relations
-  repository      Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
-  
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
   @@unique([repositoryId, filePath])
   @@index([repositoryId])
   @@index([slug])
@@ -408,47 +408,47 @@ model Document {
 }
 
 model BlogPost {
-  id              String    @id @default(uuid())
-  repositoryId    String
-  
+  id           String @id @default(uuid())
+  repositoryId String
+
   // File information
-  filePath        String    // Path in repository (e.g., /blog/2025/02/product-locks.md)
-  fileName        String
-  title           String
-  slug            String    // URL-friendly
-  
+  filePath String // Path in repository (e.g., /blog/2025/02/product-locks.md)
+  fileName String
+  title    String
+  slug     String // URL-friendly
+
   // Content
-  content         String    @db.Text
-  excerpt         String?   @db.Text
-  featuredImage   String?
-  
+  content       String  @db.Text
+  excerpt       String? @db.Text
+  featuredImage String?
+
   // Frontmatter metadata
-  author          String?   // Author name or email
-  authorId        String?   // Link to Author model if exists
-  category        String?
-  tags            String[]  @default([])
-  publishedAt     DateTime?
-  isDraft         Boolean   @default(false)
-  
+  author      String? // Author name or email
+  authorId    String? // Link to Author model if exists
+  category    String?
+  tags        String[]  @default([])
+  publishedAt DateTime?
+  isDraft     Boolean   @default(false)
+
   // Engagement (for future use)
-  views           Int       @default(0)
-  
+  views Int @default(0)
+
   // Access control
-  restricted      Boolean   @default(false) // Whether content is restricted
-  restrictedRoles String[]  @default([])    // Roles that can access restricted content
-  
+  restricted      Boolean  @default(false) // Whether content is restricted
+  restrictedRoles String[] @default([]) // Roles that can access restricted content
+
   // Search optimization
-  searchVector    Unsupported("tsvector")? // For full-text search
-  
+  searchVector Unsupported("tsvector")? // For full-text search
+
   // Sync metadata
-  sourceHash      String
-  lastSyncedAt    DateTime  @default(now())
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
+  sourceHash   String
+  lastSyncedAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
   // Relations
-  repository      Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
-  
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
   @@unique([repositoryId, filePath])
   @@index([repositoryId])
   @@index([slug])
@@ -460,32 +460,32 @@ model BlogPost {
 // Content Engagement Models
 
 model ContentVote {
-  id              String    @id @default(uuid())
-  userId          String
-  contentType     String    // 'document' or 'blogpost'
-  contentId       String    // ID of Document or BlogPost
-  voteType        String    // 'up' or 'down'
-  createdAt       DateTime  @default(now())
-  
+  id          String   @id @default(uuid())
+  userId      String
+  contentType String // 'document' or 'blogpost'
+  contentId   String // ID of Document or BlogPost
+  voteType    String // 'up' or 'down'
+  createdAt   DateTime @default(now())
+
   // Relations
-  user            User      @relation("ContentVotes", fields: [userId], references: [id], onDelete: Cascade)
-  
+  user User @relation("ContentVotes", fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, contentType, contentId])
   @@index([contentType, contentId])
   @@index([userId])
 }
 
 model ContentFollow {
-  id              String    @id @default(uuid())
-  userId          String
-  contentType     String    // 'document' or 'blogpost'
-  contentId       String    // ID of Document or BlogPost
-  createdAt       DateTime  @default(now())
-  lastNotifiedAt  DateTime?
-  
+  id             String    @id @default(uuid())
+  userId         String
+  contentType    String // 'document' or 'blogpost'
+  contentId      String // ID of Document or BlogPost
+  createdAt      DateTime  @default(now())
+  lastNotifiedAt DateTime?
+
   // Relations
-  user            User      @relation("ContentFollows", fields: [userId], references: [id], onDelete: Cascade)
-  
+  user User @relation("ContentFollows", fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, contentType, contentId])
   @@index([contentType, contentId])
   @@index([userId])
@@ -494,41 +494,41 @@ model ContentFollow {
 // Feature Request System Models
 
 model FeatureCategory {
-  id              String    @id @default(uuid())
-  name            String    @unique // e.g., "Dynamics 365 BC", "Dynamics 365 CE"
-  slug            String    @unique
-  description     String?   @db.Text
-  icon            String?   // Legacy Lucide icon name (deprecated)
-  iconBase64      String?   @db.Text // Base64 encoded icon (64x64 PNG)
-  color           String?   // Badge color (hex format)
-  order           Int       @default(0)
-  
+  id          String  @id @default(uuid())
+  name        String  @unique // e.g., "Dynamics 365 BC", "Dynamics 365 CE"
+  slug        String  @unique
+  description String? @db.Text
+  icon        String? // Legacy Lucide icon name (deprecated)
+  iconBase64  String? @db.Text // Base64 encoded icon (64x64 PNG)
+  color       String? // Badge color (hex format)
+  order       Int     @default(0)
+
   // Integration settings
-  integrationType String?   // 'github', 'azure-devops', null
-  
+  integrationType String? // 'github', 'azure-devops', null
+
   // GitHub specific (OAuth handled by service worker)
-  githubOwner     String?
-  githubRepo      String?
-  
+  githubOwner String?
+  githubRepo  String?
+
   // Azure DevOps specific (OAuth handled by service worker)
-  devopsProject   String?   // Project name (org comes from DEVOPS_ORG_URL env var)
-  devopsAreaPath  String?   // Area path for work items
-  
+  devopsProject  String? // Project name (org comes from DEVOPS_ORG_URL env var)
+  devopsAreaPath String? // Area path for work items
+
   // Sync settings
-  syncComments         Boolean @default(true)  // Bi-directional comment sync
-  syncStatus           Boolean @default(true)  // Sync status changes
-  
+  syncComments Boolean @default(true) // Bi-directional comment sync
+  syncStatus   Boolean @default(true) // Sync status changes
+
   // Legacy fields (deprecated - kept for backwards compatibility)
-  integrationUrl  String?   // Repository URL or DevOps project URL (deprecated)
-  githubPat       String?   @db.Text // GitHub PAT (deprecated - use OAuth)
-  devopsOrg       String?   // DevOps org (deprecated - use DEVOPS_ORG_URL env var)
-  devopsPat       String?   @db.Text // Azure DevOps PAT (deprecated - use OAuth)
-  patEncrypted    String?   @db.Text // Legacy encrypted token (deprecated)
-  
-  enabled         Boolean   @default(true)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
+  integrationUrl String? // Repository URL or DevOps project URL (deprecated)
+  githubPat      String? @db.Text // GitHub PAT (deprecated - use OAuth)
+  devopsOrg      String? // DevOps org (deprecated - use DEVOPS_ORG_URL env var)
+  devopsPat      String? @db.Text // Azure DevOps PAT (deprecated - use OAuth)
+  patEncrypted   String? @db.Text // Legacy encrypted token (deprecated)
+
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations
   featureRequests FeatureRequest[]
   epics           Epic[]
@@ -540,84 +540,84 @@ model FeatureCategory {
 }
 
 model FeatureRequest {
-  id              String    @id @default(uuid())
-  title           String
-  slug            String    @unique
-  description     String    @db.Text
-  
+  id          String @id @default(uuid())
+  title       String
+  slug        String @unique
+  description String @db.Text
+
   // Status workflow
-  status          String    @default("proposal") // proposal, approved, declined, in-progress, completed, on-hold
-  priority        String?   // low, medium, high, critical
-  targetVersion   String?   // e.g., "v2.1.0"
-  expectedDate    DateTime? // Expected completion date
-  
+  status        String    @default("proposal") // proposal, approved, declined, in-progress, completed, on-hold
+  priority      String? // low, medium, high, critical
+  targetVersion String? // e.g., "v2.1.0"
+  expectedDate  DateTime? // Expected completion date
+
   // Admin Management
-  isPinned        Boolean   @default(false) // Highlight on main page
-  isArchived      Boolean   @default(false) // Hide from listings but keep history
-  commentsLocked  Boolean   @default(false) // Prevent further discussion
-  
+  isPinned       Boolean @default(false) // Highlight on main page
+  isArchived     Boolean @default(false) // Hide from listings but keep history
+  commentsLocked Boolean @default(false) // Prevent further discussion
+
   // User info
-  createdBy       String    // User ID
-  createdByName   String    // Cache for display
-  createdByEmail  String    // Cache for notifications
-  
+  createdBy      String // User ID
+  createdByName  String // Cache for display
+  createdByEmail String // Cache for notifications
+
   // Categorization
-  categoryId      String?   // Nullable to allow orphaned requests
-  epicId          String?   // Link to epic
-  tagIds          String[]  @default([]) // Array of tag IDs
-  
+  categoryId String? // Nullable to allow orphaned requests
+  epicId     String? // Link to epic
+  tagIds     String[] @default([]) // Array of tag IDs
+
   // DevOps metadata
-  storyPoints     Int?      // Effort estimation
-  sprint          String?   // Sprint/iteration name
-  assignedTo      String?   // Assigned developer/team
-  
+  storyPoints Int? // Effort estimation
+  sprint      String? // Sprint/iteration name
+  assignedTo  String? // Assigned developer/team
+
   // Search
-  searchVector    Unsupported("tsvector")? // For full-text search
-  
+  searchVector Unsupported("tsvector")? // For full-text search
+
   // Attachments
-  attachments     String[]  @default([]) // JSON array of file URLs
-  
+  attachments String[] @default([]) // JSON array of file URLs
+
   // Integration tracking
-  externalId      String?   // GitHub Issue # or DevOps Work Item ID
-  externalUrl     String?   // Direct link to external item
-  externalType    String?   // 'github' or 'azure-devops'
-  syncEnabled     Boolean   @default(false)
-  lastSyncAt      DateTime?
-  syncStatus      String?   // 'not_synced', 'syncing', 'synced', 'error'
-  syncError       String?   @db.Text // Last sync error message
-  
+  externalId   String? // GitHub Issue # or DevOps Work Item ID
+  externalUrl  String? // Direct link to external item
+  externalType String? // 'github' or 'azure-devops'
+  syncEnabled  Boolean   @default(false)
+  lastSyncAt   DateTime?
+  syncStatus   String? // 'not_synced', 'syncing', 'synced', 'error'
+  syncError    String?   @db.Text // Last sync error message
+
   // Two-way sync tracking
   localUpdatedAt    DateTime  @updatedAt // Last update in The Hive
   externalUpdatedAt DateTime? // Last known update in external system
   lastSyncedTitle   String?   @db.Text // Last synced title for conflict detection
   lastSyncedDesc    String?   @db.Text // Last synced description for conflict detection
   syncConflict      Boolean   @default(false) // True if both sides changed
-  
+
   // Engagement metrics (denormalized for performance)
-  voteCount       Int       @default(0)
-  commentCount    Int       @default(0)
-  followerCount   Int       @default(0)
-  
+  voteCount     Int @default(0)
+  commentCount  Int @default(0)
+  followerCount Int @default(0)
+
   // Metadata
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  lastActivityAt  DateTime  @default(now()) // For sorting by activity
-  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  lastActivityAt DateTime @default(now()) // For sorting by activity
+
   // Relations
-  creator         User      @relation("FeatureRequestCreator", fields: [createdBy], references: [id])
-  category        FeatureCategory? @relation(fields: [categoryId], references: [id])
-  epic            Epic?     @relation(fields: [epicId], references: [id])
-  votes           FeatureVote[]
-  comments        FeatureComment[]
-  followers       FeatureFollower[]
-  statusHistory   FeatureStatusHistory[]
-  internalNotes   FeatureInternalNote[] // Admin-only notes
-  mergedInto      FeatureRequest? @relation("MergedRequests", fields: [mergedIntoId], references: [id])
-  mergedIntoId    String?
-  mergedRequests  FeatureRequest[] @relation("MergedRequests")
-  parentMerges    FeatureMerge[] @relation("ParentMerges")
-  childMerges     FeatureMerge[] @relation("ChildMerges")
-  releases        Release[]      @relation("ReleaseFeatures")
+  creator        User                   @relation("FeatureRequestCreator", fields: [createdBy], references: [id])
+  category       FeatureCategory?       @relation(fields: [categoryId], references: [id])
+  epic           Epic?                  @relation(fields: [epicId], references: [id])
+  votes          FeatureVote[]
+  comments       FeatureComment[]
+  followers      FeatureFollower[]
+  statusHistory  FeatureStatusHistory[]
+  internalNotes  FeatureInternalNote[] // Admin-only notes
+  mergedInto     FeatureRequest?        @relation("MergedRequests", fields: [mergedIntoId], references: [id])
+  mergedIntoId   String?
+  mergedRequests FeatureRequest[]       @relation("MergedRequests")
+  parentMerges   FeatureMerge[]         @relation("ParentMerges")
+  childMerges    FeatureMerge[]         @relation("ChildMerges")
+  releases       Release[]              @relation("ReleaseFeatures")
 
   @@index([status])
   @@index([categoryId])
@@ -631,47 +631,47 @@ model FeatureRequest {
 }
 
 model FeatureVote {
-  id              String    @id @default(uuid())
-  featureId       String
-  userId          String
-  voteType        Int       // +1 (upvote) or -1 (downvote)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  feature         FeatureRequest @relation(fields: [featureId], references: [id], onDelete: Cascade)
-  user            User      @relation("FeatureVotes", fields: [userId], references: [id], onDelete: Cascade)
-  
+  id        String   @id @default(uuid())
+  featureId String
+  userId    String
+  voteType  Int // +1 (upvote) or -1 (downvote)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  feature FeatureRequest @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  user    User           @relation("FeatureVotes", fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([featureId, userId]) // One vote per user per feature
   @@index([featureId])
   @@index([userId])
 }
 
 model FeatureComment {
-  id              String    @id @default(uuid())
-  featureId       String
-  userId          String
-  content         String    @db.Text
-  
+  id        String @id @default(uuid())
+  featureId String
+  userId    String
+  content   String @db.Text
+
   // Threading support (flat for now, can add nested later)
-  parentId        String?   // For future nested replies
-  
+  parentId String? // For future nested replies
+
   // Moderation
-  isDeleted       Boolean   @default(false)
-  deletedAt       DateTime?
-  deletedBy       String?   // Admin who deleted it
-  
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String? // Admin who deleted it
+
   // External sync tracking
   externalCommentId String? // DevOps or GitHub comment ID
   externalSource    String? // 'azure-devops', 'github', 'nextdocs'
-  
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  feature         FeatureRequest @relation(fields: [featureId], references: [id], onDelete: Cascade)
-  user            User      @relation("FeatureComments", fields: [userId], references: [id])
-  deletedByUser   User?     @relation("DeletedComments", fields: [deletedBy], references: [id])
-  commentSync     CommentSync?
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  feature       FeatureRequest @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  user          User           @relation("FeatureComments", fields: [userId], references: [id])
+  deletedByUser User?          @relation("DeletedComments", fields: [deletedBy], references: [id])
+  commentSync   CommentSync?
+
   @@index([featureId])
   @@index([userId])
   @@index([createdAt])
@@ -679,82 +679,82 @@ model FeatureComment {
 }
 
 model FeatureFollower {
-  id              String    @id @default(uuid())
-  featureId       String
-  userId          String
-  
+  id        String @id @default(uuid())
+  featureId String
+  userId    String
+
   // Notification preferences
-  notifyOnComment Boolean   @default(true)
-  notifyOnStatus  Boolean   @default(true)
-  notifyOnUpdate  Boolean   @default(true)
-  
-  createdAt       DateTime  @default(now())
-  
-  feature         FeatureRequest @relation(fields: [featureId], references: [id], onDelete: Cascade)
-  user            User      @relation("FeatureFollowers", fields: [userId], references: [id], onDelete: Cascade)
-  
+  notifyOnComment Boolean @default(true)
+  notifyOnStatus  Boolean @default(true)
+  notifyOnUpdate  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+
+  feature FeatureRequest @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  user    User           @relation("FeatureFollowers", fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([featureId, userId])
   @@index([userId])
 }
 
 model FeatureStatusHistory {
-  id              String    @id @default(uuid())
-  featureId       String
-  oldStatus       String?
-  newStatus       String
-  changedBy       String    // Admin user ID
-  reason          String?   @db.Text // Optional reason for change
-  createdAt       DateTime  @default(now())
-  
-  feature         FeatureRequest @relation(fields: [featureId], references: [id], onDelete: Cascade)
-  user            User      @relation("StatusChanges", fields: [changedBy], references: [id])
-  
+  id        String   @id @default(uuid())
+  featureId String
+  oldStatus String?
+  newStatus String
+  changedBy String // Admin user ID
+  reason    String?  @db.Text // Optional reason for change
+  createdAt DateTime @default(now())
+
+  feature FeatureRequest @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  user    User           @relation("StatusChanges", fields: [changedBy], references: [id])
+
   @@index([featureId])
   @@index([createdAt])
 }
 
 model Epic {
-  id              String    @id @default(uuid())
-  title           String
-  description     String?   @db.Text
-  categoryId      String
-  
+  id          String  @id @default(uuid())
+  title       String
+  description String? @db.Text
+  categoryId  String
+
   // Timeline
-  startDate       DateTime?
-  endDate         DateTime?
-  
+  startDate DateTime?
+  endDate   DateTime?
+
   // Status
-  status          String    @default("planned") // planned, in-progress, completed, cancelled
-  
+  status String @default("planned") // planned, in-progress, completed, cancelled
+
   // External tracking
-  externalId      String?   // DevOps Epic ID or GitHub Milestone ID
-  externalUrl     String?
-  
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  category        FeatureCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  features        FeatureRequest[]
-  
+  externalId  String? // DevOps Epic ID or GitHub Milestone ID
+  externalUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  category FeatureCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  features FeatureRequest[]
+
   @@index([categoryId])
   @@index([status])
 }
 
 model Tag {
-  id          String   @id @default(uuid())
-  name        String
-  color       String   @default("#3b82f6") // Tailwind blue-500
-  categoryId  String
-  
+  id         String @id @default(uuid())
+  name       String
+  color      String @default("#3b82f6") // Tailwind blue-500
+  categoryId String
+
   // External mapping
-  githubLabel     String?  // GitHub label name
-  devopsTag       String?  // Azure DevOps tag name
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  category    FeatureCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  
+  githubLabel String? // GitHub label name
+  devopsTag   String? // Azure DevOps tag name
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  category FeatureCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
   @@unique([name, categoryId])
   @@index([categoryId])
 }
@@ -762,58 +762,58 @@ model Tag {
 model CommentSync {
   id                String   @id @default(uuid())
   commentId         String   @unique
-  externalCommentId String   // DevOps comment ID or GitHub comment ID
-  externalType      String   // 'azure-devops' or 'github'
+  externalCommentId String // DevOps comment ID or GitHub comment ID
+  externalType      String // 'azure-devops' or 'github'
   lastSyncedAt      DateTime @default(now())
-  syncDirection     String   // 'to-external', 'from-external', 'bidirectional'
-  
-  comment           FeatureComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  
+  syncDirection     String // 'to-external', 'from-external', 'bidirectional'
+
+  comment FeatureComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
   @@index([externalCommentId])
   @@index([lastSyncedAt])
 }
 
 model EmailQueue {
-  id              String    @id @default(uuid())
-  to              String[]  // Array of email addresses
-  subject         String
-  body            String    @db.Text
-  htmlBody        String?   @db.Text
-  
+  id       String   @id @default(uuid())
+  to       String[] // Array of email addresses
+  subject  String
+  body     String   @db.Text
+  htmlBody String?  @db.Text
+
   // Metadata
-  emailType       String    // 'feature_created', 'comment_added', 'status_changed'
-  relatedId       String?   // Feature request ID
-  
+  emailType String // 'feature_created', 'comment_added', 'status_changed'
+  relatedId String? // Feature request ID
+
   // Queue status
-  status          String    @default("pending") // pending, sent, failed
-  attempts        Int       @default(0)
-  maxAttempts     Int       @default(3)
-  lastAttemptAt   DateTime?
-  sentAt          DateTime?
-  error           String?   @db.Text
-  
-  createdAt       DateTime  @default(now())
-  
+  status        String    @default("pending") // pending, sent, failed
+  attempts      Int       @default(0)
+  maxAttempts   Int       @default(3)
+  lastAttemptAt DateTime?
+  sentAt        DateTime?
+  error         String?   @db.Text
+
+  createdAt DateTime @default(now())
+
   @@index([status])
   @@index([emailType])
   @@index([createdAt])
 }
 
 model RepositoryImage {
-  id              String    @id @default(uuid())
-  repositoryId    String
-  filePath        String    // Original path in repository (e.g., "docs/_img/screenshot.png" or "assets/diagram.svg")
-  localPath       String    // Path in /public/img/ (e.g., "img/repo-slug/docs/_img/screenshot.png")
-  sha             String    // Git SHA for change detection
-  size            Int       // File size in bytes
-  mimeType        String?   // e.g., "image/png"
-  
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  lastSyncedAt    DateTime  @default(now())
-  
-  repository      Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
-  
+  id           String  @id @default(uuid())
+  repositoryId String
+  filePath     String // Original path in repository (e.g., "docs/_img/screenshot.png" or "assets/diagram.svg")
+  localPath    String // Path in /public/img/ (e.g., "img/repo-slug/docs/_img/screenshot.png")
+  sha          String // Git SHA for change detection
+  size         Int // File size in bytes
+  mimeType     String? // e.g., "image/png"
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  lastSyncedAt DateTime @default(now())
+
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
   @@unique([repositoryId, filePath])
   @@index([repositoryId])
   @@index([sha])
@@ -822,33 +822,33 @@ model RepositoryImage {
 // Analytics Models
 
 model AnalyticsEvent {
-  id              String    @id @default(uuid())
-  sessionId       String    // Session identifier (user-specific or anonymous)
-  userId          String?   // Null for anonymous visitors
-  eventType       String    // 'page_view', 'login_success', 'login_failure', 'document_read', 'search', 'feature_view', 'api_spec_view', etc.
-  eventData       Json?     // Additional event-specific data
-  
+  id        String  @id @default(uuid())
+  sessionId String // Session identifier (user-specific or anonymous)
+  userId    String? // Null for anonymous visitors
+  eventType String // 'page_view', 'login_success', 'login_failure', 'document_read', 'search', 'feature_view', 'api_spec_view', etc.
+  eventData Json? // Additional event-specific data
+
   // Page/Resource information
-  path            String    // URL path
-  resourceId      String?   // Document slug, feature ID, etc.
-  resourceType    String?   // 'doc', 'blog', 'feature', 'api_spec'
-  category        String?   // Content category
-  
+  path         String // URL path
+  resourceId   String? // Document slug, feature ID, etc.
+  resourceType String? // 'doc', 'blog', 'feature', 'api_spec'
+  category     String? // Content category
+
   // User information
-  ipAddress       String?
-  userAgent       String?   @db.Text
-  referrer        String?
-  
+  ipAddress String?
+  userAgent String? @db.Text
+  referrer  String?
+
   // Timing data
-  duration        Int?      // Time spent (milliseconds)
-  scrollDepth     Int?      // Scroll percentage (0-100)
-  
+  duration    Int? // Time spent (milliseconds)
+  scrollDepth Int? // Scroll percentage (0-100)
+
   // Metadata
-  createdAt       DateTime  @default(now())
-  
+  createdAt DateTime @default(now())
+
   // Relations
-  user            User?     @relation("AnalyticsEvents", fields: [userId], references: [id], onDelete: SetNull)
-  
+  user User? @relation("AnalyticsEvents", fields: [userId], references: [id], onDelete: SetNull)
+
   @@index([userId])
   @@index([sessionId])
   @@index([eventType])
@@ -858,155 +858,155 @@ model AnalyticsEvent {
 }
 
 model AnalyticsSession {
-  id              String    @id @default(uuid())
-  sessionId       String    @unique // Session identifier
-  userId          String?   // Null for anonymous visitors
-  
+  id        String  @id @default(uuid())
+  sessionId String  @unique // Session identifier
+  userId    String? // Null for anonymous visitors
+
   // Session details
-  ipAddress       String?
-  userAgent       String?   @db.Text
-  country         String?
-  city            String?
-  
+  ipAddress String?
+  userAgent String? @db.Text
+  country   String?
+  city      String?
+
   // Session timing
-  startedAt       DateTime  @default(now())
-  lastActivityAt  DateTime  @default(now())
-  endedAt         DateTime?
-  duration        Int?      // Total session duration (milliseconds)
-  
+  startedAt      DateTime  @default(now())
+  lastActivityAt DateTime  @default(now())
+  endedAt        DateTime?
+  duration       Int? // Total session duration (milliseconds)
+
   // Session stats
-  pageViews       Int       @default(0)
-  uniquePages     Int       @default(0)
-  eventsCount     Int       @default(0)
-  
+  pageViews   Int @default(0)
+  uniquePages Int @default(0)
+  eventsCount Int @default(0)
+
   // Relations
-  user            User?     @relation("AnalyticsSessions", fields: [userId], references: [id], onDelete: SetNull)
-  
+  user User? @relation("AnalyticsSessions", fields: [userId], references: [id], onDelete: SetNull)
+
   @@index([userId])
   @@index([sessionId])
   @@index([startedAt])
 }
 
 model AnalyticsDailySummary {
-  id              String    @id @default(uuid())
-  date            DateTime  @unique @db.Date
-  
+  id   String   @id @default(uuid())
+  date DateTime @unique @db.Date
+
   // User metrics
-  totalUsers      Int       @default(0)
-  newUsers        Int       @default(0)
-  activeUsers     Int       @default(0)
-  anonymousUsers  Int       @default(0)
-  
+  totalUsers     Int @default(0)
+  newUsers       Int @default(0)
+  activeUsers    Int @default(0)
+  anonymousUsers Int @default(0)
+
   // Session metrics
-  totalSessions   Int       @default(0)
-  avgSessionDuration Int    @default(0)
-  
+  totalSessions      Int @default(0)
+  avgSessionDuration Int @default(0)
+
   // Page metrics
-  totalPageViews  Int       @default(0)
-  uniquePageViews Int       @default(0)
-  
+  totalPageViews  Int @default(0)
+  uniquePageViews Int @default(0)
+
   // Authentication metrics
-  loginSuccess    Int       @default(0)
-  loginFailure    Int       @default(0)
-  
+  loginSuccess Int @default(0)
+  loginFailure Int @default(0)
+
   // Content metrics
-  documentsRead   Int       @default(0)
-  avgReadDuration Int       @default(0)
-  searchQueries   Int       @default(0)
-  featuresViewed  Int       @default(0)
-  apiSpecsViewed  Int       @default(0)
-  
+  documentsRead   Int @default(0)
+  avgReadDuration Int @default(0)
+  searchQueries   Int @default(0)
+  featuresViewed  Int @default(0)
+  apiSpecsViewed  Int @default(0)
+
   // Top content (JSON arrays)
-  topPages        Json?     // [{path, views}]
-  topDocuments    Json?     // [{slug, views}]
-  topSearches     Json?     // [{query, count}]
-  
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
+  topPages     Json? // [{path, views}]
+  topDocuments Json? // [{slug, views}]
+  topSearches  Json? // [{query, count}]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([date])
 }
 
 model FeatureInternalNote {
-  id              String    @id @default(uuid())
-  featureId       String
-  content         String    @db.Text
-  createdBy       String
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  feature         FeatureRequest @relation(fields: [featureId], references: [id], onDelete: Cascade)
-  creator         User           @relation("InternalNotes", fields: [createdBy], references: [id])
-  
+  id        String   @id @default(uuid())
+  featureId String
+  content   String   @db.Text
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  feature FeatureRequest @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  creator User           @relation("InternalNotes", fields: [createdBy], references: [id])
+
   @@index([featureId])
   @@index([createdBy])
 }
 
 model PageViewer {
-  id        String    @id @default(uuid())
-  userId    String    // Always required since auth is mandatory
-  page      String    // e.g., "/features/awesome-feature"
-  lastSeen  DateTime  @default(now()) @updatedAt
-  createdAt DateTime  @default(now())
-  
-  user      User      @relation("PageViewers", fields: [userId], references: [id], onDelete: Cascade)
-  
+  id        String   @id @default(uuid())
+  userId    String // Always required since auth is mandatory
+  page      String // e.g., "/features/awesome-feature"
+  lastSeen  DateTime @default(now()) @updatedAt
+  createdAt DateTime @default(now())
+
+  user User @relation("PageViewers", fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, page])
   @@index([page])
   @@index([lastSeen])
 }
 
 model FeatureMerge {
-  id                  String    @id @default(uuid())
+  id                  String   @id @default(uuid())
   parentId            String
   childId             String
   mergedBy            String
-  mergedAt            DateTime  @default(now())
-  originalDescription String    @db.Text
-  mergedDescription   String    @db.Text
-  
-  parent              FeatureRequest @relation("ParentMerges", fields: [parentId], references: [id], onDelete: Cascade)
-  child               FeatureRequest @relation("ChildMerges", fields: [childId], references: [id], onDelete: Cascade)
-  merger              User      @relation("FeatureMerger", fields: [mergedBy], references: [id])
-  
+  mergedAt            DateTime @default(now())
+  originalDescription String   @db.Text
+  mergedDescription   String   @db.Text
+
+  parent FeatureRequest @relation("ParentMerges", fields: [parentId], references: [id], onDelete: Cascade)
+  child  FeatureRequest @relation("ChildMerges", fields: [childId], references: [id], onDelete: Cascade)
+  merger User           @relation("FeatureMerger", fields: [mergedBy], references: [id])
+
   @@index([parentId])
   @@index([childId])
   @@index([mergedBy])
 }
 
 model UserNotificationSettings {
-  id                   String    @id @default(uuid())
-  userId               String    @unique
-  
+  id     String @id @default(uuid())
+  userId String @unique
+
   // Email notifications
-  emailEnabled         Boolean   @default(true)
-  emailNewFeatures     Boolean   @default(true)
-  emailStatusChanges   Boolean   @default(true)
-  emailNewComments     Boolean   @default(true)
-  emailWeeklyDigest    Boolean   @default(false)
-  
+  emailEnabled       Boolean @default(true)
+  emailNewFeatures   Boolean @default(true)
+  emailStatusChanges Boolean @default(true)
+  emailNewComments   Boolean @default(true)
+  emailWeeklyDigest  Boolean @default(false)
+
   // Teams notifications
-  teamsEnabled         Boolean   @default(false)
-  teamsWebhook         String?
-  teamsNewFeatures     Boolean   @default(false)
-  teamsStatusChanges   Boolean   @default(false)
-  teamsNewComments     Boolean   @default(false)
-  teamsChannel         String?
-  
+  teamsEnabled       Boolean @default(false)
+  teamsWebhook       String?
+  teamsNewFeatures   Boolean @default(false)
+  teamsStatusChanges Boolean @default(false)
+  teamsNewComments   Boolean @default(false)
+  teamsChannel       String?
+
   // In-app notifications
-  inAppEnabled         Boolean   @default(true)
-  inAppNewFeatures     Boolean   @default(true)
-  inAppStatusChanges   Boolean   @default(true)
-  inAppNewComments     Boolean   @default(true)
-  inAppMentions        Boolean   @default(true)
-  
+  inAppEnabled       Boolean @default(true)
+  inAppNewFeatures   Boolean @default(true)
+  inAppStatusChanges Boolean @default(true)
+  inAppNewComments   Boolean @default(true)
+  inAppMentions      Boolean @default(true)
+
   // Frequency settings
-  frequency            String    @default("immediate") // immediate, daily, weekly, never
-  
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-  
-  user                 User      @relation("UserNotificationSettings", fields: [userId], references: [id], onDelete: Cascade)
+  frequency String @default("immediate") // immediate, daily, weekly, never
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation("UserNotificationSettings", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -1016,16 +1016,16 @@ model UserNotificationSettings {
 model Team {
   id          String   @id @default(uuid())
   name        String   @unique
-  slug        String   @unique      // Used in markdown: "crm", "pos"
+  slug        String   @unique // Used in markdown: "crm", "pos"
   description String?  @db.Text
-  icon        String?               // Lucide icon name
-  color       String?               // Hex color for badges
+  icon        String? // Lucide icon name
+  color       String? // Hex color for badges
   enabled     Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   memberships UserTeamMembership[]
-  releases    Release[] @relation("ReleaseTeams")
+  releases    Release[]            @relation("ReleaseTeams")
 
   @@index([enabled])
   @@index([slug])
@@ -1035,8 +1035,8 @@ model UserTeamMembership {
   id                  String   @id @default(uuid())
   userId              String
   teamId              String
-  role                String?  @default("member")  // member, lead, admin
-  subscribeToReleases Boolean  @default(true)      // Opt-in for release notifications
+  role                String?  @default("member") // member, lead, admin
+  subscribeToReleases Boolean  @default(true) // Opt-in for release notifications
   notifyEmail         Boolean  @default(true)
   notifyInApp         Boolean  @default(true)
   createdAt           DateTime @default(now())
@@ -1053,21 +1053,21 @@ model UserTeamMembership {
 // Release Notification Models
 
 model Release {
-  id           String    @id @default(uuid())
-  version      String                          // yyyy.mm.dd.sub format
+  id           String                   @id @default(uuid())
+  version      String // yyyy.mm.dd.sub format
   title        String?
-  content      String    @db.Text              // Markdown body
-  categoryId   String?                         // Application category (from FeatureCategory)
-  documentId   String?                         // Source document (if from repo sync)
-  repositoryId String?                         // Source repository (if from repo sync)
-  filePath     String?                         // Source file path (if from repo sync)
-  source       String    @default("manual")    // "manual" or "repository"
-  createdById  String?                         // User who created (for manual releases)
-  publishedAt  DateTime  @default(now())
-  notifiedAt   DateTime?                       // When notifications were sent
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  searchVector    Unsupported("tsvector")? // For full-text search
+  content      String                   @db.Text // Markdown body
+  categoryId   String? // Application category (from FeatureCategory)
+  documentId   String? // Source document (if from repo sync)
+  repositoryId String? // Source repository (if from repo sync)
+  filePath     String? // Source file path (if from repo sync)
+  source       String                   @default("manual") // "manual" or "repository"
+  createdById  String? // User who created (for manual releases)
+  publishedAt  DateTime                 @default(now())
+  notifiedAt   DateTime? // When notifications were sent
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+  searchVector Unsupported("tsvector")? // For full-text search
 
   category        FeatureCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   createdBy       User?            @relation("UserReleases", fields: [createdById], references: [id], onDelete: SetNull)
@@ -1086,8 +1086,8 @@ model ReleaseNotificationLog {
   releaseId String
   userId    String
   teamId    String
-  channel   String    // "email", "in-app"
-  status    String    @default("pending")  // pending, sent, failed
+  channel   String // "email", "in-app"
+  status    String    @default("pending") // pending, sent, failed
   sentAt    DateTime?
   error     String?   @db.Text
   createdAt DateTime  @default(now())

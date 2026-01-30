@@ -759,6 +759,35 @@ export async function notifyReleaseSubscribers(options: {
       { email: string; name: string | null; teamNames: string[] }
     >()
 
+    // Get all active users and admins for CC
+    const activeUsersAndAdmins = await prisma.user.findMany({
+      where: {
+        OR: [
+          { role: 'admin' },
+          { 
+            emailNotifications: true,
+            // Active users (has recent activity or created recently)
+            OR: [
+              { 
+                analyticsSessions: { 
+                  some: { 
+                    lastActivityAt: { gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) } 
+                  } 
+                } 
+              }, // Activity in last 90 days
+              { createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } }, // Created in last 30 days
+            ]
+          }
+        ]
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+      }
+    })
+
     for (const team of teamRecords) {
       for (const membership of team.memberships) {
         // Check master toggle
@@ -799,13 +828,22 @@ export async function notifyReleaseSubscribers(options: {
     }
 
     const recipients = Array.from(usersToNotify.values()).map((u) => u.email)
+    
+    // CC all active users and admins (excluding those already in TO)
+    const ccRecipients = activeUsersAndAdmins
+      .filter(user => !usersToNotify.has(user.id))
+      .map(user => user.email)
 
     await emailClient.sendEmail({
       to: recipients,
+      cc: ccRecipients.length > 0 ? ccRecipients : undefined,
       subject: `Release Notes v${version}`,
       body: emailBody,
       isHtml: true,
     })
+
+    console.log(`📧 Release notification: ${recipients.length} TO, ${ccRecipients.length} CC`)
+
 
     // Send push notifications
     const userIds = Array.from(usersToNotify.keys())

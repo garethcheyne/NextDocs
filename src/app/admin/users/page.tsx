@@ -30,6 +30,13 @@ export default async function UsersPage() {
             active: true,
             image: true,
             createdAt: true,
+            analyticsSessions: {
+                orderBy: { lastActivityAt: 'desc' },
+                take: 1,
+                select: {
+                    lastActivityAt: true,
+                },
+            },
             _count: {
                 select: {
                     repositories: true,

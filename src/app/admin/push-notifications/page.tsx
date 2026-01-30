@@ -26,7 +26,7 @@ export default function PushNotificationsPage() {
     const [isLoading, setIsLoading] = useState(true)
     const [isSending, setIsSending] = useState(false)
     const [title, setTitle] = useState('Test Notification')
-    const [message, setMessage] = useState(`This is a test push notification from ${process.env.NEXT_SITE_NAME || 'NextDocs'}!`)
+    const [message, setMessage] = useState(`This is a test push notification from ${process.env.NEXT_PUBLIC_SITE_NAME || 'NextDocs'}!`)
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
 
     useEffect(() => {
@@ -82,7 +82,7 @@ export default function PushNotificationsPage() {
                 const data = await response.json()
                 toast.success(`Sent ${data.sent} notification(s)!`)
                 setTitle('Test Notification')
-                setMessage(`This is a test push notification from ${process.env.NEXT_SITE_NAME || 'NextDocs'}!`)
+                setMessage(`This is a test push notification from ${process.env.NEXT_PUBLIC_SITE_NAME || 'NextDocs'}!`)
                 setSelectedUserId(null)
             } else {
                 const error = await response.json()

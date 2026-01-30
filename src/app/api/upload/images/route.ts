@@ -100,13 +100,14 @@ export async function POST(request: NextRequest) {
         const filepath = join(uploadsDir, filename)
         await writeFile(filepath, buffer)
 
-        // Return the URL using the API route for serving images
-        const imageUrl = `/api/images/${filename}`
+        // Log success for debugging
+        console.log(`[IMAGE UPLOAD] Successfully saved: ${filename} (${buffer.length} bytes) to ${filepath}`)
 
+        // Return just the filename - the secure endpoint will be constructed by the client
         return NextResponse.json({ 
             success: true, 
-            url: imageUrl,
-            filename: filename 
+            filename: filename,
+            url: filename  // Return filename only, not full URL path
         })
 
     } catch (error) {

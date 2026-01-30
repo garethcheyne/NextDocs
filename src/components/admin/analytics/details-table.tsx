@@ -146,31 +146,24 @@ const columns: ColumnDef<AnalyticsEvent>[] = [
     cell: ({ row }) => {
       const event = row.original
       return (
-        <div className="font-mono text-sm max-w-md space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="truncate">{event.path}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 opacity-0 group-hover:opacity-100"
-              onClick={() => {
-                navigator.clipboard.writeText(event.path)
-                toast.success('Path copied to clipboard')
-              }}
-            >
-              <Copy className="h-3 w-3" />
-            </Button>
-          </div>
-          {event.resourceId && (
-            <div className="text-xs text-muted-foreground truncate">
-              ID: {event.resourceId}
-            </div>
-          )}
+        <div className="font-mono text-sm max-w-md flex items-center gap-2">
+          <span className="truncate">{event.path}</span>
           {event.resourceType && (
-            <Badge variant="outline" className="text-xs">
+            <Badge variant="outline" className="text-xs shrink-0">
               {event.resourceType}
             </Badge>
           )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 shrink-0"
+            onClick={() => {
+              navigator.clipboard.writeText(event.path)
+              toast.success('Path copied to clipboard')
+            }}
+          >
+            <Copy className="h-3 w-3" />
+          </Button>
         </div>
       )
     },
@@ -250,15 +243,11 @@ const columns: ColumnDef<AnalyticsEvent>[] = [
     cell: ({ row }) => {
       const { browser, os, device } = parseUserAgent(row.getValue("userAgent"))
       return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 text-sm">
           {getDeviceIcon(device)}
-          <div className="text-xs space-y-0.5">
-            <div className="font-medium">{browser}</div>
-            <div className="text-muted-foreground">{os}</div>
-            <Badge variant="secondary" className="text-xs capitalize">
-              {device}
-            </Badge>
-          </div>
+          <span className="font-medium">{browser}</span>
+          <span className="text-muted-foreground">·</span>
+          <span className="text-muted-foreground">{os}</span>
         </div>
       )
     },
@@ -389,45 +378,43 @@ export function AnalyticsDetailsTable() {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header with title and stats */}
+    <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Analytics Events</h2>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground mt-1">
             Showing {filteredEvents.length} of {events.length} events
           </p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-4 p-4 bg-muted/50 rounded-lg">
-        <div className="flex gap-4 items-end flex-1 min-w-[300px]">
-          <div className="space-y-2 flex-1">
-            <label className="text-sm font-medium">From Date</label>
-            <Input
-              type="date"
-              value={dateRange.from}
-              onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
-            />
-          </div>
-          <div className="space-y-2 flex-1">
-            <label className="text-sm font-medium">To Date</label>
-            <Input
-              type="date"
-              value={dateRange.to}
-              onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
-            />
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">From Date</label>
+          <Input
+            type="date"
+            value={dateRange.from}
+            onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <label className="text-sm font-medium">To Date</label>
+          <Input
+            type="date"
+            value={dateRange.to}
+            onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
+          />
         </div>
 
-        <div className="space-y-2 min-w-[200px]">
+        <div className="space-y-2">
           <label className="text-sm font-medium">Event Type</label>
           <Select value={eventTypeFilter} onValueChange={setEventTypeFilter}>
             <SelectTrigger>
               <SelectValue />
-            </SelectTrigger>, or IP address..."
-        defaultPageSize={50}
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
               {uniqueEventTypes.map(type => (
@@ -437,7 +424,7 @@ export function AnalyticsDetailsTable() {
           </Select>
         </div>
 
-        <div className="space-y-2 min-w-[200px]">
+        <div className="space-y-2">
           <label className="text-sm font-medium">User Type</label>
           <Select value={userFilter} onValueChange={setUserFilter}>
             <SelectTrigger>
@@ -457,7 +444,8 @@ export function AnalyticsDetailsTable() {
         columns={columns}
         data={filteredEvents}
         searchKey="path"
-        searchPlaceholder="Search path, resource ID..."
+        searchPlaceholder="Search path or resource..."
+        defaultPageSize={50}
       />
     </div>
   )

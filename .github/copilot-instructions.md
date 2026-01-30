@@ -298,3 +298,121 @@ async session({ session, token }) {
 - JWT contains only: `sub`, `email`, `name`, `role`, `picture` (URL reference)
 - Session callbacks populate `session.user` from token data
 - Database is the source of truth for all user data
+
+## Media in Documentation (Images & Videos)
+
+### Adding Images & Videos to Documentation
+
+When helping users create documentation repositories, follow these guidelines for media:
+
+#### Images
+- **Store location**: Create `img/` or `images/` directories next to markdown files
+- **File types**: PNG, JPG, SVG, WebP
+- **Naming**: Use descriptive names (`user-dashboard.png` not `image1.png`)
+- **Size**: Keep under 500KB per image (compress before committing)
+- **Alt text**: Always provide descriptive alt text for accessibility
+- **Markdown syntax**: `![Alt text](./img/screenshot.png)` or `![Alt text with title](./img/diagram.png "Optional caption")`
+
+**Recommended structure:**
+```
+docs/
+├── getting-started/
+│   ├── index.md
+│   └── img/
+│       ├── dashboard.png
+│       └── setup-wizard.png
+├── guides/
+│   ├── tutorial.md
+│   └── img/
+│       └── workflow.png
+```
+
+#### Videos
+- **Store location**: Create `videos/` directories next to markdown files
+- **Supported formats**: MP4 (most compatible), WebM (modern), Ogg, AVI, MKV, MOV, FLV, MPEG
+- **Recommended**: Use **MP4 for best compatibility** across browsers
+- **Size**: Keep 50-100MB per file for good performance
+- **Resolution**: 720p or lower for web
+- **Markdown syntax**: `![Demo video](./videos/demo.mp4)` (same as images)
+- **Captions**: Use title text for accessibility: `![Demo](./videos/demo.mp4 "How to use this feature")`
+
+**Recommended structure:**
+```
+docs/
+├── getting-started/
+│   ├── index.md
+│   ├── img/
+│   │   └── dashboard.png
+│   └── videos/
+│       └── setup-demo.mp4
+├── guides/
+│   ├── tutorial.md
+│   └── videos/
+│       └── workflow-demo.webm
+```
+
+### Security & Permissions
+
+✅ **All media (images & videos) are automatically protected:**
+- Requires user authentication to access
+- Anonymous users get 401 Unauthorized
+- Any authenticated user can access media in content
+- Direct links won't work - must go through secure endpoints
+- Media files have random, unguessable filenames
+- Validated with file signature (magic bytes) verification
+
+### For Content Creators
+
+When embedding media in markdown content:
+
+```markdown
+# Feature Documentation
+
+## Overview
+![Feature dashboard](./img/dashboard.png "The main feature dashboard")
+
+## Video Tutorial
+![Tutorial video](./videos/tutorial.mp4 "5-minute introduction")
+
+## Step-by-step Guide
+1. First, see this screenshot:
+   ![First step](./img/step-1.png)
+2. Then watch this demonstration:
+   ![Step 2 demo](./videos/step-2.webm)
+3. Finally, verify your work:
+   ![Verification](./img/step-3.png "Success screen")
+```
+
+### When Helping Create Documentation Repos
+
+1. **Ask about media needs**: "Does your documentation need screenshots, diagrams, or videos?"
+2. **Create proper directory structure**: Set up `img/` and `videos/` folders
+3. **Guide on file formats**: 
+   - PNG/JPG for screenshots
+   - SVG for diagrams/logos (scales perfectly)
+   - MP4 for videos (most compatible)
+4. **Provide file size guidance**: 
+   - Images: aim for <500KB
+   - Videos: aim for 50-100MB
+5. **Document best practices**: Remind creators to use descriptive filenames and alt text
+6. **Security note**: Emphasize that all media is secure - no need to worry about public access
+
+### Component Integration
+
+Media automatically works with `EnhancedMarkdown` component:
+
+```tsx
+// Images and videos are automatically protected
+// when using EnhancedMarkdown with proper contentType
+<EnhancedMarkdown 
+  contentType="documentation" 
+  contentId={documentId}
+>
+  {markdownContent}
+</EnhancedMarkdown>
+```
+
+The component detects file extensions and routes:
+- Image files (png, jpg, svg, webp) → Image component
+- Video files (mp4, webm, ogg, avi, mkv, mov, flv, mpeg) → Video player component
+- Both go through secure endpoints requiring authentication

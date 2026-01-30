@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "NextDocs API",
-    "description": "Auto-generated API documentation for NextDocs\n\nGenerated on: 2026-01-23T01:13:49.797Z",
-    "version": "1.0.0-20260123",
+    "description": "Auto-generated API documentation for NextDocs\n\nGenerated on: 2026-01-29T23:32:49.973Z",
+    "version": "1.0.0-20260129",
     "contact": {
       "name": "NextDocs Team"
     }

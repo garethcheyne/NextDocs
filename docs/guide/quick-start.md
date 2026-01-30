@@ -22,11 +22,14 @@ my-project/
 │   ├── getting-started/
 │   │   ├── _meta.json
 │   │   ├── index.md
-│   │   └── installation.md
+│   │   ├── installation.md
+│   │   ├── img/            # Images for this section
+│   │   └── videos/         # Videos for this section
 │   └── user-guide/
 │       ├── _meta.json
 │       ├── index.md
-│       └── img/            # Images for this section
+│       ├── img/            # Images for this section
+│       └── videos/         # Videos for this section
 ├── blog/                    # Blog posts (optional)
 │   └── 2024/
 │       └── 12/

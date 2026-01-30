@@ -24,7 +24,7 @@ npx prisma db seed
 npm run dev
 ```
 
-Access at: http://localhost:8100
+Access at: <http://localhost:8100>
 
 ### Production (Docker)
 
@@ -40,7 +40,7 @@ npm run docker:prod
 npm run docker:prod:logs
 ```
 
-Access at: http://localhost:8101
+Access at: <http://localhost:8101>
 
 ## What's Included
 
@@ -54,6 +54,68 @@ Access at: http://localhost:8101
 - **Azure DevOps/GitHub Sync** - Automated repository syncing
 - **Admin Portal** - User management, settings, analytics
 - **API Documentation** - Swagger/Redoc integration
+- **Secure Media Serving** - All content images and videos require authentication
+- **Video Support** - Embed MP4, WebM, Ogg, and other video formats in markdown
+
+## Security Features
+
+### Private Content Media
+
+All images and videos embedded in markdown content are **secure and private** - they cannot be accessed with a direct link by anonymous/unauthenticated users. All authenticated users can access media in any content:
+
+- **Feature Request Images & Videos** - Accessible only by authenticated users
+- **Release Images & Videos** - Accessible only by authenticated users
+- **Blog/Documentation Images & Videos** - Accessible only by authenticated users
+- **API Spec Images & Videos** - Accessible only by authenticated users
+- **Comment Images & Videos** - Accessible only by authenticated users
+
+**How it works:**
+
+1. Media files are stored with random, unguessable filenames
+2. All image access goes through `/api/images/secure` endpoint
+3. All video access goes through `/api/videos/secure` endpoint
+4. Server verifies user authentication and permissions before serving
+5. Media files are never cached publicly - always checked on-demand
+
+**For developers:**
+
+```tsx
+// Images and videos are automatically protected when you use EnhancedMarkdown
+<EnhancedMarkdown contentType="feature-request" contentId={featureId}>
+  {description}  // Markdown with images and videos
+</EnhancedMarkdown>
+```
+
+You can embed media by using standard markdown syntax:
+
+```markdown
+![Description](./uploads/images/screenshot.png)    // Image
+![Demo](./uploads/videos/demo.mp4)                  // Video
+![YouTube](https://example.com/video.mp4)          // External video
+```
+
+## For Content Creators
+
+If you're creating documentation, check out the [Content Creator Guide](./docs/guide/index.md) which covers:
+
+- **Quick Start** - Get up and running in 5 minutes
+- **Markdown Syntax** - Write rich content with headers, lists, code, images, and videos
+- **Repository Structure** - Organize your documentation effectively
+- **Publishing** - How to connect your repository to NextDocs
+- **Navigation** - Configure menus and document ordering
+- **Icons** - Add visual elements inline
+- **Blog Posts** - Create time-based content and announcements
+- **API Documentation** - Include OpenAPI/Swagger specs
+- **Author Profiles** - Manage contributor information
+
+### Media Support
+
+You can embed both images and videos in your documentation:
+
+- **Images**: PNG, JPG, SVG, WebP (aim for <500KB)
+- **Videos**: MP4, WebM, Ogg, AVI, MKV, MOV, FLV, MPEG (50-100MB recommended)
+
+All media is **automatically protected** - only authenticated users can access it. Videos include interactive controls, fullscreen support, and responsive playback.
 
 ## Project Structure
 
@@ -77,20 +139,24 @@ The project follows a clean, organized structure. See [`PROJECT-STRUCTURE.md`](P
 Copy `.env.example` (for local dev) or `.env.docker.example` (for Docker) to `.env`:
 
 **Database:**
+
 - `DATABASE_URL` - PostgreSQL connection string
 - `POSTGRES_PASSWORD` - Database password
 
 **Authentication:**
+
 - `NEXTAUTH_URL` - Your app URL
 - `NEXTAUTH_SECRET` - Random secret (min 32 chars)
 - `ENCRYPTION_KEY` - 64-char hex string
 
 **Azure AD (for SSO):**
+
 - `AZURE_AD_CLIENT_ID`
 - `AZURE_AD_CLIENT_SECRET`
 - `AZURE_AD_TENANT_ID`
 
 **Redis:**
+
 - `REDIS_URL` - Redis connection string
 - `REDIS_PASSWORD` - Redis password
 
@@ -120,6 +186,7 @@ node prisma/seed-categories.js
 ```
 
 **Seed Files:**
+
 - `prisma/seed-standalone.js` - Main seeder (users, categories, sample docs)
 - `prisma/seed-categories.js` - Categories only
 
@@ -142,11 +209,13 @@ npm run docker:dev:down      # Stop containers
 ```
 
 **Features:**
+
 - Hot reload enabled
 - Source code mounted as volumes
 - Fast startup, no build optimization
 
 **Ports:**
+
 - App: 8100
 - PostgreSQL: 5500
 - Redis: 6400
@@ -162,12 +231,14 @@ npm run docker:prod:down         # Stop containers
 ```
 
 **Features:**
+
 - Optimized multi-stage build
 - Standalone Next.js output
 - Resource limits & health checks
 - Automated daily backups (2 AM)
 
 **Ports:**
+
 - App: 8101
 - PostgreSQL: 5501
 - Redis: 6401
@@ -300,6 +371,8 @@ Private/Enterprise Use
 ## Support
 
 For issues or questions, see detailed guides:
+
 - Docker setup: `DOCKER.md`
 - Windows commands: `DOCKER-WINDOWS.md`
+
 # Test multi-push

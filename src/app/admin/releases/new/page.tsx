@@ -7,7 +7,7 @@ import { ArrowLeft, Loader2, Send, Save, Lightbulb } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { MarkdownInput } from '@/components/markdown/markdown-input'
+import { RichTextEditor } from '@/components/editor/rich-text-editor'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { CategoryBadge } from '@/components/badges/category-badge'
@@ -16,7 +16,6 @@ import { Separator } from '@/components/ui/separator'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation'
 import { toast, Toaster } from 'sonner'
-import { releaseTemplates } from '@/lib/markdown-templates'
 import {
   Card,
   CardContent,
@@ -280,17 +279,18 @@ export default function NewReleasePage() {
                   </div>
 
                   <div className="space-y-2">
-                    <MarkdownInput
-                      value={content}
+                    <Label htmlFor="content">
+                      Content <span className="text-red-500">*</span>
+                    </Label>
+                    <RichTextEditor
+                      content={content}
                       onChange={setContent}
-                      label="Content *"
                       placeholder="What's new in this release?"
-                      rows={12}
-                      maxLength={50000}
-                      showCharCount={true}
-                      templates={releaseTemplates}
-                      showHelp={true}
+                      editable={!isSaving}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      {content.length} / 50000 characters
+                    </p>
                   </div>
                 </CardContent>
               </Card>

@@ -4,16 +4,13 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Lightbulb, Loader2, Plus, X } from 'lucide-react'
-import ReactMarkdown from 'react-markdown'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { MarkdownInput } from '@/components/markdown/markdown-input'
-import { featureRequestTemplates } from '@/lib/markdown-templates'
+import { RichTextEditor } from '@/components/editor/rich-text-editor'
 
 interface Category {
     id: string
@@ -172,18 +169,18 @@ export function NewFeatureForm({ categories: initialCategories }: NewFeatureForm
 
                         {/* Description */}
                         <div className="space-y-2">
-                            <MarkdownInput
-                                value={formData.description}
+                            <Label htmlFor="description">
+                                Description <span className="text-red-500">*</span>
+                            </Label>
+                            <RichTextEditor
+                                content={formData.description}
                                 onChange={(description) => setFormData(prev => ({ ...prev, description }))}
-                                label="Description *"
                                 placeholder="Describe your feature request in detail. What problem does it solve? How would it work?"
-                                disabled={isLoading}
-                                rows={10}
-                                maxLength={5000}
-                                showCharCount={true}
-                                templates={featureRequestTemplates}
-                                showHelp={true}
+                                editable={!isLoading}
                             />
+                            <p className="text-xs text-muted-foreground">
+                                {formData.description.length} / 5000 characters
+                            </p>
                         </div>
 
                         {/* Category */}

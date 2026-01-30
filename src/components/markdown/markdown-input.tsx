@@ -1,5 +1,17 @@
 'use client'
 
+/**
+ * @deprecated Use RichTextEditor instead
+ * 
+ * This component is deprecated in favor of RichTextEditor which provides:
+ * - WYSIWYG editing with TipTap
+ * - Native image upload and paste support
+ * - Better UX with real-time markdown conversion
+ * - Standardized editor across the application
+ * 
+ * Replacement: import { RichTextEditor } from '@/components/editor/rich-text-editor'
+ */
+
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Maximize2, Minimize2, X } from 'lucide-react'

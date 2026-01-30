@@ -117,11 +117,14 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    // The server layout (home/layout.tsx) already checks auth and redirects
+    // unauthenticated users, so we can fetch immediately without waiting
+    // for the client-side session to load.
+    const controller = new AbortController()
+
     const fetchData = async () => {
       try {
-        // Add timeout to prevent hanging
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 10000)
 
         const response = await fetch('/api/dashboard', {
           signal: controller.signal,
@@ -130,7 +133,7 @@ export default function HomePage() {
 
         if (!response.ok) {
           if (response.status === 401) {
-            router.push('/login?callbackUrl=/home')
+            router.push('/?callbackUrl=/home')
             return
           }
           throw new Error('Failed to fetch dashboard data')
@@ -138,6 +141,7 @@ export default function HomePage() {
         const data = await response.json()
         setData(data)
       } catch (err) {
+        if (controller.signal.aborted) return
         if (err instanceof Error && err.name === 'AbortError') {
           setError('Request timed out. Please try again.')
         } else {
@@ -145,11 +149,15 @@ export default function HomePage() {
         }
         console.error('Dashboard fetch error:', err)
       } finally {
-        setIsLoading(false)
+        if (!controller.signal.aborted) {
+          setIsLoading(false)
+        }
       }
     }
 
     fetchData()
+
+    return () => controller.abort()
   }, [router])
 
   if (isLoading) {

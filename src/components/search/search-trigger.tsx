@@ -10,6 +10,7 @@ import DOMPurify from 'isomorphic-dompurify'
 import { CategoryBadge } from '@/components/badges/category-badge'
 import { SlugBadge } from '@/components/features/slug-badge'
 import { EnhancedMarkdown } from '@/components/markdown/enhanced-markdown'
+import { useAnalytics } from '@/lib/analytics/client'
 
 // Sanitize HTML to prevent XSS attacks
 function sanitizeHtml(html: string): string {
@@ -49,6 +50,7 @@ export function SearchTrigger() {
     const debouncedQuery = useDebounce(query, 300)
     const searchRef = useRef<HTMLDivElement>(null)
     const inputRef = useRef<HTMLInputElement>(null)
+    const { trackSearch } = useAnalytics()
 
     // Global keyboard shortcut for Cmd/Ctrl + K
     useEffect(() => {
@@ -104,6 +106,9 @@ export function SearchTrigger() {
                 const data = await response.json()
                 setResults(data.results || [])
                 setSelectedIndex(0)
+                
+                // Track search analytics
+                trackSearch(debouncedQuery, data.results?.length || 0)
             } catch (error) {
                 console.error('Search error:', error)
                 setResults([])

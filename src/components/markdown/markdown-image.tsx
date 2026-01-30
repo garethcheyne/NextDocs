@@ -16,9 +16,11 @@ interface MarkdownImageProps {
   title?: string
   repositorySlug?: string
   documentPath?: string
+  contentType?: 'feature-request' | 'blog' | 'release' | 'guide' | 'documentation' | 'api-spec'
+  contentId?: string
 }
 
-export function MarkdownImage({ src, alt, title, repositorySlug, documentPath }: MarkdownImageProps) {
+export function MarkdownImage({ src, alt, title, repositorySlug, documentPath, contentType, contentId }: MarkdownImageProps) {
   const [error, setError] = useState(false)
   const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null)
   const [isOpen, setIsOpen] = useState(false)
@@ -26,11 +28,40 @@ export function MarkdownImage({ src, alt, title, repositorySlug, documentPath }:
   // Determine image source type
   const isExternal = src.startsWith('http://') || src.startsWith('https://')
   const isAbsolute = src.startsWith('/')
+  const isJustFilename = !isExternal && !isAbsolute && !src.includes('/')
+  
+  // Track if we're using secure endpoint
+  let usingSecureEndpoint = false
   
   // Construct the image URL
   let imageSrc = src
   
-  if (!isExternal && !isAbsolute && repositorySlug && documentPath) {
+  // If this is just a filename (from editor upload) and we have content context, use the secure endpoint
+  if (isJustFilename && (contentType || contentId)) {
+    const params = new URLSearchParams({ filename: src })
+    
+    if (contentType) params.append('contentType', contentType)
+    if (contentId) params.append('contentId', contentId)
+    
+    imageSrc = `/api/images/secure?${params.toString()}`
+    usingSecureEndpoint = true
+  } else if (isJustFilename) {
+    // Just a filename but no content context - assume it's an uploaded image
+    // Construct secure URL without content parameters (will require auth but no content check)
+    const params = new URLSearchParams({ filename: src })
+    imageSrc = `/api/images/secure?${params.toString()}`
+    usingSecureEndpoint = true
+  } else if (isAbsolute && src.includes('/api/images/') && (contentType || contentId)) {
+    // Legacy: full path - extract filename and use secure endpoint
+    const filename = src.split('/').pop() || src
+    const params = new URLSearchParams({ filename })
+    
+    if (contentType) params.append('contentType', contentType)
+    if (contentId) params.append('contentId', contentId)
+    
+    imageSrc = `/api/images/secure?${params.toString()}`
+    usingSecureEndpoint = true
+  } else if (!isExternal && !isAbsolute && repositorySlug && documentPath) {
     // Relative path - resolve based on document location
     // Document path example: "docs/dynamics-365-bc/warehouse/warehouse-management"
     // Image src example: "_img/warehouse-management-img-19.jpeg"
@@ -74,8 +105,9 @@ export function MarkdownImage({ src, alt, title, repositorySlug, documentPath }:
     )
   }
 
-  // For external images or when dimensions are unknown, use regular img tag
-  if (isExternal || !dimensions) {
+  // For external images, secure endpoint images, or when dimensions are unknown, use regular img tag
+  // Secure endpoint requires authentication headers that can't be proxied through Next.js Image Optimization
+  if (isExternal || usingSecureEndpoint || !dimensions) {
     return (
       <>
         <span className="block my-6 group relative cursor-pointer" onClick={() => setIsOpen(true)}>

@@ -50,7 +50,7 @@ export class EmailNotificationChannel {
         try {
             await this.client.sendEmail({
                 to: emails,
-                subject: process.env.NEXT_SITE_NAME ? `[${process.env.NEXT_SITE_NAME}] ${payload.title}` : payload.title,
+                subject: process.env.NEXT_PUBLIC_SITE_NAME ? `[${process.env.NEXT_PUBLIC_SITE_NAME}] ${payload.title}` : payload.title,
                 body: htmlBody || this.buildDefaultEmailBody(payload),
                 isHtml: true,
             })
@@ -100,7 +100,7 @@ export class EmailNotificationChannel {
             }
           
           <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; font-size: 12px; color: #666;">
-            <p>This is an automated notification from ${process.env.NEXT_SITE_NAME || 'NextDocs'} Documentation System.</p>
+            <p>This is an automated notification from ${process.env.NEXT_PUBLIC_SITE_NAME || 'NextDocs'} Documentation System.</p>
             <p>You can manage your notification preferences in your account settings.</p>
           </div>
         </body>

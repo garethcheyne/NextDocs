@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: `${process.env.NEXT_PUBLIC_SITE_NAME || 'NextDocs'} - Enterprise Documentation Platform`,
     short_name: process.env.NEXT_PUBLIC_SITE_NAME || 'NextDocs',
-    description: process.env.NEXT_SITE_DESCRIPTION || 'Knowledge Hub for Microsoft Technologies & Business Applications',
+    description: process.env.NEXT_PUBLIC_SITE_DESCRIPTION || 'Knowledge Hub for Microsoft Technologies & Business Applications',
     start_url: '/',
     display: 'standalone',
     background_color: '#0a0a0a',

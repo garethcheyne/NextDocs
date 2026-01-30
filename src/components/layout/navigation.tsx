@@ -45,14 +45,14 @@ export function Navigation() {
                     <Link href="/docs" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                         <Image
                             src="/icons/logo-256.png"
-                            alt={process.env.NEXT_SITE_NAME || 'NextDocs'}
+                            alt={process.env.NEXT_PUBLIC_SITE_NAME || 'NextDocs'}
                             width={40}
                             height={40}
                             className="drop-shadow-lg"
                         />
                         <div>
                             <h1 className="text-xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">
-                                {process.env.NEXT_SITE_NAME || 'NextDocs'}
+                                {process.env.NEXT_PUBLIC_SITE_NAME || 'NextDocs'}
                             </h1>
                             <p className="text-xs text-gray-500">Knowledge Hub</p>
                         </div>

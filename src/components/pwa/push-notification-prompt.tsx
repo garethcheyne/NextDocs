@@ -160,7 +160,7 @@ export function PushNotificationPrompt() {
             </Button>
           </div>
           <CardDescription>
-            Get notified about new features, updates, and important announcements from {process.env.NEXT_SITE_NAME || 'NextDocs'}
+            Get notified about new features, updates, and important announcements from {process.env.NEXT_PUBLIC_SITE_NAME || 'NextDocs'}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex gap-2">

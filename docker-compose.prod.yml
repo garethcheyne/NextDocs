@@ -12,6 +12,8 @@ services:
       target: runner
       args:
         - NEXT_PUBLIC_VAPID_PUBLIC_KEY=${NEXT_PUBLIC_VAPID_PUBLIC_KEY}
+        - NEXT_PUBLIC_SITE_NAME=${NEXT_PUBLIC_SITE_NAME}
+        - NEXT_PUBLIC_SITE_DESCRIPTION=${NEXT_PUBLIC_SITE_DESCRIPTION}
     image: nextdocs-app:latest
     container_name: nextdocs-app-prod
     ports:
@@ -30,6 +32,7 @@ services:
       - BACKUP_DIR=/backups
     volumes:
       - ./backups:/backups:rw
+      - ./public/uploads:/app/public/uploads:rw
     depends_on:
       postgres:
         condition: service_healthy

@@ -62,20 +62,6 @@ export const STATUS_COLORS: Record<string, StatusColorConfig> = {
 } as const
 
 /**
- * Get the background class for a status badge
- */
-export function getStatusBgClass(status: string): string {
-  return STATUS_COLORS[status]?.bg || 'bg-gray-500'
-}
-
-/**
- * Get the border class for a status
- */
-export function getStatusBorderClass(status: string): string {
-  return STATUS_COLORS[status]?.border || 'border-gray-500'
-}
-
-/**
  * Get the hover border class for a status
  */
 export function getStatusHoverClass(status: string): string {
@@ -94,15 +80,3 @@ export function getStatusColors(status: string): StatusColorConfig {
   }
 }
 
-/**
- * Legacy color map for backward compatibility
- * @deprecated Use STATUS_COLORS instead
- */
-export const defaultStatusColors: Record<string, string> = {
-  proposal: 'bg-yellow-500',
-  approved: 'bg-green-600',
-  'in-progress': 'bg-blue-500',
-  completed: 'bg-green-500',
-  declined: 'bg-red-500',
-  'on-hold': 'bg-orange-500',
-}

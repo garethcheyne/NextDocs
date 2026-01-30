@@ -4,8 +4,9 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import Link from '@tiptap/extension-link'
-import { useEffect } from 'react'
-import { Bold, Italic, List, ListOrdered, Link as LinkIcon, Undo, Redo, Heading2, Heading3, Code } from 'lucide-react'
+import Image from '@tiptap/extension-image'
+import { useEffect, useRef } from 'react'
+import { Bold, Italic, List, ListOrdered, Link as LinkIcon, Undo, Redo, Heading2, Heading3, Code, Image as ImageIcon, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 
@@ -51,6 +52,9 @@ function htmlToMarkdown(html: string): string {
   if (!html) return ''
   
   let markdown = html
+    // Images (must be before links to avoid conflicts)
+    .replace(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/gi, '![$2]($1)')
+    .replace(/<img[^>]*src="([^"]*)"[^>]*>/gi, '![]($1)')
     // Headers
     .replace(/<h1>(.*?)<\/h1>/gi, '# $1\n\n')
     .replace(/<h2>(.*?)<\/h2>/gi, '## $1\n\n')
@@ -110,6 +114,11 @@ export function RichTextEditor({
           class: 'text-primary underline',
         },
       }),
+      Image.configure({
+        HTMLAttributes: {
+          class: 'max-w-full h-auto rounded-md',
+        },
+      }),
       Placeholder.configure({
         placeholder,
       }),
@@ -135,6 +144,76 @@ export function RichTextEditor({
     }
   }, [content, editor])
 
+  // Handle image upload from file
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleImageUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file')
+      return
+    }
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/upload/images', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('Upload failed')
+      }
+
+      const data = await response.json()
+      if (data.filename) {
+        // Store just the filename in markdown
+        // When displayed, MarkdownImage will construct the secure URL with proper content parameters
+        editor?.chain().focus().setImage({ src: data.filename }).run()
+      }
+    } catch (error) {
+      console.error('Image upload error:', error)
+      alert('Failed to upload image')
+    }
+  }
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0]
+    if (file) {
+      handleImageUpload(file)
+    }
+    // Reset input so the same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  // Handle paste of images
+  useEffect(() => {
+    if (!editor) return
+
+    const handlePaste = (event: ClipboardEvent) => {
+      const items = event.clipboardData?.items
+      if (!items) return
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith('image/')) {
+          const file = items[i].getAsFile()
+          if (file) {
+            event.preventDefault()
+            handleImageUpload(file)
+          }
+        }
+      }
+    }
+
+    editor.view.dom.addEventListener('paste', handlePaste)
+    return () => {
+      editor.view.dom.removeEventListener('paste', handlePaste)
+    }
+  }, [editor])
+
   if (!editor) {
     return null
   }
@@ -143,6 +222,13 @@ export function RichTextEditor({
     const url = window.prompt('Enter URL:')
     if (url) {
       editor.chain().focus().setLink({ href: url }).run()
+    }
+  }
+
+  const addImageByUrl = () => {
+    const url = window.prompt('Enter image URL:')
+    if (url) {
+      editor.chain().focus().setImage({ src: url }).run()
     }
   }
 
@@ -236,6 +322,25 @@ export function RichTextEditor({
               <LinkIcon className="h-4 w-4" />
             </Button>
             
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              title="Upload image (or paste from clipboard)"
+            >
+              <Upload className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={addImageByUrl}
+              title="Insert image by URL"
+            >
+              <ImageIcon className="h-4 w-4" />
+            </Button>
+            
             <Separator orientation="vertical" className="h-6" />
             
             <Button
@@ -259,6 +364,16 @@ export function RichTextEditor({
           </div>
         </>
       )}
+      
+      {/* Hidden file input for image upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileSelect}
+        className="hidden"
+        aria-label="Upload image"
+      />
       
       <EditorContent editor={editor} />
     </div>

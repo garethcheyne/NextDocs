@@ -53,6 +53,9 @@ export default async function FeatureRequestPage({
                 },
             },
             comments: {
+                where: {
+                    isDeleted: false,
+                },
                 include: {
                     user: {
                         select: { id: true, name: true, email: true, image: true },
@@ -289,7 +292,7 @@ export default async function FeatureRequestPage({
                                     <h2 className="text-lg font-semibold">Description</h2>
                                 </CardHeader>
                                 <CardContent>
-                                    <EnhancedMarkdown>
+                                    <EnhancedMarkdown contentType="feature-request" contentId={feature.id}>
                                         {feature.description}
                                     </EnhancedMarkdown>
                                 </CardContent>
@@ -313,7 +316,7 @@ export default async function FeatureRequestPage({
                                     ) : (
                                         <div className="space-y-4">
                                             {feature.comments.map((comment) => (
-                                                <CommentItem key={comment.id} comment={comment} />
+                                                <CommentItem key={comment.id} comment={comment} featureId={feature.id} />
                                             ))}
                                         </div>
                                     )}

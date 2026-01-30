@@ -68,7 +68,7 @@ Before asking your admin to connect your repository:
 - [ ] **Review structure**: Confirm folder organization makes sense
 - [ ] **Add icons**: Include icons in `_meta.json` for better navigation
 - [ ] **Proofread**: Check for typos and formatting issues
-- [ ] **Images**: Ensure all images are committed to the repository
+- [ ] **Media files**: Ensure all images and videos are committed to the repository
 
 ## How Syncing Works :refresh-cw:
 
@@ -85,6 +85,7 @@ Once your admin connects your repository:
 - All `.md` files in the docs folder
 - `_meta.json` files
 - Images referenced in markdown
+- Videos referenced in markdown
 
 ❌ **Not synced**:
 - Application code outside docs folder
@@ -153,6 +154,18 @@ Your changes will appear in NextDocs within minutes (depending on the sync sched
 2. Use relative paths: `![Alt](./images/screenshot.png)`
 3. Verify image files exist in the correct location
 4. Check file extensions are lowercase (.png not .PNG)
+
+### Videos Not Playing
+
+**Problem**: Videos don't play in NextDocs
+
+**Solution**:
+1. Ensure video files are committed to the repository (videos must be in git)
+2. Use relative paths: `![Demo](./videos/demo.mp4)`
+3. Verify video files exist in the correct location
+4. Check file format is supported: MP4, WebM, Ogg, AVI, MKV, MOV, FLV, or MPEG
+5. Ensure video file size is reasonable (50-100MB recommended)
+6. Video requires authentication - make sure you're logged in to view
 
 ## Best Practices :lightbulb:
 

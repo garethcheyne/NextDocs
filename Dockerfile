@@ -12,9 +12,15 @@ RUN npm install
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Accept VAPID key as build argument
+# Accept public env vars as build arguments (needed for client-side inlining)
 ARG NEXT_PUBLIC_VAPID_PUBLIC_KEY
 ENV NEXT_PUBLIC_VAPID_PUBLIC_KEY=$NEXT_PUBLIC_VAPID_PUBLIC_KEY
+
+ARG NEXT_PUBLIC_SITE_NAME
+ENV NEXT_PUBLIC_SITE_NAME=$NEXT_PUBLIC_SITE_NAME
+
+ARG NEXT_PUBLIC_SITE_DESCRIPTION
+ENV NEXT_PUBLIC_SITE_DESCRIPTION=$NEXT_PUBLIC_SITE_DESCRIPTION
 
 # Provide dummy DATABASE_URL for build (real one injected at runtime)
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"

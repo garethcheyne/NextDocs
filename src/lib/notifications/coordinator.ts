@@ -564,7 +564,7 @@ export class NotificationCoordinator {
                     
                     <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; font-size: 12px; color: #666;">
                         <p><strong>This is an automated system alert.</strong></p>
-                        <p>You are receiving this because you are an administrator of ${process.env.NEXT_SITE_NAME || 'NextDocs'} system.</p>
+                        <p>You are receiving this because you are an administrator of ${process.env.NEXT_PUBLIC_SITE_NAME || 'NextDocs'} system.</p>
                     </div>
                 </body>
             </html>

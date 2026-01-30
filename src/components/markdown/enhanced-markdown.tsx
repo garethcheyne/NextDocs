@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { Components } from 'react-markdown'
 import { MarkdownImage } from './markdown-image'
+import { MarkdownVideo } from './markdown-video'
 import { LanguageBadgeDisplay } from '../badges/code-language-badge'
 import * as LucideIcons from 'lucide-react'
 import * as FluentIcons from '@fluentui/react-icons'
@@ -272,9 +273,23 @@ interface EnhancedMarkdownProps {
     className?: string
     repositorySlug?: string
     documentPath?: string
+    requestId?: string // For feature requests (legacy, use contentId instead)
+    contentType?: 'feature-request' | 'blog' | 'release' | 'guide' | 'documentation' | 'api-spec'
+    contentId?: string // ID of the content (feature ID, blog slug, release ID, etc.)
 }
 
-export function EnhancedMarkdown({ children, className, repositorySlug, documentPath }: EnhancedMarkdownProps) {
+export function EnhancedMarkdown({
+    children,
+    className,
+    repositorySlug,
+    documentPath,
+    requestId,
+    contentType,
+    contentId,
+}: EnhancedMarkdownProps) {
+    // Support legacy requestId parameter
+    const finalContentType = contentType || (requestId ? 'feature-request' : undefined)
+    const finalContentId = contentId || requestId
     const finalClassName = cn(className || DEFAULT_PROSE_CLASSES)
 
     const { processedContent, releases } = extractReleaseBlocks(children)
@@ -301,12 +316,28 @@ export function EnhancedMarkdown({ children, className, repositorySlug, document
             )
         },
         img({ src, alt, title }: any) {
+            // Check if this is a video file
+            const videoExtensions = ['mp4', 'webm', 'ogg', 'avi', 'mkv', 'mov', 'flv', 'wmv', 'mpg', 'mpeg', 'm4v']
+            const ext = src?.split('.').pop()?.toLowerCase()
+            const isVideo = ext && videoExtensions.includes(ext)
+
+            if (isVideo) {
+                return <MarkdownVideo
+                    src={src || ''}
+                    title={title || alt}
+                    contentType={finalContentType}
+                    contentId={finalContentId}
+                />
+            }
+
             return <MarkdownImage
                 src={src || ''}
                 alt={alt || ''}
                 title={title}
                 repositorySlug={repositorySlug}
                 documentPath={documentPath}
+                contentType={finalContentType}
+                contentId={finalContentId}
             />
         },
         a({ href, children }: any) {

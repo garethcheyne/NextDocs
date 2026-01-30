@@ -444,8 +444,8 @@ body {
 .glow-effect-primary {
   position: absolute;
   inset: 0;
-  width: 600px;
-  height: 600px;
+  /* width: 600px;
+  height: 600px; */
   background: linear-gradient(to bottom right, rgba(249, 115, 22, 0.2), rgba(249, 115, 22, 0.2));
   filter: blur(48px);
   z-index: -10;
@@ -455,8 +455,8 @@ body {
 .glow-effect-secondary {
   position: absolute;
   inset: 0;
-  width: 600px;
-  height: 600px;
+  /* width: 600px;
+  height: 600px; */
   background: linear-gradient(to bottom right, rgba(249, 115, 22, 0.1), rgba(249, 115, 22, 0.1));
   filter: blur(100px);
   z-index: -20;

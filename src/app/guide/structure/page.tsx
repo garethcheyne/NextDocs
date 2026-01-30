@@ -34,7 +34,7 @@ export default async function StructurePage() {
           Back to Guide
         </Button>
       </Link>
-      <EnhancedMarkdown>{content}</EnhancedMarkdown>
+      <EnhancedMarkdown contentType="documentation">{content}</EnhancedMarkdown>
     </ContentDetailLayout>
   )
 }

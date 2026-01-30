@@ -12,6 +12,16 @@ import { EnhancedMarkdown } from '@/components/markdown/enhanced-markdown'
 import { AuthorDisplay } from '@/components/ui/author-display'
 import ReactMarkdown from 'react-markdown'
 import { formatDate, formatTime } from '@/lib/utils/date-format'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 interface CommentItemProps {
     comment: {
@@ -27,9 +37,10 @@ interface CommentItemProps {
             image: string | null
         } | null
     }
+    featureId?: string
 }
 
-export function CommentItem({ comment }: CommentItemProps) {
+export function CommentItem({ comment, featureId }: CommentItemProps) {
     const { data: session } = useSession()
     const router = useRouter()
     const [isEditing, setIsEditing] = useState(false)
@@ -37,6 +48,7 @@ export function CommentItem({ comment }: CommentItemProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [showPreview, setShowPreview] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
     const { textareaRef, handleInsert } = useMarkdownEditor(editContent, setEditContent)
 
@@ -77,10 +89,6 @@ export function CommentItem({ comment }: CommentItemProps) {
     }
 
     const handleDelete = async () => {
-        if (!confirm('Are you sure you want to delete this comment?')) {
-            return
-        }
-
         setIsSubmitting(true)
 
         try {
@@ -93,6 +101,7 @@ export function CommentItem({ comment }: CommentItemProps) {
                 throw new Error(data.error || 'Failed to delete comment')
             }
 
+            setDeleteDialogOpen(false)
             router.refresh()
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to delete comment')
@@ -137,7 +146,7 @@ export function CommentItem({ comment }: CommentItemProps) {
 
                     {showPreview ? (
                         <div className="p-3 border rounded-md min-h-[100px]">
-                            <EnhancedMarkdown className="prose prose-sm max-w-none dark:prose-invert">
+                            <EnhancedMarkdown className="prose prose-sm max-w-none dark:prose-invert" contentType="feature-request" contentId={featureId}>
                                 {editContent}
                             </EnhancedMarkdown>
                         </div>
@@ -182,7 +191,7 @@ export function CommentItem({ comment }: CommentItemProps) {
                 </div>
             ) : (
                 <div className="mb-3">
-                    <EnhancedMarkdown className="prose prose-sm max-w-none dark:prose-invert [&>*]:text-foreground/90 dark:[&>*]:text-foreground/90">
+                    <EnhancedMarkdown className="prose prose-sm max-w-none dark:prose-invert [&>*]:text-foreground/90 dark:[&>*]:text-foreground/90" contentType="feature-request" contentId={featureId}>
                         {comment.content}
                     </EnhancedMarkdown>
                 </div>
@@ -221,7 +230,7 @@ export function CommentItem({ comment }: CommentItemProps) {
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={handleDelete}
+                                onClick={() => setDeleteDialogOpen(true)}
                                 disabled={isSubmitting}
                                 className="h-6 w-6 p-0"
                             >
@@ -231,6 +240,28 @@ export function CommentItem({ comment }: CommentItemProps) {
                     )}
                 </div>
             </div>
+
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Comment</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete this comment? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDelete}
+                            disabled={isSubmitting}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            {isSubmitting ? 'Deleting...' : 'Delete'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }

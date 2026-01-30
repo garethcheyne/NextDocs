@@ -122,7 +122,7 @@ export function buildFeatureStatusChangeEmail(
         <!-- Header -->
         <div style="${headerStyles}">
           <div style="${logoStyles}">
-            <img src="${process.env.NEXT_PUBLIC_URL}/icons/logo-256.png" alt="${process.env.NEXT_SITE_NAME || 'NextDocs'}" style="max-height: 120px; height: auto; width: auto;" />
+            <img src="${process.env.NEXT_PUBLIC_URL}/icons/logo-256.png" alt="${process.env.NEXT_PUBLIC_SITE_NAME || 'NextDocs'}" style="max-height: 120px; height: auto; width: auto;" />
           </div>
           <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             ${statusEmoji[newStatus] || '📢'} Feature Status Updated
@@ -182,7 +182,7 @@ export function buildFeatureStatusChangeEmail(
             <a href="${process.env.NEXT_PUBLIC_URL}/settings/notifications" style="color: #666;">Notification Settings</a>
           </p>
           <p style="margin: 16px 0 0 0; color: #9ca3af; font-weight: 500;">
-            ${process.env.NEXT_SITE_NAME || 'NextDocs'}
+            ${process.env.NEXT_PUBLIC_SITE_NAME || 'NextDocs'}
           </p>
         </div>
       </div>
@@ -229,7 +229,7 @@ export function buildNewCommentEmail(
         <!-- Header -->
         <div style="${headerStyles}">
           <div style="${logoStyles}">
-            <img src="${process.env.NEXT_PUBLIC_URL}/icons/logo-256.png" alt="${process.env.NEXT_SITE_NAME || 'NextDocs'}" style="max-height: 200px; height: auto; width: auto;" />
+            <img src="${process.env.NEXT_PUBLIC_URL}/icons/logo-256.png" alt="${process.env.NEXT_PUBLIC_SITE_NAME || 'NextDocs'}" style="max-height: 200px; height: auto; width: auto;" />
           </div>
           <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             💬 New Comment Added
@@ -272,7 +272,7 @@ export function buildNewCommentEmail(
             <a href="${process.env.NEXT_PUBLIC_URL}/settings/notifications" style="color: #666;">Notification Settings</a>
           </p>
           <p style="margin: 16px 0 0 0; color: #9ca3af; font-weight: 500;">
-            ${process.env.NEXT_SITE_NAME || 'NextDocs'}
+            ${process.env.NEXT_PUBLIC_SITE_NAME || 'NextDocs'}
           </p>
         </div>
       </div>
@@ -334,7 +334,7 @@ export function buildReleaseNotificationEmail(options: {
         <!-- Header -->
         <div style="${headerStyles}">
           <div style="${logoStyles}">
-            <img src="${process.env.NEXT_PUBLIC_URL}/icons/logo-256.png" alt="${process.env.NEXT_SITE_NAME || 'NextDocs'}" style="max-height: 200px; height: auto; width: auto;" />
+            <img src="${process.env.NEXT_PUBLIC_URL}/icons/logo-256.png" alt="${process.env.NEXT_PUBLIC_SITE_NAME || 'NextDocs'}" style="max-height: 200px; height: auto; width: auto;" />
           </div>
           <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             🚀 Release Notes v${version}
@@ -362,15 +362,16 @@ export function buildReleaseNotificationEmail(options: {
               ${content.replace(/\n/g, '<br>')}
             </div>
           </div>
-
-          ${documentUrl ? `
-            <div style="text-align: center; margin: 32px 0;">
-              <a href="${documentUrl}" style="${buttonStyles}">
-                View Full Documentation
-              </a>
-            </div>
-          ` : ''}
         </div>
+
+        ${documentUrl ? `
+          <!-- View Online Button -->
+          <div style="text-align: center; margin: 32px 0; padding: 0 20px;">
+            <a href="${documentUrl}" style="${buttonStyles}">
+              📄 View Release Notes Online
+            </a>
+          </div>
+        ` : ''}
 
         <!-- Footer -->
         <div style="${footerStyles}">
@@ -382,7 +383,7 @@ export function buildReleaseNotificationEmail(options: {
             <a href="${process.env.NEXT_PUBLIC_URL}/docs" style="color: #ff6b35;">Documentation</a>
           </p>
           <p style="margin: 16px 0 0 0; color: #9ca3af; font-weight: 500;">
-            ${process.env.NEXT_SITE_NAME || 'NextDocs'}
+            ${process.env.NEXT_PUBLIC_SITE_NAME || 'NextDocs'}
           </p>
         </div>
       </div>
@@ -420,7 +421,7 @@ export function buildNewFeatureEmail(
         <!-- Header -->
         <div style="${headerStyles}">
           <div style="${logoStyles}">
-            <img src="${process.env.NEXT_PUBLIC_URL}/icons/logo-256.png" alt="${process.env.NEXT_SITE_NAME || 'NextDocs'}" style="max-height: 120px; height: auto; width: auto;" />
+            <img src="${process.env.NEXT_PUBLIC_URL}/icons/logo-256.png" alt="${process.env.NEXT_PUBLIC_SITE_NAME || 'NextDocs'}" style="max-height: 200px; height: auto; width: auto;" />
           </div>
           <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             ✨ New Feature Request
@@ -473,7 +474,7 @@ export function buildNewFeatureEmail(
             <a href="${process.env.NEXT_PUBLIC_URL}/settings/notifications" style="color: #666;">Notification Settings</a>
           </p>
           <p style="margin: 16px 0 0 0; color: #9ca3af; font-weight: 500;">
-            ${process.env.NEXT_SITE_NAME || 'NextDocs'}
+            ${process.env.NEXT_PUBLIC_SITE_NAME || 'NextDocs'}
           </p>
         </div>
       </div>
