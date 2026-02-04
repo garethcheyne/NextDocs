@@ -70,6 +70,15 @@ export default function IntegrationSettings({ category, devopsEnabled = false, g
   const [availableAreaPaths, setAvailableAreaPaths] = useState<string[]>([]);
   const [isLoadingAreaPaths, setIsLoadingAreaPaths] = useState(false);
 
+  // Validate and sanitize project name - allow spaces but prevent dangerous characters
+  const handleProjectNameChange = (value: string) => {
+    // Only remove dangerous characters that would cause URL encoding issues
+    // Keep spaces and other normal characters
+    const sanitized = value.replace(/[<>'"&%]/g, '')
+    
+    setDevopsProject(sanitized)
+  }
+
   // Sync settings
   const [syncComments, setSyncComments] = useState(category.syncComments);
   const [syncStatus, setSyncStatus] = useState(category.syncStatus);
@@ -231,10 +240,10 @@ export default function IntegrationSettings({ category, devopsEnabled = false, g
                     id="devops-project"
                     placeholder="MyProject"
                     value={devopsProject}
-                    onChange={(e) => setDevopsProject(e.target.value)}
+                    onChange={(e) => handleProjectNameChange(e.target.value)}
                   />
                   <p className="text-sm text-muted-foreground">
-                    The name of your Azure DevOps project.
+                    The name of your Azure DevOps project. Special characters like %, &lt;, &gt;, &apos;, &quot; will be removed.
                   </p>
                 </div>
 

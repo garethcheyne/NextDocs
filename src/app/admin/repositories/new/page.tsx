@@ -105,14 +105,45 @@ export default function NewRepositoryPage() {
     setIsLoading(true)
     setTestResult(null)
 
-    // Simulate API call
-    setTimeout(() => {
-      setTestResult({
-        success: true,
-        message: 'Connection successful! Found 23 markdown files.',
+    try {
+      const payload = provider === 'GITHUB'
+        ? {
+          provider: 'GITHUB',
+          owner: formData.githubOwner,
+          repo: formData.githubRepo,
+          token: formData.githubToken,
+          branch: formData.branch,
+        }
+        : {
+          provider: 'AZURE_DEVOPS',
+          organization: formData.azureOrganization,
+          project: formData.azureProject,
+          repositoryId: formData.azureRepository,
+          pat: formData.azurePat,
+          branch: formData.branch,
+        }
+
+      const response = await fetch('/api/repositories/test-connection', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
       })
+
+      const result = await response.json()
+      setTestResult({
+        success: result.success,
+        message: result.success ? result.message : result.error,
+      })
+    } catch (error) {
+      setTestResult({
+        success: false,
+        message: error instanceof Error ? error.message : 'Connection test failed',
+      })
+    } finally {
       setIsLoading(false)
-    }, 2000)
+    }
   }
 
   const updateSyncStep = (stepId: string, status: SyncStep['status'], message?: string) => {
@@ -125,11 +156,11 @@ export default function NewRepositoryPage() {
 
   const simulateSync = async () => {
     const steps = ['save', 'connect', 'scan', 'index', 'complete']
-    
+
     for (const stepId of steps) {
       updateSyncStep(stepId, 'processing')
       await new Promise(resolve => setTimeout(resolve, 1500))
-      
+
       if (stepId === 'scan') {
         updateSyncStep(stepId, 'completed', 'Found 23 markdown files')
       } else if (stepId === 'index') {
@@ -198,405 +229,401 @@ export default function NewRepositoryPage() {
     <>
       {/* Header */}
       <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <BreadcrumbNavigation
-            items={[
-              { label: 'Admin', href: '/admin' },
-              { label: 'Repositories', href: '/admin/repositories' },
-              { label: 'New Repository', href: '/admin/repositories/new' },
-            ]}
-          />
-          <div className="ml-auto flex items-center gap-2">
-            <ThemeToggle />
-          </div>
-        </header>
+        <SidebarTrigger className="-ml-1" />
+        <Separator orientation="vertical" className="mr-2 h-4" />
+        <BreadcrumbNavigation
+          items={[
+            { label: 'Admin', href: '/admin' },
+            { label: 'Repositories', href: '/admin/repositories' },
+            { label: 'New Repository', href: '/admin/repositories/new' },
+          ]}
+        />
+        <div className="ml-auto flex items-center gap-2">
+          <ThemeToggle />
+        </div>
+      </header>
 
-        {/* Main Content */}
+      {/* Main Content */}
       <div className="flex-1 p-6 space-y-6 overflow-auto">
-          {/* Page Header */}
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">
-              Add New Repository
-            </h1>
-            <p className="text-gray-400 mt-2">
-              Connect a documentation repository from Azure DevOps or GitHub
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Provider Selection */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Source Provider</CardTitle>
-                <CardDescription>
-                  Choose where your documentation is hosted
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setProvider('AZURE_DEVOPS')}
-                    className={`p-6 rounded-lg border-2 transition-colors ${
-                      provider === 'AZURE_DEVOPS'
-                        ? 'border-primary bg-primary/10'
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <div className="text-center">
-                      <div className="text-2xl mb-2">☁️</div>
-                      <div className="font-semibold">Azure DevOps</div>
-                      <div className="text-sm text-muted-foreground mt-1">
-                        Microsoft Azure DevOps repositories
-                      </div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setProvider('GITHUB')}
-                    className={`p-6 rounded-lg border-2 transition-colors ${
-                      provider === 'GITHUB'
-                        ? 'border-primary bg-primary/10'
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <div className="text-center">
-                      <div className="text-2xl mb-2">🐙</div>
-                      <div className="font-semibold">GitHub</div>
-                      <div className="text-sm text-muted-foreground mt-1">
-                        GitHub repositories
-                      </div>
-                    </div>
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Repository URL */}
-            <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
-              <CardHeader>
-                <CardTitle className="text-white">Repository URL</CardTitle>
-                <CardDescription className="text-gray-400">
-                  Paste your repository URL and we'll extract the details automatically
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="repoUrl" className="text-gray-300">
-                    Repository URL
-                  </Label>
-                  <Input
-                    id="repoUrl"
-                    type="url"
-                    placeholder="e.g., https://dev.azure.com/harveynorman/HN%20Commercial%20Division/_git/Full%20Documentation%20Repo"
-                    value={formData.repoUrl}
-                    onChange={(e) => handleUrlChange(e.target.value)}
-                    className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-brand-orange"
-                  />
-                  <p className="text-xs text-gray-500">
-                    Supports Azure DevOps and GitHub URLs
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Basic Information */}
-            <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
-              <CardHeader>
-                <CardTitle className="text-white">Source Configuration</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="text-gray-300">
-                    Repository Name *
-                  </Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="e.g., Business Central Documentation"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                    className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-brand-orange"
-                  />
-                  <p className="text-xs text-gray-500">
-                    A friendly name to identify this repository
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Azure DevOps Configuration */}
-            {provider === 'AZURE_DEVOPS' && (
-              <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
-                <CardHeader>
-                  <CardTitle className="text-white">Azure DevOps Settings</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="azureOrganization" className="text-gray-300">
-                      Organization *
-                    </Label>
-                    <Input
-                      id="azureOrganization"
-                      type="text"
-                      placeholder="e.g., HNC-Apps"
-                      value={formData.azureOrganization}
-                      onChange={(e) =>
-                        setFormData({ ...formData, azureOrganization: e.target.value })
-                      }
-                      required
-                      className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-brand-orange"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="azureProject" className="text-gray-300">
-                      Project *
-                    </Label>
-                    <Input
-                      id="azureProject"
-                      type="text"
-                      placeholder="e.g., BC-Docs"
-                      value={formData.azureProject}
-                      onChange={(e) =>
-                        setFormData({ ...formData, azureProject: e.target.value })
-                      }
-                      required
-                      className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-brand-orange"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="azureRepository" className="text-gray-300">
-                      Repository *
-                    </Label>
-                    <Input
-                      id="azureRepository"
-                      type="text"
-                      placeholder="e.g., main"
-                      value={formData.azureRepository}
-                      onChange={(e) =>
-                        setFormData({ ...formData, azureRepository: e.target.value })
-                      }
-                      required
-                      className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-brand-orange"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="azurePat" className="text-gray-300">
-                      Personal Access Token (PAT) *
-                    </Label>
-                    <Input
-                      id="azurePat"
-                      type="password"
-                      placeholder="Enter your Azure DevOps PAT"
-                      value={formData.azurePat}
-                      onChange={(e) =>
-                        setFormData({ ...formData, azurePat: e.target.value })
-                      }
-                      required
-                      className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-brand-orange"
-                    />
-                    <p className="text-xs text-gray-500">
-                      Requires 'Code (Read)' permission
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* GitHub Configuration */}
-            {provider === 'GITHUB' && (
-              <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
-                <CardHeader>
-                  <CardTitle className="text-white">GitHub Settings</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="githubOwner" className="text-gray-300">
-                      Owner / Organization *
-                    </Label>
-                    <Input
-                      id="githubOwner"
-                      type="text"
-                      placeholder="e.g., garethcheyne"
-                      value={formData.githubOwner}
-                      onChange={(e) =>
-                        setFormData({ ...formData, githubOwner: e.target.value })
-                      }
-                      required
-                      className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-brand-orange"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="githubRepo" className="text-gray-300">
-                      Repository *
-                    </Label>
-                    <Input
-                      id="githubRepo"
-                      type="text"
-                      placeholder="e.g., api-docs"
-                      value={formData.githubRepo}
-                      onChange={(e) =>
-                        setFormData({ ...formData, githubRepo: e.target.value })
-                      }
-                      required
-                      className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-brand-orange"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="githubToken" className="text-gray-300">
-                      Personal Access Token *
-                    </Label>
-                    <Input
-                      id="githubToken"
-                      type="password"
-                      placeholder="Enter your GitHub token"
-                      value={formData.githubToken}
-                      onChange={(e) =>
-                        setFormData({ ...formData, githubToken: e.target.value })
-                      }
-                      required
-                      className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-brand-orange"
-                    />
-                    <p className="text-xs text-gray-500">
-                      Requires 'repo' scope for private repositories
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Repository Settings */}
-            <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
-              <CardHeader>
-                <CardTitle className="text-white">Repository Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="branch" className="text-gray-300">
-                      Branch *
-                    </Label>
-                    <Input
-                      id="branch"
-                      type="text"
-                      placeholder="main"
-                      value={formData.branch}
-                      onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
-                      required
-                      className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-brand-orange"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="basePath" className="text-gray-300">
-                      Base Path
-                    </Label>
-                    <Input
-                      id="basePath"
-                      type="text"
-                      placeholder="/"
-                      value={formData.basePath}
-                      onChange={(e) => setFormData({ ...formData, basePath: e.target.value })}
-                      className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-brand-orange"
-                    />
-                    <p className="text-xs text-gray-500">
-                      Path to docs folder (e.g., /docs or /)
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="syncSchedule" className="text-gray-300">
-                    Sync Schedule
-                  </Label>
-                  <select
-                    id="syncSchedule"
-                    title="Sync Schedule"
-                    value={formData.syncSchedule}
-                    onChange={(e) =>
-                      setFormData({ ...formData, syncSchedule: e.target.value })
-                    }
-                    className="w-full px-4 py-2 rounded-lg bg-gray-800/50 border border-gray-700 text-white focus:border-brand-orange focus:outline-none"
-                  >
-                    <option value="HOURLY_1">Every hour</option>
-                    <option value="HOURLY_6">Every 6 hours</option>
-                    <option value="HOURLY_12">Every 12 hours</option>
-                    <option value="DAILY">Daily at 2am</option>
-                    <option value="MANUAL">Manual only</option>
-                  </select>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Test Connection Result */}
-            {testResult && (
-              <Card
-                className={`border-2 backdrop-blur-xl ${
-                  testResult.success
-                    ? 'bg-green-500/10 border-green-500/50'
-                    : 'bg-red-500/10 border-red-500/50'
-                }`}
-              >
-                <CardContent className="pt-6">
-                  <p
-                    className={`${
-                      testResult.success ? 'text-green-400' : 'text-red-400'
-                    }`}
-                  >
-                    {testResult.message}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Actions */}
-            <div className="flex gap-4">
-              <Button
-                type="button"
-                onClick={handleTestConnection}
-                disabled={isLoading}
-                variant="outline"
-                className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white"
-              >
-                <TestTube className="w-4 h-4 mr-2" />
-                {isLoading ? 'Testing...' : 'Test Connection'}
-              </Button>
-
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="bg-gradient-to-r from-brand-orange to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                {isLoading ? 'Saving...' : 'Save Repository'}
-              </Button>
-
-              <Link href="/admin/repositories">
-                <Button type="button" variant="ghost" className="text-gray-400 hover:text-white">
-                  Cancel
-                </Button>
-              </Link>
-            </div>
-          </form>
+        {/* Page Header */}
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-orange to-orange-500 bg-clip-text text-transparent">
+            Add New Repository
+          </h1>
+          <p className="text-gray-400 mt-2">
+            Connect a documentation repository from Azure DevOps or GitHub
+          </p>
         </div>
 
-        {/* Sync Progress Modal */}
-        {showSyncModal && (
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Provider Selection */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Source Provider</CardTitle>
+              <CardDescription>
+                Choose where your documentation is hosted
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setProvider('AZURE_DEVOPS')}
+                  className={`p-6 rounded-lg border-2 transition-colors ${provider === 'AZURE_DEVOPS'
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border hover:border-primary/50'
+                    }`}
+                >
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">☁️</div>
+                    <div className="font-semibold">Azure DevOps</div>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      Microsoft Azure DevOps repositories
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setProvider('GITHUB')}
+                  className={`p-6 rounded-lg border-2 transition-colors ${provider === 'GITHUB'
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border hover:border-primary/50'
+                    }`}
+                >
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">🐙</div>
+                    <div className="font-semibold">GitHub</div>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      GitHub repositories
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Repository URL */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Repository URL</CardTitle>
+              <CardDescription >
+                Paste your repository URL and we'll extract the details automatically
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="repoUrl" >
+                  Repository URL
+                </Label>
+                <Input
+                  id="repoUrl"
+                  type="url"
+                  placeholder="e.g., https://dev.azure.com/harveynorman/HN%20Commercial%20Division/_git/Full%20Documentation%20Repo"
+                  value={formData.repoUrl}
+                  onChange={(e) => handleUrlChange(e.target.value)}
+
+                />
+                <p className="text-xs text-muted-foreground">
+                  Supports Azure DevOps and GitHub URLs
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Basic Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Source Configuration</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name" >
+                  Repository Name *
+                </Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="e.g., Business Central Documentation"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+
+                />
+                <p className="text-xs text-muted-foreground">
+                  A friendly name to identify this repository
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Azure DevOps Configuration */}
+          {provider === 'AZURE_DEVOPS' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Azure DevOps Settings</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="azureOrganization" >
+                    Organization *
+                  </Label>
+                  <Input
+                    id="azureOrganization"
+                    type="text"
+                    placeholder="e.g., HNC-Apps"
+                    value={formData.azureOrganization}
+                    onChange={(e) =>
+                      setFormData({ ...formData, azureOrganization: e.target.value })
+                    }
+                    required
+
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="azureProject" >
+                    Project *
+                  </Label>
+                  <Input
+                    id="azureProject"
+                    type="text"
+                    placeholder="e.g., BC-Docs"
+                    value={formData.azureProject}
+                    onChange={(e) =>
+                      setFormData({ ...formData, azureProject: e.target.value })
+                    }
+                    required
+
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="azureRepository" >
+                    Repository *
+                  </Label>
+                  <Input
+                    id="azureRepository"
+                    type="text"
+                    placeholder="e.g., main"
+                    value={formData.azureRepository}
+                    onChange={(e) =>
+                      setFormData({ ...formData, azureRepository: e.target.value })
+                    }
+                    required
+
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="azurePat" >
+                    Personal Access Token (PAT) *
+                  </Label>
+                  <Input
+                    id="azurePat"
+                    type="password"
+                    placeholder="Enter your Azure DevOps PAT"
+                    value={formData.azurePat}
+                    onChange={(e) =>
+                      setFormData({ ...formData, azurePat: e.target.value })
+                    }
+                    required
+
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Requires 'Code (Read)' permission
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* GitHub Configuration */}
+          {provider === 'GITHUB' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>GitHub Settings</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="githubOwner" >
+                    Owner / Organization *
+                  </Label>
+                  <Input
+                    id="githubOwner"
+                    type="text"
+                    placeholder="e.g., garethcheyne"
+                    value={formData.githubOwner}
+                    onChange={(e) =>
+                      setFormData({ ...formData, githubOwner: e.target.value })
+                    }
+                    required
+
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="githubRepo" >
+                    Repository *
+                  </Label>
+                  <Input
+                    id="githubRepo"
+                    type="text"
+                    placeholder="e.g., api-docs"
+                    value={formData.githubRepo}
+                    onChange={(e) =>
+                      setFormData({ ...formData, githubRepo: e.target.value })
+                    }
+                    required
+
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="githubToken" >
+                    Personal Access Token *
+                  </Label>
+                  <Input
+                    id="githubToken"
+                    type="password"
+                    placeholder="Enter your GitHub token"
+                    value={formData.githubToken}
+                    onChange={(e) =>
+                      setFormData({ ...formData, githubToken: e.target.value })
+                    }
+                    required
+
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Requires 'repo' scope for private repositories
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Repository Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Repository Settings</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="branch" >
+                    Branch *
+                  </Label>
+                  <Input
+                    id="branch"
+                    type="text"
+                    placeholder="main"
+                    value={formData.branch}
+                    onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
+                    required
+
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="basePath" >
+                    Base Path
+                  </Label>
+                  <Input
+                    id="basePath"
+                    type="text"
+                    placeholder="/"
+                    value={formData.basePath}
+                    onChange={(e) => setFormData({ ...formData, basePath: e.target.value })}
+
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Path to docs folder (e.g., /docs or /)
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="syncSchedule" >
+                  Sync Schedule
+                </Label>
+                <select
+                  id="syncSchedule"
+                  title="Sync Schedule"
+                  value={formData.syncSchedule}
+                  onChange={(e) =>
+                    setFormData({ ...formData, syncSchedule: e.target.value })
+                  }
+                  className="w-full px-4 py-2 rounded-lg bg-gray-800/50 border border-gray-700 text-white focus:border-brand-orange focus:outline-none"
+                >
+                  <option value="HOURLY_1">Every hour</option>
+                  <option value="HOURLY_6">Every 6 hours</option>
+                  <option value="HOURLY_12">Every 12 hours</option>
+                  <option value="DAILY">Daily at 2am</option>
+                  <option value="MANUAL">Manual only</option>
+                </select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Test Connection Result */}
+          {testResult && (
+            <Card
+              className={`border-2 backdrop-blur-xl ${testResult.success
+                  ? 'bg-green-500/10 border-green-500/50'
+                  : 'bg-red-500/10 border-red-500/50'
+                }`}
+            >
+              <CardContent className="pt-6">
+                <p
+                  className={`${testResult.success ? 'text-green-400' : 'text-red-400'
+                    }`}
+                >
+                  {testResult.message}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-4">
+            <Button
+              type="button"
+              onClick={handleTestConnection}
+              disabled={isLoading}
+              variant="outline"
+              className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white"
+            >
+              <TestTube className="w-4 h-4 mr-2" />
+              {isLoading ? 'Testing...' : 'Test Connection'}
+            </Button>
+
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="bg-gradient-to-r from-brand-orange to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {isLoading ? 'Saving...' : 'Save Repository'}
+            </Button>
+
+            <Link href="/admin/repositories">
+              <Button type="button" variant="ghost" className="text-gray-400 hover:text-white">
+                Cancel
+              </Button>
+            </Link>
+          </div>
+        </form>
+      </div>
+
+      {/* Sync Progress Modal */}
+      {showSyncModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <Card className="bg-white/90 dark:bg-gray-900 border-gray-200 dark:border-gray-800 max-w-lg w-full">
             <CardHeader>
               <CardTitle className="text-white text-xl">
                 Setting Up Repository
               </CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardDescription >
                 Please wait while we configure and sync your repository
               </CardDescription>
             </CardHeader>
@@ -619,15 +646,14 @@ export default function NewRepositoryPage() {
                   </div>
                   <div className="flex-1">
                     <p
-                      className={`text-sm font-medium ${
-                        step.status === 'completed'
+                      className={`text-sm font-medium ${step.status === 'completed'
                           ? 'text-green-400'
                           : step.status === 'processing'
-                          ? 'text-brand-orange'
-                          : step.status === 'error'
-                          ? 'text-red-400'
-                          : 'text-gray-500'
-                      }`}
+                            ? 'text-brand-orange'
+                            : step.status === 'error'
+                              ? 'text-red-400'
+                              : 'text-gray-500'
+                        }`}
                     >
                       {step.label}
                     </p>
@@ -639,7 +665,7 @@ export default function NewRepositoryPage() {
               ))}
             </CardContent>
           </Card>
-      </div>
+        </div>
       )}
     </>
   )

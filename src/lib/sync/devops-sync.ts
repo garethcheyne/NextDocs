@@ -242,14 +242,14 @@ async function createAzureDevOpsWorkItem(
         path: '/relations/-',
         value: {
           rel: 'System.LinkTypes.Hierarchy-Reverse',
-          url: `${process.env.DEVOPS_ORG_URL}/${category.devopsProject}/_apis/wit/workitems/${epic.externalId}`,
+          url: `${process.env.DEVOPS_ORG_URL}/${encodeURIComponent(category.devopsProject)}/_apis/wit/workitems/${epic.externalId}`,
         },
       });
     }
 
     // Create work item
     const response = await fetch(
-      `${process.env.DEVOPS_ORG_URL}/${category.devopsProject}/_apis/wit/workitems/$${encodeURIComponent(workItemType)}?api-version=7.1`,
+      `${process.env.DEVOPS_ORG_URL}/${encodeURIComponent(category.devopsProject)}/_apis/wit/workitems/$${encodeURIComponent(workItemType)}?api-version=7.1`,
       {
         method: 'POST',
         headers: {
@@ -438,7 +438,7 @@ async function updateAzureDevOpsWorkItem(
   }
 
   const response = await fetch(
-    `https://dev.azure.com/${category.devopsOrg}/${category.devopsProject}/_apis/wit/workitems/${workItemId}?api-version=7.0`,
+    `https://dev.azure.com/${encodeURIComponent(category.devopsOrg)}/${encodeURIComponent(category.devopsProject)}/_apis/wit/workitems/${workItemId}?api-version=7.0`,
     {
       method: 'PATCH',
       headers: {
@@ -634,7 +634,7 @@ async function addAzureDevOpsCommentAsUser(
 
   try {
     const response = await fetch(
-      `${process.env.DEVOPS_ORG_URL}/${category.devopsProject}/_apis/wit/workitems/${workItemId}/comments?api-version=7.0-preview.3`,
+      `${process.env.DEVOPS_ORG_URL}/${encodeURIComponent(category.devopsProject)}/_apis/wit/workitems/${workItemId}/comments?api-version=7.0-preview.3`,
       {
         method: 'POST',
         headers: {
@@ -686,7 +686,7 @@ async function addAzureDevOpsComment(
   const accessToken = await getDevOpsAccessToken();
 
   const response = await fetch(
-    `${process.env.DEVOPS_ORG_URL}/${category.devopsProject}/_apis/wit/workitems/${workItemId}/comments?api-version=7.0-preview.3`,
+    `${process.env.DEVOPS_ORG_URL}/${encodeURIComponent(category.devopsProject)}/_apis/wit/workitems/${workItemId}/comments?api-version=7.0-preview.3`,
     {
       method: 'POST',
       headers: {
@@ -928,7 +928,7 @@ async function getAzureDevOpsComments(
     const accessToken = await getDevOpsAccessToken();
 
     const response = await fetch(
-      `${process.env.DEVOPS_ORG_URL}/${category.devopsProject}/_apis/wit/workitems/${workItemId}/comments?api-version=7.0-preview.3`,
+      `${process.env.DEVOPS_ORG_URL}/${encodeURIComponent(category.devopsProject)}/_apis/wit/workitems/${workItemId}/comments?api-version=7.0-preview.3`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -976,7 +976,7 @@ async function updateAzureDevOpsCommentAsUser(
 
   try {
     const response = await fetch(
-      `${process.env.DEVOPS_ORG_URL}/${category.devopsProject}/_apis/wit/workItems/${workItemId}/comments/${commentId}?api-version=7.0-preview.3`,
+      `${process.env.DEVOPS_ORG_URL}/${encodeURIComponent(category.devopsProject)}/_apis/wit/workItems/${workItemId}/comments/${commentId}?api-version=7.0-preview.3`,
       {
         method: 'PATCH',
         headers: {
@@ -1025,7 +1025,7 @@ async function updateAzureDevOpsComment(
   const accessToken = await getDevOpsAccessToken();
 
   const response = await fetch(
-    `${process.env.DEVOPS_ORG_URL}/${category.devopsProject}/_apis/wit/workItems/${workItemId}/comments/${commentId}?api-version=7.0-preview.3`,
+    `${process.env.DEVOPS_ORG_URL}/${encodeURIComponent(category.devopsProject)}/_apis/wit/workItems/${workItemId}/comments/${commentId}?api-version=7.0-preview.3`,
     {
       method: 'PATCH',
       headers: {
@@ -1293,7 +1293,7 @@ async function syncExistingCommentsToDevOps(
       );
 
       const response = await fetch(
-        `${process.env.DEVOPS_ORG_URL}/${category.devopsProject}/_apis/wit/workItems/${workItemId}/comments?api-version=7.0-preview.3`,
+        `${process.env.DEVOPS_ORG_URL}/${encodeURIComponent(category.devopsProject)}/_apis/wit/workItems/${workItemId}/comments?api-version=7.0-preview.3`,
         {
           method: 'POST',
           headers: {

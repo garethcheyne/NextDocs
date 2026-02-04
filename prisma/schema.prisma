@@ -356,7 +356,7 @@ model APISpec {
   searchVector Unsupported("tsvector")? // For full-text search
 
   // Relations
-  repository Repository? @relation(fields: [repositoryId], references: [id], onDelete: SetNull)
+  repository Repository? @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
   creator    User        @relation("APISpecCreator", fields: [createdBy], references: [id])
 
   @@unique([slug, version]) // Allow multiple versions of same API

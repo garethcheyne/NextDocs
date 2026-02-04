@@ -143,7 +143,7 @@ async function fetchAzureDevOpsWorkItem(
   const auth = Buffer.from(`:${pat}`).toString('base64')
 
   const response = await fetch(
-    `https://dev.azure.com/${category.devopsOrg}/${category.devopsProject}/_apis/wit/workitems/${workItemId}?api-version=7.0`,
+    `https://dev.azure.com/${encodeURIComponent(category.devopsOrg)}/${encodeURIComponent(category.devopsProject)}/_apis/wit/workitems/${workItemId}?api-version=7.0`,
     {
       headers: {
         Authorization: `Basic ${auth}`,
@@ -367,7 +367,7 @@ async function updateAzureDevOpsWorkItem(workItemId: string, category: any, upda
   }
 
   const response = await fetch(
-    `https://dev.azure.com/${category.devopsOrg}/${category.devopsProject}/_apis/wit/workitems/${workItemId}?api-version=7.0`,
+    `https://dev.azure.com/${encodeURIComponent(category.devopsOrg)}/${encodeURIComponent(category.devopsProject)}/_apis/wit/workitems/${workItemId}?api-version=7.0`,
     {
       method: 'PATCH',
       headers: {

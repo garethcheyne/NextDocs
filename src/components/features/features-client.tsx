@@ -102,7 +102,7 @@ export function FeaturesClient({ features, categories, params }: FeaturesClientP
                 {/* Filters Bar */}
                 <div className="flex items-center gap-3 mb-6">
                     {/* Category Filter */}
-                    <DropdownMenu>
+                    <DropdownMenu modal={false}>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm">
                                 <Filter className="w-4 h-4 mr-2" />
@@ -131,7 +131,7 @@ export function FeaturesClient({ features, categories, params }: FeaturesClientP
                     </DropdownMenu>
 
                     {/* Status Filter */}
-                    <DropdownMenu>
+                    <DropdownMenu modal={false}>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm">
                                 <Filter className="w-4 h-4 mr-2" />
@@ -160,7 +160,7 @@ export function FeaturesClient({ features, categories, params }: FeaturesClientP
                     </DropdownMenu>
 
                     {/* Sort Filter */}
-                    <DropdownMenu>
+                    <DropdownMenu modal={false}>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm">
                                 <Filter className="w-4 h-4 mr-2" />

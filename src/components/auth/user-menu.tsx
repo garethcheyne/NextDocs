@@ -27,7 +27,7 @@ export function UserMenu() {
   const isAdmin = session.user.role === 'admin'
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="gap-2">
           <User className="h-4 w-4" />

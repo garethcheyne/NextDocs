@@ -22,6 +22,18 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { toast } from 'sonner'
 
 function formatTimeAgo(date: string | null): string {
   if (!date) return 'Never'
@@ -49,6 +61,8 @@ export default function RepositoryDetailPage({
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
   const [tooltipData, setTooltipData] = useState<Record<string, any>>({})
   const [loadingTooltip, setLoadingTooltip] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   useEffect(() => {
     params.then((p) => setRepoId(p.id))
@@ -150,6 +164,38 @@ export default function RepositoryDetailPage({
       console.error('Failed to save category order:', error)
     } finally {
       setIsSavingOrder(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!repoId) return
+
+    setIsDeleting(true)
+    try {
+      const response = await fetch(`/api/repositories/${repoId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to delete repository')
+      }
+
+      const result = await response.json()
+      
+      toast.success('Repository deleted', {
+        description: `Deleted ${result.deleted.documents} documents, ${result.deleted.blogPosts} blog posts, ${result.deleted.apiSpecs} API specs`,
+      })
+
+      router.push('/admin/repositories')
+    } catch (error) {
+      console.error('Failed to delete repository:', error)
+      toast.error('Failed to delete repository', {
+        description: error instanceof Error ? error.message : 'An error occurred',
+      })
+    } finally {
+      setIsDeleting(false)
+      setShowDeleteDialog(false)
     }
   }
 
@@ -293,10 +339,42 @@ export default function RepositoryDetailPage({
                 Edit
               </Button>
             </Link>
-            <Button variant="outline" className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground">
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete
-            </Button>
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground">
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Repository?</AlertDialogTitle>
+                  <AlertDialogDescription className="space-y-2">
+                    <p>This will permanently delete <strong>{repository?.name}</strong> and all associated data:</p>
+                    <ul className="list-disc list-inside text-sm space-y-1 mt-2">
+                      <li>{stats.documents} documents</li>
+                      <li>{stats.blogPosts} blog posts</li>
+                      <li>{stats.parentCategories} categories</li>
+                      <li>{stats.authors} authors</li>
+                      <li>All sync logs and webhook events</li>
+                      <li>All synced images</li>
+                      <li>All linked API specifications</li>
+                    </ul>
+                    <p className="text-destructive font-medium mt-3">This action cannot be undone.</p>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {isDeleting ? 'Deleting...' : 'Delete Repository'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
 
@@ -343,7 +421,7 @@ export default function RepositoryDetailPage({
             {/* Repository Configuration */}
 
 
-            <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+            <Card>
 
 
               <CardHeader>
@@ -440,7 +518,7 @@ export default function RepositoryDetailPage({
               }
 
               return (
-                <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+                <Card >
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div>
@@ -536,7 +614,7 @@ export default function RepositoryDetailPage({
             })()}
 
             {/* Sync History */}
-            <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+            <Card >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="w-5 h-5" />
@@ -601,7 +679,7 @@ export default function RepositoryDetailPage({
           {/* Right Column - Stats & Info */}
           <div className="space-y-6">
             {/* Stats */}
-            <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+            <Card >
               <CardHeader>
                 <CardTitle>Statistics</CardTitle>
               </CardHeader>
@@ -751,7 +829,7 @@ export default function RepositoryDetailPage({
             </Card>
 
             {/* Metadata */}
-            <Card className="bg-white/50 dark:bg-gray-900/40 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-xl">
+            <Card >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calendar className="w-5 h-5" />

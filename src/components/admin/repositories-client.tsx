@@ -20,6 +20,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 function formatTimeAgo(date: string | null): string {
   if (!date) return 'Never'
@@ -299,24 +306,34 @@ export default function RepositoriesClient({ initialRepositories }: { initialRep
         <CardContent className="pt-6">
           <div className="flex gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Search repositories..."
-                className="pl-10 bg-white/80 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-500 focus:border-brand-orange"
+                className="pl-10"
               />
             </div>
-            <select aria-label="Filter by provider" className="px-4 py-2 rounded-lg bg-white/80 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:border-brand-orange focus:outline-none">
-              <option value="all">All Providers</option>
-              <option value="azure">Azure DevOps</option>
-              <option value="github">GitHub</option>
-            </select>
-            <select aria-label="Filter by status" className="px-4 py-2 rounded-lg bg-white/80 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:border-brand-orange focus:outline-none">
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="pending">Pending</option>
-              <option value="error">Error</option>
-            </select>
+            <Select defaultValue="all">
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="All Providers" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Providers</SelectItem>
+                <SelectItem value="azure">Azure DevOps</SelectItem>
+                <SelectItem value="github">GitHub</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select defaultValue="all">
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="error">Error</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>

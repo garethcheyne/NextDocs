@@ -39,6 +39,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Project parameter is required' }, { status: 400 })
     }
 
+    // Normalize project name: trim whitespace and decode any double-encoded characters
+    let normalizedProject = project.trim()
+    
+    // Handle potential double-encoding issues
+    try {
+      // If the project contains % characters that look like URL encoding, decode it
+      if (normalizedProject.includes('%')) {
+        const decoded = decodeURIComponent(normalizedProject)
+        // Only use the decoded version if it's different and doesn't contain dangerous characters
+        if (decoded !== normalizedProject && !/[<>'"&]/.test(decoded)) {
+          normalizedProject = decoded
+        }
+      }
+    } catch (error) {
+      // If decoding fails, use the original (it might not be URL encoded)
+      console.warn('Project name decoding failed, using original:', normalizedProject)
+    }
+
     const orgUrl = process.env.DEVOPS_ORG_URL
     const clientId = process.env.DEVOPS_CLIENT_ID
     const clientSecret = process.env.DEVOPS_CLIENT_SECRET
@@ -78,7 +96,7 @@ export async function GET(request: NextRequest) {
     const accessToken = tokenData.access_token
 
     // Fetch area paths from Azure DevOps
-    const areaPathsUrl = `${orgUrl}/${encodeURIComponent(project)}/_apis/wit/classificationnodes/areas?$depth=10&api-version=7.1`
+    const areaPathsUrl = `${orgUrl}/${encodeURIComponent(normalizedProject)}/_apis/wit/classificationnodes/areas?$depth=10&api-version=7.1`
     
     const response = await fetch(areaPathsUrl, {
       headers: {
@@ -90,6 +108,12 @@ export async function GET(request: NextRequest) {
     if (!response.ok) {
       const errorText = await response.text()
       console.error('Azure DevOps API error:', errorText)
+      console.error('Failed request details:', {
+        originalProject: project,
+        normalizedProject,
+        url: areaPathsUrl,
+        status: response.status
+      })
       return NextResponse.json(
         { error: 'Failed to fetch area paths from Azure DevOps' },
         { status: response.status }

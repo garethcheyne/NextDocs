@@ -38,7 +38,7 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { ThemeToggle, InlineThemeToggle } from '@/components/theme-toggle'
 import { ThemeAwareLogo } from '@/components/theme-aware-logo'
 
 interface Category {
@@ -740,7 +740,7 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                 <SidebarFooter className="border-t border-gray-800/50">
                     <SidebarMenu>
                         <SidebarMenuItem>
-                            <DropdownMenu>
+                            <DropdownMenu modal={false}>
                                 <DropdownMenuTrigger asChild>
                                     <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
                                         <div className="flex items-center gap-2 flex-1 overflow-hidden">
@@ -793,10 +793,10 @@ export async function AppSidebar({ user = { name: null, email: null, role: null 
                                     </DropdownMenuGroup>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuGroup>
-                                        <DropdownMenuItem className="p-0">
+                                        <DropdownMenuItem className="p-0" onSelect={(e) => e.preventDefault()}>
                                             <div className="flex items-center justify-between w-full px-2 py-1.5">
                                                 <span className="text-sm">Theme</span>
-                                                <ThemeToggle />
+                                                <InlineThemeToggle />
                                             </div>
                                         </DropdownMenuItem>
                                     </DropdownMenuGroup>

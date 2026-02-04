@@ -299,7 +299,7 @@ export function FeatureActionBar({
 
                 {/* Status Dropdown */}
                 {isAdmin && (
-                    <DropdownMenu>
+                    <DropdownMenu modal={false}>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm" disabled={isLoading} className="gap-2">
                                 <StatusBadge status={currentStatus} />
@@ -316,7 +316,7 @@ export function FeatureActionBar({
 
                 {/* Priority Dropdown */}
                 {isAdmin && (
-                    <DropdownMenu>
+                    <DropdownMenu modal={false}>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm" disabled={isLoading} className="gap-2">
                                 <PriorityBadge priority={priority} />
